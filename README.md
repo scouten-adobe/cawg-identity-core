@@ -1,5 +1,7 @@
 # Implementation of CAWG identity assertion core specification
 
+[![CI](https://github.com/adobe/xmp-toolkit-rs/actions/workflows/ci.yml/badge.svg)](https://github.com/scouten-adobe/cawg-identity-core/actions/workflows/ci.yml) [![codecov](https://codecov.io/gh/scouten-adobe/cawg-identity-core/graph/badge.svg?token=ThGK5CdTJ3)](https://codecov.io/gh/scouten-adobe/cawg-identity-core)
+
 EXPERIMENTAL/EARLY implementation of the core of the [Creator Assertions Working Group identity assertion draft specification](https://creator-assertions.github.io/identity/).
 
 ## Contributions and feedback
