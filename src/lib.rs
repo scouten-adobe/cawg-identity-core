@@ -23,5 +23,8 @@ pub fn add(left: usize, right: usize) -> usize {
     left + right
 }
 
+mod credential_holder;
+pub use credential_holder::CredentialHolder;
+
 #[cfg(test)]
 mod tests;
