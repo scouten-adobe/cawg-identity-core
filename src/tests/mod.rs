@@ -20,6 +20,8 @@
 
 use super::*;
 
+mod assertion_builder;
+
 #[test]
 fn it_works() {
     let result = add(2, 2);

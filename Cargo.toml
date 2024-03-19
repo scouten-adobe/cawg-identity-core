@@ -6,3 +6,4 @@ edition = "2021"
 [dependencies]
 async-trait = "0.1.78"
 c2pa = "0.31.0"
+serde = "1.0.197"

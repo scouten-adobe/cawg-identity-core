@@ -11,20 +11,19 @@
 // specific language governing permissions and limitations under
 // each license.
 
-#![deny(clippy::expect_used)]
-#![deny(clippy::panic)]
-#![deny(clippy::unwrap_used)]
-#![deny(missing_docs)]
-#![deny(warnings)]
-#![doc = include_str!("../README.md")]
+#![allow(unused_mut)] // TEMPORARY while building
+#![allow(unused_variables)] // TEMPORARY while building
 
-/// TEMPORARY until we start writing real code
-pub fn add(left: usize, right: usize) -> usize {
-    left + right
+use c2pa::Manifest;
+
+use crate::{AssertionBuilder, NaiveCredentialHolder};
+
+#[test]
+fn simple_case() {
+    let mut manifest = Manifest::new("claim_generator");
+
+    let naive_credential = NaiveCredentialHolder {};
+    let mut identity_assertion = AssertionBuilder::for_credential_holder(naive_credential);
+
+    manifest.add_assertion(&identity_assertion).unwrap();
 }
-
-mod assertion_builder;
-pub use assertion_builder::{AssertionBuilder, CredentialHolder, NaiveCredentialHolder};
-
-#[cfg(test)]
-mod tests;
