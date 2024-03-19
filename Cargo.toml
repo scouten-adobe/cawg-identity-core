@@ -4,3 +4,5 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+c2pa = { version = "0.30.1", features = ["file_io", "openssl_sign"] }
+tempfile = "3.10"
