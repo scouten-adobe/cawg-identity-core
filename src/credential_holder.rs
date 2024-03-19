@@ -46,3 +46,24 @@ pub trait CredentialHolder {
     /// by the [`reserve_size`] function.
     async fn sign(&self, tbs: &[u8]) -> c2pa::Result<Vec<u8>>;
 }
+
+/// Naive implementation of [`CredentialHolder`] trait for
+/// proof-of-concept/testing purposes.
+///
+/// NOT intended for production use.
+pub struct NaiveCredentialHolder {}
+
+#[async_trait::async_trait]
+impl CredentialHolder for NaiveCredentialHolder {
+    fn label(&self) -> String {
+        "INVALID.demo.credential".to_owned()
+    }
+
+    fn reserve_size(&self) -> usize {
+        10000
+    }
+
+    async fn sign(&self, tbs: &[u8]) -> c2pa::Result<Vec<u8>> {
+        Ok(tbs.to_owned())
+    }
+}
