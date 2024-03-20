@@ -63,7 +63,7 @@ impl Serialize for AssertionBuilder {
     }
 }
 
-/// A `Credentialholder` is able to generate a signature over the `tbs`
+/// A `CredentialHolder` is able to generate a signature over the `tbs`
 /// data structure on behalf of a credential holder.
 ///
 /// Implementations of this trait will specialize based on the kind of
