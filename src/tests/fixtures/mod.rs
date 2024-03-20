@@ -11,19 +11,16 @@
 // specific language governing permissions and limitations under
 // each license.
 
-// Tests are grouped under this module so as to avoid
-// having the test code itself included in coverage numbers.
+use std::{env, path::PathBuf};
 
-#![allow(clippy::expect_used)]
-#![allow(clippy::panic)]
-#![allow(clippy::unwrap_used)]
+pub(crate) fn fixture_path(name: &str) -> PathBuf {
+    let root_dir = &env::var("CARGO_MANIFEST_DIR").unwrap();
 
-use super::*;
+    let mut path = PathBuf::from(root_dir);
+    path.push("src/tests/fixtures");
+    path.push(name);
 
-mod fixtures;
+    assert!(path.exists());
 
-#[test]
-fn it_works() {
-    let result = add(2, 2);
-    assert_eq!(result, 4);
+    path
 }
