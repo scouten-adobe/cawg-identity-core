@@ -13,6 +13,7 @@
 
 use std::{env, path::PathBuf};
 
+#[allow(dead_code)]
 pub(crate) fn fixture_path(name: &str) -> PathBuf {
     let root_dir = &env::var("CARGO_MANIFEST_DIR").unwrap();
 
