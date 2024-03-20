@@ -14,16 +14,42 @@
 #![allow(unused_mut)] // TEMPORARY while building
 #![allow(unused_variables)] // TEMPORARY while building
 
-use c2pa::Manifest;
+use std::fs::OpenOptions;
 
-use crate::{AssertionBuilder, NaiveCredentialHolder};
+use c2pa::{create_signer, Manifest, SigningAlg};
+
+use crate::{tests::fixtures::fixture_path, AssertionBuilder, NaiveCredentialHolder};
 
 #[test]
 fn simple_case() {
-    let mut manifest = Manifest::new("claim_generator");
+    let signcert_path = fixture_path("certs/ps256.pub");
+    let pkey_path = fixture_path("certs/ps256.pem");
+
+    let signer =
+        create_signer::from_files(signcert_path, pkey_path, SigningAlg::Ps256, None).unwrap();
+
+    let source = fixture_path("cloud.jpg");
+    let dest = fixture_path("temp/cloud_output.jpg");
+
+    let mut input_file = OpenOptions::new().read(true).open(&source).unwrap();
+
+    let mut output_file = OpenOptions::new()
+        .read(true)
+        .write(true)
+        .create(true)
+        .truncate(true)
+        .open(&dest)
+        .unwrap();
+
+    let mut manifest = Manifest::new("identity_test/simple_case");
 
     let naive_credential = NaiveCredentialHolder {};
     let mut identity_assertion = AssertionBuilder::for_credential_holder(naive_credential);
 
+    // TO DO: Add a metadata assertion as an example.
+
     manifest.add_assertion(&identity_assertion).unwrap();
+
+    // CONSULT WITH GAVIN: This is where I'll need to start writing preliminary
+    // manifest and then substituting the finalized identity assertion.
 }

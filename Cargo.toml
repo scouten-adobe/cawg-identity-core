@@ -7,3 +7,6 @@ edition = "2021"
 async-trait = "0.1.78"
 c2pa = "0.31.0"
 serde = "1.0.197"
+
+[dev-dependencies]
+c2pa = { version = "0.31.0", features = ["file_io", "openssl_sign"] }
