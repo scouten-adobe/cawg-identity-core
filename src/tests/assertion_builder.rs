@@ -18,7 +18,10 @@ use std::fs::OpenOptions;
 
 use c2pa::{create_signer, Manifest, SigningAlg};
 
-use crate::{tests::fixtures::fixture_path, AssertionBuilder, NaiveCredentialHolder};
+use crate::{
+    tests::fixtures::{fixture_path, temp_dir_path},
+    AssertionBuilder, NaiveCredentialHolder,
+};
 
 #[test]
 fn simple_case() {
@@ -29,7 +32,9 @@ fn simple_case() {
         create_signer::from_files(signcert_path, pkey_path, SigningAlg::Ps256, None).unwrap();
 
     let source = fixture_path("cloud.jpg");
-    let dest = fixture_path("temp/cloud_output.jpg");
+
+    let temp_dir = tempfile::tempdir().unwrap();
+    let dest = temp_dir_path(&temp_dir, "cloud_output.jpg");
 
     let mut input_file = OpenOptions::new().read(true).open(&source).unwrap();
 

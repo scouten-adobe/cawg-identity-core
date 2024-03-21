@@ -11,9 +11,14 @@
 // specific language governing permissions and limitations under
 // each license.
 
+#![allow(dead_code)]
+// This code should only used from unit tests.
+// Silence warnings about unused code when not building tests.
+
 use std::{env, path::PathBuf};
 
-#[allow(dead_code)]
+use tempfile::TempDir;
+
 pub(crate) fn fixture_path(name: &str) -> PathBuf {
     let root_dir = &env::var("CARGO_MANIFEST_DIR").unwrap();
 
@@ -23,5 +28,11 @@ pub(crate) fn fixture_path(name: &str) -> PathBuf {
 
     assert!(path.exists());
 
+    path
+}
+
+pub(crate) fn temp_dir_path(temp_dir: &TempDir, file_name: &str) -> PathBuf {
+    let mut path = PathBuf::from(temp_dir.path());
+    path.push(file_name);
     path
 }
