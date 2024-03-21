@@ -16,12 +16,13 @@
 
 use std::{
     fs::{File, OpenOptions},
-    io::{Cursor, Read, Write},
+    io::{Cursor, Read, Seek, SeekFrom, Write},
     path::Path,
 };
 
 use c2pa::{
-    create_signer, jumbf_io::get_assetio_handler_from_path, CAIReadWrite, Manifest, SigningAlg,
+    assertions::DataHash, create_signer, jumbf_io::get_assetio_handler_from_path, CAIReadWrite,
+    HashRange, Manifest, ManifestStore, SigningAlg,
 };
 
 use crate::{
@@ -75,35 +76,29 @@ fn simple_case() {
     // If successful, write_jpeg_placeholder_file returns offset of the placeholder.
     let offset = write_jpeg_placeholder_file(&placeholder, &source, &mut output_file).unwrap();
 
-    // --- START FROM HERE ---
-    // // build manifest to insert in the hole
+    // Build manifest to insert in the placeholder space.
 
-    // // create an hash exclusion for the manifest
-    // let exclusion = HashRange::new(offset, placeholder.len());
-    // let exclusions = vec![exclusion];
+    // Create a data hash assertion with exclusion for the manifest placeholder.
+    let exclusion = HashRange::new(offset, placeholder.len());
+    let exclusions = vec![exclusion];
 
-    // let mut dh = DataHash::new("source_hash", "sha256");
-    // dh.exclusions = Some(exclusions);
+    let mut dh = DataHash::new("source_hash", "sha256");
+    dh.exclusions = Some(exclusions);
 
-    // let signed_manifest = manifest
-    //     .data_hash_embeddable_manifest(
-    //         &dh,
-    //         signer.as_ref(),
-    //         "image/jpeg",
-    //         Some(&mut output_file),
-    //     )
-    //     .unwrap();
+    let signed_manifest = manifest
+        .data_hash_embeddable_manifest(&dh, signer.as_ref(), "image/jpeg", Some(&mut output_file))
+        .unwrap();
 
-    // use std::io::{Seek, SeekFrom, Write};
+    // TO DO: Rewrite manifest with finalized identity assertion(s)
+    // and re-sign.
 
-    // // path in new composed manifest
-    // output_file.seek(SeekFrom::Start(offset as u64)).unwrap();
-    // output_file.write_all(&signed_manifest).unwrap();
+    // Write new manifest where the placeholder was.
+    output_file.seek(SeekFrom::Start(offset as u64)).unwrap();
+    output_file.write_all(&signed_manifest).unwrap();
 
-    // let manifest_store =
-    // crate::ManifestStore::from_file(&output).expect("from_file");
-    // println!("{manifest_store}");
-    // assert!(manifest_store.validation_status().is_none());
+    let manifest_store = ManifestStore::from_file(&dest).unwrap();
+    println!("{manifest_store}");
+    assert!(manifest_store.validation_status().is_none());
 }
 
 // TO DO: Move this into identity builder code?
