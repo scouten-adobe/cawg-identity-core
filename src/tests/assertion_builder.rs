@@ -14,21 +14,26 @@
 #![allow(unused_mut)] // TEMPORARY while building
 #![allow(unused_variables)] // TEMPORARY while building
 
-use std::{
-    fs::{File, OpenOptions},
-    io::{Cursor, Read, Seek, SeekFrom, Write},
-    path::Path,
-};
+use std::{fs::OpenOptions, io::Seek};
 
 use c2pa::{
-    assertions::DataHash, create_signer, jumbf_io::get_assetio_handler_from_path, CAIReadWrite,
-    HashRange, Manifest, ManifestStore, SigningAlg,
+    create_signer, external_manifest::ManifestPatchCallback, Manifest, ManifestStore, SigningAlg,
+    Store,
 };
 
 use crate::{
     tests::fixtures::{fixture_path, temp_dir_path},
     AssertionBuilder, NaiveCredentialHolder,
 };
+
+struct IdentityManifestBuilder {}
+
+impl ManifestPatchCallback for IdentityManifestBuilder {
+    fn patch_manifest(&self, manifest_store: &[u8]) -> c2pa::Result<Vec<u8>> {
+        // TEMPORARY: no-op
+        Ok(manifest_store.to_owned())
+    }
+}
 
 #[test]
 fn simple_case() {
@@ -46,9 +51,9 @@ fn simple_case() {
     let temp_dir = tempfile::tempdir().unwrap();
     let dest = temp_dir_path(&temp_dir, "cloud_output.jpg");
 
-    let mut input_file = OpenOptions::new().read(true).open(&source).unwrap();
+    let mut input_stream = OpenOptions::new().read(true).open(&source).unwrap();
 
-    let mut output_file = OpenOptions::new()
+    let mut output_stream = OpenOptions::new()
         .read(true)
         .write(true)
         .create(true)
@@ -65,90 +70,30 @@ fn simple_case() {
 
     manifest.add_assertion(&identity_assertion).unwrap();
 
-    // CONSULT WITH GAVIN: This is where I'll need to start writing preliminary
-    // manifest and then substituting the finalized identity assertion.
+    let mut store = manifest.to_store().unwrap();
 
-    let placeholder = manifest
-        .data_hash_placeholder(signer.reserve_size(), "jpeg")
+    let placed_manifest = store
+        .get_placed_manifest(signer.reserve_size(), "jpg", &mut input_stream)
         .unwrap();
 
-    // Write a new JPEG file with a placeholder for the manifest.
-    // If successful, write_jpeg_placeholder_file returns offset of the placeholder.
-    let offset = write_jpeg_placeholder_file(&placeholder, &source, &mut output_file).unwrap();
+    let identity_post_processor = IdentityManifestBuilder {};
+    let callbacks: Vec<Box<dyn ManifestPatchCallback>> = vec![Box::new(identity_post_processor)];
 
-    // Build manifest to insert in the placeholder space.
+    input_stream.rewind().unwrap(); // likely not necessary
 
-    // Create a data hash assertion with exclusion for the manifest placeholder.
-    let exclusion = HashRange::new(offset, placeholder.len());
-    let exclusions = vec![exclusion];
-
-    let mut dh = DataHash::new("source_hash", "sha256");
-    dh.exclusions = Some(exclusions);
-
-    let signed_manifest = manifest
-        .data_hash_embeddable_manifest(&dh, signer.as_ref(), "image/jpeg", Some(&mut output_file))
-        .unwrap();
-
-    // TO DO: Rewrite manifest with finalized identity assertion(s)
-    // and re-sign.
-
-    // Write new manifest where the placeholder was.
-    output_file.seek(SeekFrom::Start(offset as u64)).unwrap();
-    output_file.write_all(&signed_manifest).unwrap();
+    Store::embed_placed_manifest(
+        &placed_manifest,
+        "jpg",
+        &mut input_stream,
+        &mut output_stream,
+        signer.as_ref(),
+        &callbacks,
+    )
+    .unwrap();
 
     let manifest_store = ManifestStore::from_file(&dest).unwrap();
     println!("{manifest_store}");
     assert!(manifest_store.validation_status().is_none());
-}
 
-// TO DO: Move this into identity builder code?
-fn write_jpeg_placeholder_file(
-    placeholder: &[u8],
-    input: &Path,
-    output_file: &mut dyn CAIReadWrite,
-    // mut hasher: Option<&mut Hasher>,
-) -> c2pa::Result<usize> {
-    // TO DO: Clean up error handling here.
-    // Q&D adaptation from c2pa-rs test code.
-
-    // Where we will put the data?
-    let mut f = File::open(input).unwrap();
-    let jpeg_io = get_assetio_handler_from_path(input).unwrap();
-    let box_mapper = jpeg_io.asset_box_hash_ref().unwrap();
-    let boxes = box_mapper.get_box_map(&mut f).unwrap();
-    let sof = boxes.iter().find(|b| b.names[0] == "SOF0").unwrap();
-
-    // Build new asset with hole for new manifest.
-    let outbuf = Vec::new();
-    let mut out_stream = Cursor::new(outbuf);
-    let mut input_file = std::fs::File::open(input).unwrap();
-
-    // Write content before placeholder.
-    let mut before = vec![0u8; sof.range_start];
-    input_file.read_exact(before.as_mut_slice()).unwrap();
-    // TO DO: Do we need hasher? It's not available in c2pa public interface.
-    // For now, act as though we were passed `None` here.
-    // if let Some(hasher) = hasher.as_deref_mut() {
-    //     hasher.update(&before);
-    // }
-    out_stream.write_all(&before).unwrap();
-
-    // Write placeholder.
-    out_stream.write_all(placeholder).unwrap();
-
-    // Write content after placeholder.
-    let mut after_buf = Vec::new();
-    input_file.read_to_end(&mut after_buf).unwrap();
-    // TO DO: Do we need hasher? It's not available in c2pa public interface.
-    // For now, act as though we were passed `None` here.
-    // if let Some(hasher) = hasher {
-    //     hasher.update(&after_buf);
-    // }
-
-    out_stream.write_all(&after_buf).unwrap();
-
-    // Save to output file.
-    output_file.write_all(&out_stream.into_inner()).unwrap();
-
-    Ok(sof.range_start)
+    // TO DO: Validate identity assertion.
 }

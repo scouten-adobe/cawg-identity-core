@@ -5,9 +5,17 @@ edition = "2021"
 
 [dependencies]
 async-trait = "0.1.78"
-c2pa = "0.31.0"
+# c2pa = "0.31.0"
+# ^^ TO DO: Restore this when external manifest branch is finalized.
 serde = "1.0.197"
 
+[dependencies.c2pa]
+git = "https://github.com/contentauth/c2pa-rs.git"
+branch = "external_manifest"
+features = ["file_io", "openssl_sign"]
+# ^^ TO DO: Remove this once external_manifest branch is finalized and merged.
+
 [dev-dependencies]
-c2pa = { version = "0.31.0", features = ["file_io", "openssl_sign"] }
+# c2pa = { version = "0.31.0", features = ["file_io", "openssl_sign"] }
+# ^^ TO DO: Restore this when external manifest branch is finalized.
 tempfile = "3.1.0"
