@@ -20,3 +20,6 @@
 
 pub(crate) mod credential_holder;
 pub use credential_holder::CredentialHolder;
+
+mod manifest_builder;
+pub use manifest_builder::ManifestBuilder;
