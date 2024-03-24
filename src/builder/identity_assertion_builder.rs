@@ -14,8 +14,8 @@
 #![allow(dead_code)] // TEMPORARY while building
 #![allow(missing_docs)] // TEMPORARY while building
 
-// use c2pa::{Assertion, AssertionBase};
-// use serde::{Serialize, Serializer};
+use c2pa::{Assertion, AssertionBase};
+use serde::{Serialize, Serializer};
 
 use super::CredentialHolder;
 
@@ -35,32 +35,46 @@ impl IdentityAssertionBuilder {
     }
 }
 
-// impl AssertionBase for AssertionBuilder {
-//     fn label(&self) -> &str {
-//         self.credential_holder.label()
-//     }
+/// This struct is used behind the scenes to manage the
+/// life-cycle of the identity assertion during the manifest
+/// construction and signing process. It is intentionally
+/// not part of the public API surface.
+pub(crate) struct IdentityAssertion {
+    builder: IdentityAssertionBuilder,
+}
 
-//     fn version(&self) -> Option<usize> {
-//         None
-//     }
+impl IdentityAssertion {
+    pub fn from_builder(builder: IdentityAssertionBuilder) -> Self {
+        Self { builder }
+    }
+}
 
-//     fn to_assertion(&self) -> c2pa::Result<Assertion> {
-//         unimplemented!();
-//     }
+impl AssertionBase for IdentityAssertion {
+    fn label(&self) -> &str {
+        self.builder.credential_holder.label()
+    }
 
-//     fn from_assertion(_assertion: &Assertion) -> c2pa::Result<Self> {
-//         unimplemented!();
-//     }
-// }
+    fn version(&self) -> Option<usize> {
+        None
+    }
 
-// impl Serialize for AssertionBuilder {
-//     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-//     where
-//         S: Serializer,
-//     {
-//         // Since we can't have the signature yet, just write a placeholder
-//         // for now.
-//         let placeholder = vec![0; self.credential_holder.reserve_size()];
-//         serializer.serialize_bytes(&placeholder)
-//     }
-// }
+    fn to_assertion(&self) -> c2pa::Result<Assertion> {
+        unimplemented!();
+    }
+
+    fn from_assertion(_assertion: &Assertion) -> c2pa::Result<Self> {
+        unimplemented!();
+    }
+}
+
+impl Serialize for IdentityAssertion {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        // Since we can't have the signature yet, just write a placeholder
+        // for now.
+        let placeholder = vec![0; self.builder.credential_holder.reserve_size()];
+        serializer.serialize_bytes(&placeholder)
+    }
+}

@@ -17,18 +17,18 @@ use c2pa::{
     external_manifest::ManifestPatchCallback, CAIRead, CAIReadWrite, Manifest, Signer, Store,
 };
 
-use super::IdentityAssertionBuilder;
+use super::{identity_assertion_builder::IdentityAssertion, IdentityAssertionBuilder};
 
 /// TO DO: Docs
 #[derive(Default)]
 pub struct ManifestBuilder {
-    identity_assertions: Vec<IdentityAssertionBuilder>,
+    identity_assertions: Vec<IdentityAssertion>,
 }
 
 impl ManifestBuilder {
     /// Adds an identity assertion to the builder.
     pub fn add_assertion(&mut self, identity_assertion: IdentityAssertionBuilder) {
-        self.identity_assertions.push(identity_assertion);
+        self.identity_assertions.push(IdentityAssertion::from_builder(identity_assertion));
     }
 
     /// This function wraps all the c2pa SDK calls in the (currently)
