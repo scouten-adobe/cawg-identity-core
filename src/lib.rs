@@ -23,9 +23,6 @@ pub fn add(left: usize, right: usize) -> usize {
     left + right
 }
 
-mod assertion_builder;
-pub use assertion_builder::AssertionBuilder;
-
 pub mod builder;
 
 #[cfg(test)]

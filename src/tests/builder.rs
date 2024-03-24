@@ -22,9 +22,8 @@ use c2pa::{
 };
 
 use crate::{
-    builder::credential_holder::NaiveCredentialHolder,
+    builder::{credential_holder::NaiveCredentialHolder, AssertionBuilder},
     tests::fixtures::{fixture_path, temp_dir_path},
-    AssertionBuilder,
 };
 
 struct IdentityManifestBuilder {}
@@ -62,7 +61,7 @@ fn simple_case() {
         .open(&dest)
         .unwrap();
 
-    let mut manifest = Manifest::new("identity_test/simple_case");
+    let mut manifest: Manifest = Manifest::new("identity_test/simple_case");
 
     let naive_credential = NaiveCredentialHolder {};
     let mut identity_assertion = AssertionBuilder::for_credential_holder(naive_credential);

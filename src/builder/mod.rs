@@ -18,6 +18,9 @@
 //! to ensure that the identity assertion properly references the
 //! finalized hard binding assertion.
 
+mod assertion_builder;
+pub use assertion_builder::AssertionBuilder;
+
 pub(crate) mod credential_holder;
 pub use credential_holder::CredentialHolder;
 

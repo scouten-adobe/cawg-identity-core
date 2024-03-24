@@ -20,7 +20,7 @@
 
 use super::*;
 
-mod assertion_builder;
+mod builder;
 mod fixtures;
 
 #[test]
