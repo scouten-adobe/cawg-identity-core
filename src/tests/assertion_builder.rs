@@ -22,8 +22,9 @@ use c2pa::{
 };
 
 use crate::{
+    builder::credential_holder::NaiveCredentialHolder,
     tests::fixtures::{fixture_path, temp_dir_path},
-    AssertionBuilder, NaiveCredentialHolder,
+    AssertionBuilder,
 };
 
 struct IdentityManifestBuilder {}
