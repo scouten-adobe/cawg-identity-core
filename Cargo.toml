@@ -16,6 +16,7 @@ features = ["file_io", "openssl_sign"]
 # ^^ TO DO: Remove this once external_manifest branch is finalized and merged.
 
 [dev-dependencies]
+actix = "0.13.3"
 # c2pa = { version = "0.31.0", features = ["file_io", "openssl_sign"] }
 # ^^ TO DO: Restore this when external manifest branch is finalized.
 tempfile = "3.1.0"

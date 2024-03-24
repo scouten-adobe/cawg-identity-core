@@ -14,22 +14,33 @@
 #![allow(unused_variables)] // TEMPORARY while building
 
 use c2pa::{
-    external_manifest::ManifestPatchCallback, AsyncSigner, CAIRead, CAIReadWrite, Manifest, Store,
+    external_manifest::ManifestPatchCallback, CAIRead, CAIReadWrite, Manifest, Signer, Store,
 };
 
+use super::IdentityAssertionBuilder;
+
 /// TO DO: Docs
-pub struct ManifestBuilder {}
+#[derive(Default)]
+pub struct ManifestBuilder {
+    identity_assertions: Vec<IdentityAssertionBuilder>,
+}
 
 impl ManifestBuilder {
+    /// Adds an identity assertion to the builder.
+    pub fn add_assertion(&mut self, identity_assertion: IdentityAssertionBuilder) {
+        self.identity_assertions.push(identity_assertion);
+    }
+
     /// This function wraps all the c2pa SDK calls in the (currently)
     /// correct sequence. This is likely to change as the c2pa SDK
     /// evolves.
     pub async fn build(
+        self,
         manifest: Manifest,
         format: &str,
         input_stream: &mut dyn CAIRead,
         output_stream: &mut dyn CAIReadWrite,
-        signer: &dyn AsyncSigner,
+        signer: &dyn Signer,
     ) -> c2pa::Result<()> {
         // let naive_credential = NaiveCredentialHolder {};
         // let mut identity_assertion =
@@ -42,21 +53,22 @@ impl ManifestBuilder {
         let placed_manifest =
             store.get_placed_manifest(signer.reserve_size(), "jpg", input_stream)?;
 
-        let identity_post_processor = ManifestBuilder {};
-        let callbacks: Vec<Box<dyn ManifestPatchCallback>> =
-            vec![Box::new(identity_post_processor)];
+        let callbacks: Vec<Box<dyn ManifestPatchCallback>> = vec![Box::new(self)];
 
         input_stream.rewind()?;
 
-        Store::embed_placed_manifest_async(
+        // TO DO: Place the async signing parts here.
+        // Not (yet?)
+        // compatible with the callback mechanism.
+
+        Store::embed_placed_manifest(
             &placed_manifest,
             "jpg",
             input_stream,
             output_stream,
             signer,
             &callbacks,
-        )
-        .await?;
+        )?;
 
         Ok(())
     }

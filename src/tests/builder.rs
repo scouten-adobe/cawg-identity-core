@@ -14,29 +14,19 @@
 #![allow(unused_mut)] // TEMPORARY while building
 #![allow(unused_variables)] // TEMPORARY while building
 
-use std::{fs::OpenOptions, io::Seek};
+use std::fs::OpenOptions;
 
-use c2pa::{
-    create_signer, external_manifest::ManifestPatchCallback, Manifest, ManifestStore, SigningAlg,
-    Store,
-};
+use c2pa::{create_signer, Manifest, ManifestStore, SigningAlg};
 
 use crate::{
-    builder::{credential_holder::NaiveCredentialHolder, AssertionBuilder},
+    builder::{
+        credential_holder::NaiveCredentialHolder, IdentityAssertionBuilder, ManifestBuilder,
+    },
     tests::fixtures::{fixture_path, temp_dir_path},
 };
 
-struct IdentityManifestBuilder {}
-
-impl ManifestPatchCallback for IdentityManifestBuilder {
-    fn patch_manifest(&self, manifest_store: &[u8]) -> c2pa::Result<Vec<u8>> {
-        // TEMPORARY: no-op
-        Ok(manifest_store.to_owned())
-    }
-}
-
-#[test]
-fn simple_case() {
+#[actix::test]
+async fn simple_case() {
     // TO DO: Clean up code and extract into builder interface.
     // For now, just looking for a simple proof-of-concept.
 
@@ -63,32 +53,22 @@ fn simple_case() {
 
     let mut manifest: Manifest = Manifest::new("identity_test/simple_case");
 
-    let naive_credential = NaiveCredentialHolder {};
-    let mut identity_assertion = AssertionBuilder::for_credential_holder(naive_credential);
-
     // TO DO: Add a metadata assertion as an example.
 
-    manifest.add_assertion(&identity_assertion).unwrap();
+    let naive_credential = NaiveCredentialHolder {};
+    let mut iab = IdentityAssertionBuilder::for_credential_holder(naive_credential);
 
-    let mut store = manifest.to_store().unwrap();
+    let mut mb = ManifestBuilder::default();
+    mb.add_assertion(iab);
 
-    let placed_manifest = store
-        .get_placed_manifest(signer.reserve_size(), "jpg", &mut input_stream)
-        .unwrap();
-
-    let identity_post_processor = IdentityManifestBuilder {};
-    let callbacks: Vec<Box<dyn ManifestPatchCallback>> = vec![Box::new(identity_post_processor)];
-
-    input_stream.rewind().unwrap(); // likely not necessary
-
-    Store::embed_placed_manifest(
-        &placed_manifest,
+    mb.build(
+        manifest,
         "jpg",
         &mut input_stream,
         &mut output_stream,
         signer.as_ref(),
-        &callbacks,
     )
+    .await
     .unwrap();
 
     let manifest_store = ManifestStore::from_file(&dest).unwrap();
