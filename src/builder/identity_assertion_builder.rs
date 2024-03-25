@@ -51,7 +51,7 @@ impl IdentityAssertion {
 
 impl AssertionBase for IdentityAssertion {
     fn label(&self) -> &str {
-        self.builder.credential_holder.label()
+        "cawg.identity"
     }
 
     fn version(&self) -> Option<usize> {

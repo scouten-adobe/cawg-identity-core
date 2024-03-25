@@ -20,13 +20,8 @@
 /// from the CAWG Identity Assertion specification.
 #[async_trait::async_trait]
 pub trait CredentialHolder {
-    /// Returns the designated label for this kind of credential.
-    ///
-    /// Labels designated in the CAWG Identity Assertion specification
-    /// will have the prefix `cawg.identity.`. Any label not designed
-    /// in the CAWG specification MUST NOT start with `cawg.` but are
-    /// encouraged to contain the string `.identity.`.
-    fn label(&self) -> &'static str;
+    /// Returns the designated `sig_type` value for this kind of credential.
+    fn sig_type(&self) -> &'static str;
 
     /// Returns the maximum expected size in bytes of the `signature`
     /// field for the identity assertion which will be subsequently
@@ -55,7 +50,7 @@ pub(crate) struct NaiveCredentialHolder {}
 
 #[async_trait::async_trait]
 impl CredentialHolder for NaiveCredentialHolder {
-    fn label(&self) -> &'static str {
+    fn sig_type(&self) -> &'static str {
         "INVALID.identity.naive_credential"
     }
 
