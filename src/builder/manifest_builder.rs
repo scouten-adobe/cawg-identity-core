@@ -28,7 +28,8 @@ pub struct ManifestBuilder {
 impl ManifestBuilder {
     /// Adds an identity assertion to the builder.
     pub fn add_assertion(&mut self, identity_assertion: IdentityAssertionBuilder) {
-        self.identity_assertions.push(IdentityAssertion::from_builder(identity_assertion));
+        self.identity_assertions
+            .push(IdentityAssertion::from_builder(identity_assertion));
     }
 
     /// This function wraps all the c2pa SDK calls in the (currently)
@@ -36,17 +37,15 @@ impl ManifestBuilder {
     /// evolves.
     pub async fn build(
         self,
-        manifest: Manifest,
+        mut manifest: Manifest,
         format: &str,
         input_stream: &mut dyn CAIRead,
         output_stream: &mut dyn CAIReadWrite,
         signer: &dyn Signer,
     ) -> c2pa::Result<()> {
-        // let naive_credential = NaiveCredentialHolder {};
-        // let mut identity_assertion =
-        // AssertionBuilder::for_credential_holder(naive_credential);
-
-        // manifest.add_assertion(&identity_assertion)?;
+        for ia in self.identity_assertions.iter() {
+            manifest.add_assertion(ia)?;
+        }
 
         let mut store = manifest.to_store()?;
 
