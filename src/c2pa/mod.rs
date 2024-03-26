@@ -13,5 +13,11 @@
 
 //! A few utilities for parsing and describing C2PA data structures.
 
+#![allow(dead_code)] // TEMPORARY while building
+#![allow(unused_imports)] // TEMPORARY while building
+
 mod hashed_uri;
 pub use hashed_uri::HashedUri;
+
+mod manifest_store;
+pub(crate) use manifest_store::ManifestStore;
