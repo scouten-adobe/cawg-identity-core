@@ -13,9 +13,7 @@
 
 #![allow(unused_variables)] // TEMPORARY while building
 
-use c2pa::{
-    external_manifest::ManifestPatchCallback, CAIRead, CAIReadWrite, Manifest, Signer, Store,
-};
+use c2pa::{CAIRead, CAIReadWrite, Manifest, ManifestPatchCallback, Signer};
 
 use super::{identity_assertion_builder::IdentityAssertion, IdentityAssertionBuilder};
 
@@ -47,20 +45,18 @@ impl ManifestBuilder {
             manifest.add_assertion(ia)?;
         }
 
-        let mut store = manifest.to_store()?;
-
-        let placed_manifest =
-            store.get_placed_manifest(signer.reserve_size(), "jpg", input_stream)?;
+        let (placed_manifest, active_manifest_label) =
+            manifest.get_placed_manifest(signer.reserve_size(), "jpg", input_stream)?;
 
         let callbacks: Vec<Box<dyn ManifestPatchCallback>> = vec![Box::new(self)];
-
-        input_stream.rewind()?;
 
         // TO DO: Place the async signing parts here.
         // Not (yet?)
         // compatible with the callback mechanism.
 
-        Store::embed_placed_manifest(
+        input_stream.rewind()?;
+
+        Manifest::embed_placed_manifest(
             &placed_manifest,
             "jpg",
             input_stream,
