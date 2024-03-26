@@ -23,3 +23,19 @@ fn basic_case() {
     let ms = ManifestStore::from_slice(&jumbf).unwrap();
     assert!(ms.active_manifest().is_some());
 }
+
+#[test]
+fn error_wrong_manifest_store_box_type() {
+    let mut jumbf = fs::read(fixture_path("C.c2pa")).unwrap();
+    jumbf[17] = b'3'; // box type = 'c3pa'
+
+    assert!(ManifestStore::from_slice(&jumbf).is_none());
+}
+
+#[test]
+fn error_wrong_manifest_store_label() {
+    let mut jumbf = fs::read(fixture_path("C.c2pa")).unwrap();
+    jumbf[36] = b'b'; // label = 'c2pb'
+
+    assert!(ManifestStore::from_slice(&jumbf).is_none());
+}
