@@ -2,3 +2,6 @@
 name = "cawg-identity-core"
 version = "0.1.0"
 edition = "2021"
+
+[dev-dependencies]
+hex-literal = "0.4.1"

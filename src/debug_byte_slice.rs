@@ -11,14 +11,21 @@
 // specific language governing permissions and limitations under
 // each license.
 
-#![deny(clippy::expect_used)]
-#![deny(clippy::panic)]
-#![deny(clippy::unwrap_used)]
-#![deny(missing_docs)]
-#![deny(warnings)]
-#![doc = include_str!("../README.md")]
+use std::fmt::{Debug, Error, Formatter};
 
-mod debug_byte_slice;
+pub(crate) struct DebugByteSlice<'a>(pub(crate) &'a [u8]);
 
-#[cfg(test)]
-mod tests;
+impl<'a> Debug for DebugByteSlice<'a> {
+    fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), Error> {
+        if self.0.len() > 20 {
+            write!(
+                f,
+                "{} bytes starting with {:02x?}",
+                self.0.len(),
+                &self.0[0..20]
+            )
+        } else {
+            write!(f, "{:02x?}", self.0)
+        }
+    }
+}
