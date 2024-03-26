@@ -11,15 +11,7 @@
 // specific language governing permissions and limitations under
 // each license.
 
-#![deny(clippy::expect_used)]
-#![deny(clippy::panic)]
-#![deny(clippy::unwrap_used)]
-#![deny(missing_docs)]
-#![deny(warnings)]
-#![doc = include_str!("../README.md")]
+//! A few utilities for parsing and describing C2PA data structures.
 
-pub mod c2pa;
-mod debug_byte_slice;
-
-#[cfg(test)]
-mod tests;
+mod hashed_uri;
+pub use hashed_uri::HashedUri;
