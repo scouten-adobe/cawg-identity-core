@@ -12,3 +12,4 @@
 // each license.
 
 mod hashed_uri;
+mod parser;

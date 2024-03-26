@@ -11,13 +11,15 @@
 // specific language governing permissions and limitations under
 // each license.
 
-//! A few utilities for parsing and describing C2PA data structures.
+use std::fs;
 
-#![allow(dead_code)] // TEMPORARY while building
-#![allow(unused_imports)] // TEMPORARY while building
+use crate::{c2pa::ManifestStore, tests::fixtures::*};
 
-mod hashed_uri;
-pub use hashed_uri::HashedUri;
+#[test]
+fn basic_case() {
+    // Quick proof that we can parse the C2PA JUMBF structure.
+    let jumbf = fs::read(fixture_path("C.c2pa")).unwrap();
 
-mod manifest_store;
-pub(crate) use manifest_store::ManifestStore;
+    let ms = ManifestStore::from_slice(&jumbf).unwrap();
+    assert!(ms.active_manifest().is_some());
+}
