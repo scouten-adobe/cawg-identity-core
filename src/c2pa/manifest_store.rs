@@ -27,16 +27,7 @@ const UUID: &[u8; 16] = &hex!("6332706100110010800000aa00389b71");
 ///
 /// Definition from [C2PA Technical Specification :: Manifest Store].
 ///
-/// ## Non-Exhaustive
-///
-/// This struct can only be constructed via [`ManifestStore::from_slice()`].
-///
-/// [asset]: crate::c2pa::Asset
-/// [C2PA Manifest]: crate::c2pa::Manifest
-///  
 /// [C2PA Technical Specification :: Manifest Store]: https://c2pa.org/specifications/specifications/2.0/specs/C2PA_Specification.html#_manifest_store
-#[derive(PartialEq)]
-#[non_exhaustive]
 pub struct ManifestStore<'a> {
     /// Parsed manifest boxes
     sbox: SuperBox<'a>,
@@ -83,14 +74,5 @@ impl<'a> ManifestStore<'a> {
     pub fn active_manifest(&'a self) -> Option<&'a ChildBox<'a>> {
         // TO DO: Change to Manifest once we have that type defined.
         self.sbox.child_boxes.last()
-    }
-}
-
-impl<'a> Debug for ManifestStore<'a> {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::result::Result<(), std::fmt::Error> {
-        f.debug_struct("ManifestStore")
-            .field("sbox", &self.sbox)
-            .field("jumbf", &DebugByteSlice(self.jumbf))
-            .finish()
     }
 }
