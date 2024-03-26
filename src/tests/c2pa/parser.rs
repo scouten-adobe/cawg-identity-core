@@ -18,10 +18,10 @@ use crate::{c2pa::ManifestStore, tests::fixtures::*};
 #[test]
 fn basic_case() {
     // Quick proof that we can parse the C2PA JUMBF structure.
-    let jumbf = fs::read(fixture_path("C.c2pa")).unwrap();
+    let jumbf: Vec<u8> = fs::read(fixture_path("C.c2pa")).unwrap();
 
     let ms = ManifestStore::from_slice(&jumbf).unwrap();
-    assert!(ms.active_manifest().is_some());
+    let _m = ms.active_manifest().unwrap();
 }
 
 #[test]
@@ -38,4 +38,13 @@ fn error_wrong_manifest_store_label() {
     jumbf[36] = b'b'; // label = 'c2pb'
 
     assert!(ManifestStore::from_slice(&jumbf).is_none());
+}
+
+#[test]
+fn error_wrong_manifest_box_uuid() {
+    let mut jumbf = fs::read(fixture_path("C.c2pa")).unwrap();
+    jumbf[64] = 1; // wrong UUID
+
+    let ms = ManifestStore::from_slice(&jumbf).unwrap();
+    assert!(ms.active_manifest().is_none());
 }
