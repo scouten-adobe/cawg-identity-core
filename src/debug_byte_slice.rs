@@ -11,14 +11,23 @@
 // specific language governing permissions and limitations under
 // each license.
 
-// Tests are grouped under this module so as to avoid
-// having the test code itself included in coverage numbers.
+#![allow(dead_code)] // TEMPORARY while building
 
-#![allow(clippy::expect_used)]
-#![allow(clippy::panic)]
-#![allow(clippy::unwrap_used)]
+use std::fmt::{Debug, Error, Formatter};
 
-mod builder;
-mod c2pa;
-mod debug_byte_slice;
-mod fixtures;
+pub(crate) struct DebugByteSlice<'a>(pub(crate) &'a [u8]);
+
+impl<'a> Debug for DebugByteSlice<'a> {
+    fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), Error> {
+        if self.0.len() > 20 {
+            write!(
+                f,
+                "{} bytes starting with {:02x?}",
+                self.0.len(),
+                &self.0[0..20]
+            )
+        } else {
+            write!(f, "{:02x?}", self.0)
+        }
+    }
+}

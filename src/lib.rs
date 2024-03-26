@@ -18,10 +18,8 @@
 #![deny(warnings)]
 #![doc = include_str!("../README.md")]
 
-/// TEMPORARY until we start writing real code
-pub fn add(left: usize, right: usize) -> usize {
-    left + right
-}
+pub mod c2pa;
+mod debug_byte_slice;
 
 pub mod builder;
 

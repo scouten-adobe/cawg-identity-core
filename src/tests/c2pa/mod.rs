@@ -11,14 +11,4 @@
 // specific language governing permissions and limitations under
 // each license.
 
-// Tests are grouped under this module so as to avoid
-// having the test code itself included in coverage numbers.
-
-#![allow(clippy::expect_used)]
-#![allow(clippy::panic)]
-#![allow(clippy::unwrap_used)]
-
-mod builder;
-mod c2pa;
-mod debug_byte_slice;
-mod fixtures;
+mod hashed_uri;

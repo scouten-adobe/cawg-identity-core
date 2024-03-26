@@ -19,4 +19,7 @@ features = ["file_io", "openssl_sign"]
 actix = "0.13.3"
 # c2pa = { version = "0.31.0", features = ["file_io", "openssl_sign"] }
 # ^^ TO DO: Restore this when external manifest branch is finalized.
+hex-literal = "0.4.1"
+serde = { version = "1.0.197", features = ["derive"] }
+serde_bytes = "0.11.14"
 tempfile = "3.1.0"
