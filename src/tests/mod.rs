@@ -18,5 +18,6 @@
 #![allow(clippy::panic)]
 #![allow(clippy::unwrap_used)]
 
+mod c2pa;
 mod debug_byte_slice;
 mod fixtures;
