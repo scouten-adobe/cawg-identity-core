@@ -23,7 +23,7 @@ const UUID: &[u8; 16] = &hex!("6332706100110010800000aa00389b71");
 
 /// On-demand parser for a C2PA Manifest Store. Parses the top-level JUMBF data
 /// structure and will parse lower layers only as needed.
-pub struct ManifestStore<'a> {
+pub(crate) struct ManifestStore<'a> {
     /// Parsed manifest boxes
     sbox: SuperBox<'a>,
 
@@ -38,7 +38,7 @@ impl<'a> ManifestStore<'a> {
     /// when requested.
     ///
     /// Returns `None` if unable to parse as a manifest store.
-    pub fn from_slice(jumbf: &'a [u8]) -> Option<Self> {
+    pub(crate) fn from_slice(jumbf: &'a [u8]) -> Option<Self> {
         let (_, sbox) = SuperBox::from_slice_with_depth_limit(jumbf, 0).ok()?;
 
         if sbox.desc.label != Some(LABEL) {
@@ -58,7 +58,7 @@ impl<'a> ManifestStore<'a> {
     /// superbox is the active manifest.
     ///
     /// Returns `None` if no valid manifests are found.
-    pub fn active_manifest(&'a self) -> Option<Manifest<'a>> {
+    pub(crate) fn active_manifest(&'a self) -> Option<Manifest<'a>> {
         self.sbox
             .child_boxes
             .last()
