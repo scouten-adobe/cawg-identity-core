@@ -1,0 +1,58 @@
+// Copyright 2024 Adobe. All rights reserved.
+// This file is licensed to you under the Apache License,
+// Version 2.0 (http://www.apache.org/licenses/LICENSE-2.0)
+// or the MIT license (http://opensource.org/licenses/MIT),
+// at your option.
+
+// Unless required by applicable law or agreed to in writing,
+// this software is distributed on an "AS IS" BASIS, WITHOUT
+// WARRANTIES OR REPRESENTATIONS OF ANY KIND, either express or
+// implied. See the LICENSE-MIT and LICENSE-APACHE files for the
+// specific language governing permissions and limitations under
+// each license.
+
+use std::fmt::{Debug, Formatter};
+
+use hex_literal::hex;
+use jumbf::parser::{ChildBox, DataBox, SuperBox};
+
+const UUID: &[u8; 16] = &hex!("63326d61 0011 0010 8000 00aa00389b71");
+
+/// On-demand parser for a single C2PA Manifest.
+pub struct Manifest<'a> {
+    /// Parsed child boxes of C2PA Manifest
+    sbox: SuperBox<'a>,
+
+    /// Raw JUMBF data
+    jumbf: &'a [u8],
+}
+
+impl<'a> Manifest<'a> {
+    /// Parse the top level of the JUMBF box into a manifest.
+    ///
+    /// Does not recurse into the child boxes of this manifest. That is done
+    /// on-demand when requested.
+    ///
+    /// Returns `None` if unable to parse as a manifest store.
+    pub(crate) fn from_data_box(data_box: &DataBox<'a>) -> Option<Self> {
+        let (_, sbox) = SuperBox::from_data_box_with_depth_limit(data_box, 0).ok()?;
+
+        // NOTE: For now, we do not support update manifests.
+        if sbox.desc.uuid != UUID {
+            return None;
+        }
+
+        Some(Self {
+            sbox,
+            jumbf: data_box.original,
+        })
+    }
+
+    // /// Returns the assertion store from this manifest.
+    // ///
+    // /// Returns `None` if no assertion store box is found.
+    // pub fn assertion_store(&'a self) -> Option<&'a ChildBox<'a>> {
+    //     // TO DO: Change to AssertionStore once we have that type defined.
+    //     self.sbox.child_boxes.last()
+    // }
+}
