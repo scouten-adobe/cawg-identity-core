@@ -7,8 +7,9 @@ edition = "2021"
 async-trait = "0.1.78"
 # c2pa = "0.31.0"
 # ^^ TO DO: Restore this when external manifest branch is finalized.
+ciborium = "0.2.2"
 hex-literal = "0.4.1"
-jumbf = "0.3.0"
+jumbf = "0.4.0"
 serde = { version = "1.0.197", features = ["derive"] }
 serde_bytes = "0.11.14"
 
