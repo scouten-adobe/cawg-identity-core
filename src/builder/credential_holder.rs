@@ -29,7 +29,7 @@ pub trait CredentialHolder {
     /// field for the identity assertion which will be subsequently
     /// returned by the [`sign`] function. Signing will fail if the
     /// subsequent signature is larger than this number of bytes.
-    /// 
+    ///
     /// [`sign`]: Self::sign
     fn reserve_size(&self) -> usize;
 
@@ -40,7 +40,7 @@ pub trait CredentialHolder {
     ///
     /// The signature MUST NOT be larger than the size previously stated
     /// by the [`reserve_size`] function.
-    /// 
+    ///
     /// [`reserve_size`]: Self::reserve_size
     async fn sign(&self, tbs: &Tbs) -> c2pa::Result<Vec<u8>>;
 }
