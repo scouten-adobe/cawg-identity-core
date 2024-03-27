@@ -16,6 +16,9 @@
 #![allow(dead_code)] // TEMPORARY while building
 #![allow(unused_imports)] // TEMPORARY while building
 
+mod assertion_store;
+pub(crate) use assertion_store::AssertionStore;
+
 mod claim;
 pub(crate) use claim::Claim;
 

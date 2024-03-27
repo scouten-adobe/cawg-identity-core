@@ -84,6 +84,12 @@ fn basic_case() {
     );
 
     assert_eq!(claim.dc_title.unwrap(), "C.jpg".to_owned());
+
+    let ast = m.assertion_store().unwrap();
+    let hash = ast.find_by_label("c2pa.actions").unwrap();
+    assert_eq!(hash.desc.label.unwrap(), "c2pa.actions");
+
+    assert!(ast.find_by_label("INVALID.no.such.assertion").is_none());
 }
 
 #[test]

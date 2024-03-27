@@ -16,7 +16,7 @@ use std::fmt::{Debug, Formatter};
 use hex_literal::hex;
 use jumbf::parser::{ChildBox, DataBox, SuperBox};
 
-use super::Claim;
+use super::{AssertionStore, Claim};
 
 const UUID: &[u8; 16] = &hex!("63326d61 0011 0010 8000 00aa00389b71");
 
@@ -37,7 +37,7 @@ impl<'a> Manifest<'a> {
     ///
     /// Returns `None` if unable to parse as a manifest.
     pub(crate) fn from_data_box(data_box: &DataBox<'a>) -> Option<Self> {
-        let (_, sbox) = SuperBox::from_data_box_with_depth_limit(data_box, 1).ok()?;
+        let (_, sbox) = SuperBox::from_data_box_with_depth_limit(data_box, 2).ok()?;
 
         // NOTE: For now, we do not support update manifests.
         if sbox.desc.uuid != UUID {
@@ -59,11 +59,12 @@ impl<'a> Manifest<'a> {
             .and_then(Claim::from_super_box)
     }
 
-    // /// Returns the assertion store from this manifest.
-    // ///
-    // /// Returns `None` if no assertion store box is found.
-    // pub fn assertion_store(&'a self) -> Option<&'a ChildBox<'a>> {
-    //     // TO DO: Change to AssertionStore once we have that type defined.
-    //     self.sbox.child_boxes.last()
-    // }
+    /// Returns the assertion store from this manifest.
+    ///
+    /// Returns `None` if no assertion store box is found.
+    pub fn assertion_store(&'a self) -> Option<AssertionStore<'a>> {
+        self.sbox
+            .find_by_label(super::assertion_store::LABEL)
+            .and_then(AssertionStore::from_super_box)
+    }
 }
