@@ -5,6 +5,6 @@ edition = "2021"
 
 [dependencies]
 hex-literal = "0.4.1"
-jumbf = "0.3.0"
+jumbf = "0.4.0"
 serde = { version = "1.0.197", features = ["derive"] }
 serde_bytes = "0.11.14"
