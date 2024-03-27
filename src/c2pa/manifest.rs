@@ -16,6 +16,8 @@ use std::fmt::{Debug, Formatter};
 use hex_literal::hex;
 use jumbf::parser::{ChildBox, DataBox, SuperBox};
 
+use super::Claim;
+
 const UUID: &[u8; 16] = &hex!("63326d61 0011 0010 8000 00aa00389b71");
 
 /// On-demand parser for a single C2PA Manifest.
@@ -33,9 +35,9 @@ impl<'a> Manifest<'a> {
     /// Does not recurse into the child boxes of this manifest. That is done
     /// on-demand when requested.
     ///
-    /// Returns `None` if unable to parse as a manifest store.
+    /// Returns `None` if unable to parse as a manifest.
     pub(crate) fn from_data_box(data_box: &DataBox<'a>) -> Option<Self> {
-        let (_, sbox) = SuperBox::from_data_box_with_depth_limit(data_box, 0).ok()?;
+        let (_, sbox) = SuperBox::from_data_box_with_depth_limit(data_box, 1).ok()?;
 
         // NOTE: For now, we do not support update manifests.
         if sbox.desc.uuid != UUID {
@@ -46,6 +48,15 @@ impl<'a> Manifest<'a> {
             sbox,
             jumbf: data_box.original,
         })
+    }
+
+    /// Returns the claim from this manifest.
+    ///
+    /// Returns `None` if no claim is found or unable to parse it as a claim.
+    pub(crate) fn claim(&self) -> Option<Claim> {
+        self.sbox
+            .find_by_label(super::claim::LABEL)
+            .and_then(Claim::from_super_box)
     }
 
     // /// Returns the assertion store from this manifest.

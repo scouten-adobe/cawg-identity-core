@@ -13,7 +13,12 @@
 
 use std::fs;
 
-use crate::{c2pa::ManifestStore, tests::fixtures::*};
+use hex_literal::hex;
+
+use crate::{
+    c2pa::{HashedUri, ManifestStore},
+    tests::fixtures::*,
+};
 
 #[test]
 fn basic_case() {
@@ -21,7 +26,64 @@ fn basic_case() {
     let jumbf: Vec<u8> = fs::read(fixture_path("C.c2pa")).unwrap();
 
     let ms = ManifestStore::from_slice(&jumbf).unwrap();
-    let _m = ms.active_manifest().unwrap();
+    let m = ms.active_manifest().unwrap();
+    let claim = m.claim().unwrap();
+
+    assert_eq!(
+        claim.claim_generator,
+        "make_test_images/0.3.0 c2pa-rs/0.3.0"
+    );
+
+    assert_eq!(claim.signature, "self#jumbf=c2pa.signature");
+
+    let mut assertions = claim.assertions.iter();
+
+    assert_eq!(
+        assertions.next().unwrap(),
+        &HashedUri {
+            url: "self#jumbf=c2pa.assertions/c2pa.thumbnail.claim.jpeg".to_owned(),
+            alg: None,
+            hash: hex!("06 42 3e 40 f7 72 67 57 c4 5c 44 e0 da e3 81 4e 93 39 c2 69 70 c7 e7 ab ab b6 bc 2a 70 d3 3a de").to_vec()
+        }
+    );
+
+    assert_eq!(
+        assertions.next().unwrap(),
+        &HashedUri {
+            url: "self#jumbf=c2pa.assertions/stds.schema-org.CreativeWork".to_owned(),
+            alg: None,
+            hash: hex!("40 8f 92 bf 2f 31 3e e9 04 67 68 40 4b a7 48 7a b8 98 42 37 c5 9f 47 ed e7 be 13 6a 09 94 ec 1a").to_vec()
+        }
+    );
+
+    assert_eq!(
+        assertions.next().unwrap(),
+        &HashedUri {
+            url: "self#jumbf=c2pa.assertions/c2pa.actions".to_owned(),
+            alg: None,
+            hash: hex!("e3 69 74 99 2b 78 b9 ed 21 22 4e 58 49 9d d0 f1 cc 1c a2 d3 69 85 6b 12 73 0b c3 ca af aa c8 ff").to_vec()
+        }
+    );
+
+    assert_eq!(
+        assertions.next().unwrap(),
+        &HashedUri {
+            url: "self#jumbf=c2pa.assertions/c2pa.hash.data".to_owned(),
+            alg: None,
+            hash: hex!("ee 50 52 b3 2e d8 3f 4b 8f 71 ee 6d 0d 8b ef 20 bd a0 08 0f bf 25 83 e6 09 ae 86 1b ff 8b 6d ed").to_vec()
+        }
+    );
+
+    assert_eq!(claim.alg.unwrap(), "sha256".to_owned());
+
+    assert_eq!(claim.dc_format.unwrap(), "image/jpeg".to_owned());
+
+    assert_eq!(
+        claim.instance_id,
+        "xmp:iid:e4fbfd18-cb94-42c1-819b-d4f5bb1b4742".to_owned()
+    );
+
+    assert_eq!(claim.dc_title.unwrap(), "C.jpg".to_owned());
 }
 
 #[test]
@@ -47,4 +109,48 @@ fn error_wrong_manifest_box_uuid() {
 
     let ms = ManifestStore::from_slice(&jumbf).unwrap();
     assert!(ms.active_manifest().is_none());
+}
+
+#[test]
+fn error_wrong_claim_box_uuid() {
+    let mut jumbf = fs::read(fixture_path("C.c2pa")).unwrap();
+    jumbf[0x7ef3] = 1; // wrong UUID
+
+    let ms = ManifestStore::from_slice(&jumbf).unwrap();
+    let m = ms.active_manifest().unwrap();
+
+    assert!(m.claim().is_none());
+}
+
+#[test]
+fn error_wrong_claim_box_type() {
+    let mut jumbf = fs::read(fixture_path("C.c2pa")).unwrap();
+    jumbf[0x7f12] = b'b'; // wrong box type
+
+    let ms = ManifestStore::from_slice(&jumbf).unwrap();
+    let m = ms.active_manifest().unwrap();
+
+    assert!(m.claim().is_none());
+}
+
+#[test]
+fn error_wrong_claim_label() {
+    let mut jumbf = fs::read(fixture_path("C.c2pa")).unwrap();
+    jumbf[0x7f07] = b'x'; // label = "c2paxclaim"
+
+    let ms = ManifestStore::from_slice(&jumbf).unwrap();
+    let m = ms.active_manifest().unwrap();
+
+    assert!(m.claim().is_none());
+}
+
+#[test]
+fn error_invalid_claim_cbor() {
+    let mut jumbf = fs::read(fixture_path("C.c2pa")).unwrap();
+    jumbf[0x7faf] = b'o'; // replace "signature" field name with "signoture"
+
+    let ms = ManifestStore::from_slice(&jumbf).unwrap();
+    let m = ms.active_manifest().unwrap();
+
+    assert!(m.claim().is_none());
 }
