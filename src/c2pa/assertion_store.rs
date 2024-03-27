@@ -47,7 +47,7 @@ impl<'a> AssertionStore<'a> {
     ///
     /// Will return `None` if no matching child superbox is found _or_ if
     /// more than one matching child superbox is found.
-    pub fn find_by_label(&self, label: &str) -> Option<&'a SuperBox<'a>> {
+    pub(crate) fn find_by_label(&self, label: &str) -> Option<&'a SuperBox<'a>> {
         self.sbox.find_by_label(label)
     }
 }
