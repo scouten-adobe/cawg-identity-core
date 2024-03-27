@@ -28,7 +28,7 @@ pub struct IdentityAssertionBuilder {
 }
 
 impl IdentityAssertionBuilder {
-    pub fn for_credential_holder<H: CredentialHolder + 'static>(credential_holder: H) -> Self {
+    pub fn for_credential_holder<CH: CredentialHolder + 'static>(credential_holder: CH) -> Self {
         Self {
             credential_holder: Box::new(credential_holder),
         }
@@ -39,17 +39,17 @@ impl IdentityAssertionBuilder {
 /// life-cycle of the identity assertion during the manifest
 /// construction and signing process. It is intentionally
 /// not part of the public API surface.
-pub(crate) struct IdentityAssertion {
+pub(crate) struct PlaceholderAssertion {
     builder: IdentityAssertionBuilder,
 }
 
-impl IdentityAssertion {
+impl PlaceholderAssertion {
     pub fn from_builder(builder: IdentityAssertionBuilder) -> Self {
         Self { builder }
     }
 }
 
-impl AssertionBase for IdentityAssertion {
+impl AssertionBase for PlaceholderAssertion {
     fn label(&self) -> &str {
         "cawg.identity"
     }
@@ -67,7 +67,7 @@ impl AssertionBase for IdentityAssertion {
     }
 }
 
-impl Serialize for IdentityAssertion {
+impl Serialize for PlaceholderAssertion {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
         S: Serializer,
