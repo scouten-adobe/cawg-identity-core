@@ -136,7 +136,7 @@ fn error_wrong_claim_box_type() {
 #[test]
 fn error_wrong_claim_label() {
     let mut jumbf = fs::read(fixture_path("C.c2pa")).unwrap();
-    jumbf[0x7f03] = b'b'; // label = "b2pa.claim"
+    jumbf[0x7f07] = b'x'; // label = "c2paxclaim"
 
     let ms = ManifestStore::from_slice(&jumbf).unwrap();
     let m = ms.active_manifest().unwrap();
