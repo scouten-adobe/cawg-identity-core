@@ -69,6 +69,6 @@ impl<'a> ManifestStore<'a> {
                     None
                 }
             })
-            .and_then(|db| Manifest::from_data_box(db))
+            .and_then(Manifest::from_data_box)
     }
 }
