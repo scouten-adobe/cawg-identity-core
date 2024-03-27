@@ -17,7 +17,7 @@ use crate::Tbs;
 /// the [`Tbs`] data structure on behalf of a credential holder.
 ///
 /// Implementations of this trait will specialize based on the kind of
-/// signature as specified in
+/// credential as specified in
 /// [Credentials, signatures, and validation methods](https://creator-assertions.github.io/identity/1.0-draft/#_credentials_signatures_and_validation_methods)
 /// from the CAWG Identity Assertion specification.
 #[async_trait::async_trait]
