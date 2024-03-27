@@ -16,6 +16,9 @@
 #![allow(dead_code)] // TEMPORARY while building
 #![allow(unused_imports)] // TEMPORARY while building
 
+mod claim;
+pub(crate) use claim::Claim;
+
 mod hashed_uri;
 pub use hashed_uri::HashedUri;
 
