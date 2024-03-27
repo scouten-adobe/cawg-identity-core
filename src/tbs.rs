@@ -11,18 +11,13 @@
 // specific language governing permissions and limitations under
 // each license.
 
-#![deny(clippy::expect_used)]
-#![deny(clippy::panic)]
-#![deny(clippy::unwrap_used)]
-#![deny(missing_docs)]
-#![deny(warnings)]
-#![doc = include_str!("../README.md")]
+use serde::{Deserialize, Serialize};
 
-pub mod c2pa;
-mod debug_byte_slice;
+use crate::c2pa::HashedUri;
 
-mod tbs;
-pub use tbs::Tbs;
-
-#[cfg(test)]
-mod tests;
+/// The set of data to be signed by the [`CredentialHolder`].
+#[derive(Clone, Debug, Deserialize, Eq, Serialize, PartialEq)]
+pub struct Tbs {
+    /// List of assertions referenced by this credential signature
+    pub referenced_assertions: Vec<HashedUri>,
+}
