@@ -15,7 +15,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::c2pa::HashedUri;
 
-/// The set of data to be signed by the [`CredentialHolder`].
+/// The set of data to be signed by the credential holder.
 #[derive(Clone, Debug, Deserialize, Eq, Serialize, PartialEq)]
 pub struct Tbs {
     /// List of assertions referenced by this credential signature
