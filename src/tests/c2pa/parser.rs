@@ -29,8 +29,6 @@ fn basic_case() {
     let m = ms.active_manifest().unwrap();
     let claim = m.claim().unwrap();
 
-    dbg!(&claim);
-
     assert_eq!(
         claim.claim_generator,
         "make_test_images/0.3.0 c2pa-rs/0.3.0"
