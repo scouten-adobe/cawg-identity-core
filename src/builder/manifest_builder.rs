@@ -67,11 +67,31 @@ impl ManifestBuilder {
 
         Ok(())
     }
+
+    fn patch_manifest_imp(&self, manifest_store: &[u8]) -> Option<Vec<u8>> {
+        // let mut result_ms = manifest_store.to_vec(); // we'll need this when we start
+        // patching
+
+        let ms = crate::c2pa::ManifestStore::from_slice(manifest_store)?;
+        let m = ms.active_manifest()?;
+        let claim = m.claim()?;
+        let ast = m.assertion_store()?;
+
+        dbg!(&claim);
+
+        Some(manifest_store.to_vec())
+        // Some(result_ms)
+    }
 }
 
 impl ManifestPatchCallback for ManifestBuilder {
     fn patch_manifest(&self, manifest_store: &[u8]) -> c2pa::Result<Vec<u8>> {
-        // TEMPORARY: no-op
-        Ok(manifest_store.to_owned())
+        // TO DO: Rethink error handling. For now, we fail
+        // with "ClaimDecoding" reason regardless of the failure mode.
+
+        match self.patch_manifest_imp(manifest_store) {
+            Some(ms_buffer) => Ok(ms_buffer),
+            None => Err(c2pa::Error::ClaimDecoding),
+        }
     }
 }
