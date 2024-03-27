@@ -21,5 +21,8 @@
 pub mod c2pa;
 mod debug_byte_slice;
 
+mod tbs;
+pub use tbs::Tbs;
+
 #[cfg(test)]
 mod tests;
