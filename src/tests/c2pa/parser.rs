@@ -160,3 +160,25 @@ fn error_invalid_claim_cbor() {
 
     assert!(m.claim().is_none());
 }
+
+#[test]
+fn error_wrong_assertion_store_box_type() {
+    let mut jumbf = fs::read(fixture_path("C.c2pa")).unwrap();
+    jumbf[0x94] = b'x'; // wrong box type
+
+    let ms = ManifestStore::from_slice(&jumbf).unwrap();
+    let m = ms.active_manifest().unwrap();
+
+    assert!(m.assertion_store().is_none());
+}
+
+#[test]
+fn error_wrong_assertion_store_label() {
+    let mut jumbf = fs::read(fixture_path("C.c2pa")).unwrap();
+    jumbf[0xa5] = b'x'; // label = "c2px.assertion_store"
+
+    let ms = ManifestStore::from_slice(&jumbf).unwrap();
+    let m = ms.active_manifest().unwrap();
+
+    assert!(m.assertion_store().is_none());
+}
