@@ -21,7 +21,7 @@ use super::{AssertionStore, Claim};
 const UUID: &[u8; 16] = &hex!("63326d61 0011 0010 8000 00aa00389b71");
 
 /// On-demand parser for a single C2PA Manifest.
-pub struct Manifest<'a> {
+pub(crate) struct Manifest<'a> {
     /// Parsed child boxes of C2PA Manifest
     sbox: SuperBox<'a>,
 
@@ -62,7 +62,7 @@ impl<'a> Manifest<'a> {
     /// Returns the assertion store from this manifest.
     ///
     /// Returns `None` if no assertion store box is found.
-    pub fn assertion_store(&'a self) -> Option<AssertionStore<'a>> {
+    pub(crate) fn assertion_store(&'a self) -> Option<AssertionStore<'a>> {
         self.sbox
             .find_by_label(super::assertion_store::LABEL)
             .and_then(AssertionStore::from_super_box)
