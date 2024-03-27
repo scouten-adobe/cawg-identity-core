@@ -8,6 +8,12 @@ EXPERIMENTAL/EARLY implementation of the core of the [Creator Assertions Working
 
 We welcome contributions to this project. For information on contributing, providing feedback, and about ongoing work, see [Contributing](./CONTRIBUTING.md).
 
+## Known limitations
+
+This is very early days for this crate. Many things are subject to change at this point.
+
+In particular, there is no support (yet) for multiple identity assertions in a single manifest.
+
 ## Requirements
 
 The toolkit requires **Rust version 1.74.0** or newer. When a newer version of Rust becomes required, a new minor (1.x.0) version of this crate will be released.

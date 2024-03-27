@@ -11,6 +11,8 @@
 // specific language governing permissions and limitations under
 // each license.
 
+use crate::{builder::CredentialHolder, Tbs};
+
 /// Naive implementation of [`CredentialHolder`] trait for
 /// proof-of-concept/testing purposes.
 ///
