@@ -62,13 +62,7 @@ impl<'a> ManifestStore<'a> {
         self.sbox
             .child_boxes
             .last()
-            .and_then(|cb| {
-                if let ChildBox::DataBox(db) = cb {
-                    Some(db)
-                } else {
-                    None
-                }
-            })
+            .and_then(ChildBox::as_data_box)
             .and_then(Manifest::from_data_box)
     }
 }
