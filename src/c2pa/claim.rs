@@ -47,9 +47,10 @@ impl Claim {
     pub(crate) fn from_super_box(sbox: &SuperBox<'_>) -> Option<Self> {
         // TO DO: Support C2PA v2 claims.
 
-        if sbox.desc.label != Some(LABEL) {
-            return None;
-        }
+        // Enforced by Manifest find code.
+        // if sbox.desc.label != Some(LABEL) {
+        //     return None;
+        // }
 
         if sbox.desc.uuid != UUID {
             return None;
