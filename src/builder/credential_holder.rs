@@ -11,11 +11,13 @@
 // specific language governing permissions and limitations under
 // each license.
 
-/// A `CredentialHolder` is able to generate a signature over the `tbs`
-/// data structure on behalf of a credential holder.
+use crate::Tbs;
+
+/// An implementation of `CredentialHolder` is able to generate a signature over
+/// the [`Tbs`] data structure on behalf of a credential holder.
 ///
 /// Implementations of this trait will specialize based on the kind of
-/// signature as specified in
+/// credential as specified in
 /// [Credentials, signatures, and validation methods](https://creator-assertions.github.io/identity/1.0-draft/#_credentials_signatures_and_validation_methods)
 /// from the CAWG Identity Assertion specification.
 #[async_trait::async_trait]
@@ -28,37 +30,17 @@ pub trait CredentialHolder {
     /// returned by the [`sign`] function. Signing will fail if the
     /// subsequent signature is larger than this number of bytes.
     ///
-    /// This function is called only if the file format requires use
-    /// of the C2PA data hash assertion.
+    /// [`sign`]: Self::sign
     fn reserve_size(&self) -> usize;
 
-    /// Signs the `tbs` data structure on behalf of the credential holder.
+    /// Signs the [`Tbs`] data structure on behalf of the credential holder.
     ///
     /// If successful, returns the exact binary content to be placed in
     /// the `signature` field for this identity assertion.
     ///
     /// The signature MUST NOT be larger than the size previously stated
     /// by the [`reserve_size`] function.
-    async fn sign(&self, tbs: &[u8]) -> c2pa::Result<Vec<u8>>;
-}
-
-/// Naive implementation of [`CredentialHolder`] trait for
-/// proof-of-concept/testing purposes.
-///
-/// NOT intended for production use.
-pub(crate) struct NaiveCredentialHolder {}
-
-#[async_trait::async_trait]
-impl CredentialHolder for NaiveCredentialHolder {
-    fn sig_type(&self) -> &'static str {
-        "INVALID.identity.naive_credential"
-    }
-
-    fn reserve_size(&self) -> usize {
-        10000
-    }
-
-    async fn sign(&self, tbs: &[u8]) -> c2pa::Result<Vec<u8>> {
-        Ok(tbs.to_owned())
-    }
+    ///
+    /// [`reserve_size`]: Self::reserve_size
+    async fn sign(&self, tbs: &Tbs) -> c2pa::Result<Vec<u8>>;
 }

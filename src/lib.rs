@@ -18,10 +18,12 @@
 #![deny(warnings)]
 #![doc = include_str!("../README.md")]
 
+pub mod builder;
 pub mod c2pa;
 mod debug_byte_slice;
 
-pub mod builder;
+mod tbs;
+pub use tbs::Tbs;
 
 #[cfg(test)]
 mod tests;
