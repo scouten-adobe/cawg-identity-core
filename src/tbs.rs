@@ -11,14 +11,13 @@
 // specific language governing permissions and limitations under
 // each license.
 
-// Tests are grouped under this module so as to avoid
-// having the test code itself included in coverage numbers.
+use serde::{Deserialize, Serialize};
 
-#![allow(clippy::expect_used)]
-#![allow(clippy::panic)]
-#![allow(clippy::unwrap_used)]
+use crate::c2pa::HashedUri;
 
-mod c2pa;
-mod debug_byte_slice;
-mod fixtures;
-mod tbs;
+/// The set of data to be signed by the credential holder.
+#[derive(Clone, Debug, Deserialize, Eq, Serialize, PartialEq)]
+pub struct Tbs {
+    /// List of assertions referenced by this credential signature
+    pub referenced_assertions: Vec<HashedUri>,
+}
