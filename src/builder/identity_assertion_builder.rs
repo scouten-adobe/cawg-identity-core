@@ -18,7 +18,7 @@ use c2pa::{Assertion, AssertionBase, AssertionCbor};
 use serde::{Deserialize, Serialize};
 
 use super::CredentialHolder;
-use crate::Tbs;
+use crate::{c2pa::HashedUri, Tbs};
 
 /// An `IdentityAssertionBuilder` gathers together the necessary components
 /// for an identity assertion. When added to a [`ManifestBuilder`],
@@ -56,7 +56,11 @@ pub(crate) struct IdentityAssertion {
 impl IdentityAssertion {
     pub(crate) fn from_builder(builder: IdentityAssertionBuilder) -> Self {
         let tbs = Tbs {
-            referenced_assertions: vec![],
+            referenced_assertions: vec![HashedUri {
+                url: "self#jumbf=c2pa.assertions/c2pa.hash.to_be_determined".to_owned(),
+                alg: None,
+                hash: vec![0; 32],
+            }],
         };
 
         let sig_type = builder.credential_holder.sig_type().to_owned();
@@ -67,7 +71,8 @@ impl IdentityAssertion {
             tbs,
             sig_type,
             signature,
-            pad1: vec![0; 64],
+            pad1: vec![0; 32],
+            // a bit of padding just in case
             pad2: None,
         }
     }

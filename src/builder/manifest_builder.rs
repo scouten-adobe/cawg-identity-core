@@ -21,6 +21,7 @@ use super::{identity_assertion_builder::IdentityAssertion, IdentityAssertionBuil
 #[derive(Default)]
 pub struct ManifestBuilder {
     identity_assertions: Vec<IdentityAssertion>,
+    // patched_manifest_store: Option<Vec<u8>>,
 }
 
 impl ManifestBuilder {
@@ -45,14 +46,12 @@ impl ManifestBuilder {
             manifest.add_assertion(ia)?;
         }
 
-        let (placed_manifest, active_manifest_label) =
+        let (mut placed_manifest, active_manifest_label) =
             manifest.get_placed_manifest(signer.reserve_size(), "jpg", input_stream)?;
 
-        let callbacks: Vec<Box<dyn ManifestPatchCallback>> = vec![Box::new(self)];
-
-        // TO DO: Place the async signing parts here.
-        // Not (yet?)
-        // compatible with the callback mechanism.
+        let Some(()) = self.rewrite_placed_manifest(&mut placed_manifest).await else {
+            return Err(c2pa::Error::ClaimEncoding);
+        };
 
         input_stream.rewind()?;
 
@@ -62,25 +61,29 @@ impl ManifestBuilder {
             input_stream,
             output_stream,
             signer,
-            &callbacks,
-        )?;
-
-        Ok(())
+            &[Box::new(self)],
+        )
+        .map(|_| ())
     }
 
-    fn patch_manifest_imp(&self, manifest_store: &[u8]) -> Option<Vec<u8>> {
-        // let mut result_ms = manifest_store.to_vec(); // we'll need this when we start
-        // patching
-
+    async fn rewrite_placed_manifest(&self, manifest_store: &mut [u8]) -> Option<()> {
         let ms = crate::c2pa::ManifestStore::from_slice(manifest_store)?;
         let m = ms.active_manifest()?;
-        let claim = m.claim()?;
-        let ast = m.assertion_store()?;
 
+        let claim = m.claim()?;
         dbg!(&claim);
 
-        Some(manifest_store.to_vec())
-        // Some(result_ms)
+        let ast = m.assertion_store()?;
+
+        for ia in self.identity_assertions.iter() {
+            let assertion = ast.find_by_label("cawg.identity")?;
+
+            dbg!(&assertion);
+
+            // ia.update_with_signature(&mut placed_manifest).await?;
+        }
+
+        Some(())
     }
 }
 
@@ -89,9 +92,10 @@ impl ManifestPatchCallback for ManifestBuilder {
         // TO DO: Rethink error handling. For now, we fail
         // with "ClaimDecoding" reason regardless of the failure mode.
 
-        match self.patch_manifest_imp(manifest_store) {
-            Some(ms_buffer) => Ok(ms_buffer),
-            None => Err(c2pa::Error::ClaimDecoding),
-        }
+        // match self.patch_manifest_imp(manifest_store) {
+        //     Some(ms_buffer) => Ok(ms_buffer),
+        //     None => Err(c2pa::Error::ClaimDecoding),
+        // }
+        Ok(manifest_store.to_vec())
     }
 }
