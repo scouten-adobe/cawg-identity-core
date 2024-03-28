@@ -21,7 +21,7 @@ use super::{identity_assertion_builder::IdentityAssertion, IdentityAssertionBuil
 #[derive(Default)]
 pub struct ManifestBuilder {
     identity_assertions: Vec<IdentityAssertion>,
-    // patched_manifest_store: Option<Vec<u8>>,
+    patched_manifest_store: Option<Vec<u8>>,
 }
 
 impl ManifestBuilder {
@@ -35,7 +35,7 @@ impl ManifestBuilder {
     /// correct sequence. This is likely to change as the C2PA SDK
     /// evolves.
     pub async fn build(
-        self,
+        mut self,
         mut manifest: Manifest,
         format: &str,
         input_stream: &mut dyn CAIRead,
@@ -46,12 +46,18 @@ impl ManifestBuilder {
             manifest.add_assertion(ia)?;
         }
 
-        let (mut placed_manifest, active_manifest_label) =
+        let (placed_manifest, active_manifest_label) =
             manifest.get_placed_manifest(signer.reserve_size(), "jpg", input_stream)?;
 
-        let Some(()) = self.rewrite_placed_manifest(&mut placed_manifest).await else {
-            return Err(c2pa::Error::ClaimEncoding);
-        };
+        let mut updated_manifest = placed_manifest.clone();
+        // Is this necessary? So far, only because we have to hand back
+        // placed_Manifest to embed_placed-manifest.
+
+        self.rewrite_placed_manifest(&mut updated_manifest)
+            .await
+            .ok_or(c2pa::Error::ClaimEncoding)?;
+
+        self.patched_manifest_store = Some(updated_manifest);
 
         input_stream.rewind()?;
 
@@ -66,8 +72,10 @@ impl ManifestBuilder {
         .map(|_| ())
     }
 
-    async fn rewrite_placed_manifest(&self, manifest_store: &mut [u8]) -> Option<()> {
-        let ms = crate::c2pa::ManifestStore::from_slice(manifest_store)?;
+    async fn rewrite_placed_manifest(&self, manifest_store: &[u8]) -> Option<Vec<u8>> {
+        let mut updated_ms = manifest_store.to_vec();
+
+        let ms = crate::c2pa::ManifestStore::from_slice(&manifest_store)?;
         let m = ms.active_manifest()?;
 
         let claim = m.claim()?;
@@ -76,14 +84,24 @@ impl ManifestBuilder {
         let ast = m.assertion_store()?;
 
         for ia in self.identity_assertions.iter() {
+            // TO DO: Support for multiple identity assertions.
+
             let assertion = ast.find_by_label("cawg.identity")?;
+            let assertion_dbox = assertion.data_box()?;
+
+            let assertion_offset = assertion_dbox.offset_within_superbox(&ms.sbox)?;
+            let assertion_size = assertion_dbox.data.len();
 
             dbg!(&assertion);
+            dbg!(assertion_offset);
+            dbg!(assertion_size);
 
-            // ia.update_with_signature(&mut placed_manifest).await?;
+            updated_ms = ia
+                .update_with_signature(updated_ms, assertion_offset, assertion_size, &claim)
+                .await?;
         }
 
-        Some(())
+        Some(updated_ms)
     }
 }
 

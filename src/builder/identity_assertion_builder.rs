@@ -76,6 +76,16 @@ impl IdentityAssertion {
             pad2: None,
         }
     }
+
+    pub(crate) async fn update_with_signature(
+        &self,
+        manifest_store: Vec<u8>,
+        _assertion_offset: usize,
+        _assertion_size: usize,
+        _claim: &crate::c2pa::Claim,
+    ) -> Option<Vec<u8>> {
+        Some(manifest_store)
+    }
 }
 
 impl AssertionBase for IdentityAssertion {
