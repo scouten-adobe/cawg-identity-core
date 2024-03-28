@@ -15,23 +15,23 @@
 
 use c2pa::{CAIRead, CAIReadWrite, Manifest, ManifestPatchCallback, Signer};
 
-use super::{identity_assertion_builder::PlaceholderAssertion, IdentityAssertionBuilder};
+use super::{identity_assertion_builder::IdentityAssertion, IdentityAssertionBuilder};
 
 /// TO DO: Docs
 #[derive(Default)]
 pub struct ManifestBuilder {
-    identity_assertions: Vec<PlaceholderAssertion>,
+    identity_assertions: Vec<IdentityAssertion>,
 }
 
 impl ManifestBuilder {
     /// Adds an identity assertion to the builder.
     pub fn add_assertion(&mut self, identity_assertion: IdentityAssertionBuilder) {
         self.identity_assertions
-            .push(PlaceholderAssertion::from_builder(identity_assertion));
+            .push(IdentityAssertion::from_builder(identity_assertion));
     }
 
-    /// This function wraps all the c2pa SDK calls in the (currently)
-    /// correct sequence. This is likely to change as the c2pa SDK
+    /// This function wraps all the C2PA SDK calls in the (currently)
+    /// correct sequence. This is likely to change as the C2PA SDK
     /// evolves.
     pub async fn build(
         self,

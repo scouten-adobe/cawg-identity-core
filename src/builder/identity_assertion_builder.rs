@@ -14,10 +14,11 @@
 #![allow(dead_code)] // TEMPORARY while building
 #![allow(missing_docs)] // TEMPORARY while building
 
-use c2pa::{Assertion, AssertionBase};
-use serde::{Serialize, Serializer};
+use c2pa::{Assertion, AssertionBase, AssertionCbor};
+use serde::{Deserialize, Serialize};
 
 use super::CredentialHolder;
+use crate::Tbs;
 
 /// An `IdentityAssertionBuilder` gathers together the necessary components
 /// for an identity assertion. When added to a [`ManifestBuilder`],
@@ -35,31 +36,49 @@ impl IdentityAssertionBuilder {
     }
 }
 
-/// This struct is used behind the scenes to manage the
-/// life-cycle of the identity assertion during the manifest
-/// construction and signing process. It is intentionally
+/// This struct is used behind the scenes to create both the placeholder
+/// and the final versions of the identity assertion. It is intentionally
 /// not part of the public API surface.
-pub(crate) struct PlaceholderAssertion {
-    builder: IdentityAssertionBuilder,
+#[derive(Deserialize, Serialize)]
+pub(crate) struct IdentityAssertion {
+    #[serde(skip)]
+    builder: Option<IdentityAssertionBuilder>,
+
+    tbs: Tbs,
+    sig_type: String,
+    signature: Vec<u8>,
+    pad1: Vec<u8>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pad2: Option<Vec<u8>>,
 }
 
-impl PlaceholderAssertion {
-    pub fn from_builder(builder: IdentityAssertionBuilder) -> Self {
-        Self { builder }
+impl IdentityAssertion {
+    pub(crate) fn from_builder(builder: IdentityAssertionBuilder) -> Self {
+        let tbs = Tbs {
+            referenced_assertions: vec![],
+        };
+
+        let sig_type = builder.credential_holder.sig_type().to_owned();
+        let signature = vec![0; builder.credential_holder.reserve_size()];
+
+        Self {
+            builder: Some(builder),
+            tbs,
+            sig_type,
+            signature,
+            pad1: vec![0; 64],
+            pad2: None,
+        }
     }
 }
 
-impl AssertionBase for PlaceholderAssertion {
-    fn label(&self) -> &str {
-        "cawg.identity"
-    }
-
-    fn version(&self) -> Option<usize> {
-        None
-    }
+impl AssertionBase for IdentityAssertion {
+    const LABEL: &'static str = "cawg.identity";
+    const VERSION: Option<usize> = None;
 
     fn to_assertion(&self) -> c2pa::Result<Assertion> {
-        unimplemented!();
+        self.to_cbor_assertion()
     }
 
     fn from_assertion(_assertion: &Assertion) -> c2pa::Result<Self> {
@@ -67,14 +86,4 @@ impl AssertionBase for PlaceholderAssertion {
     }
 }
 
-impl Serialize for PlaceholderAssertion {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: Serializer,
-    {
-        // Since we can't have the signature yet, just write a placeholder
-        // for now.
-        let placeholder = vec![0; self.builder.credential_holder.reserve_size()];
-        serializer.serialize_bytes(&placeholder)
-    }
-}
+impl AssertionCbor for IdentityAssertion {}
