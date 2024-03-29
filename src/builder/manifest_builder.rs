@@ -49,11 +49,8 @@ impl ManifestBuilder {
         let (placed_manifest, active_manifest_label) =
             manifest.get_placed_manifest(signer.reserve_size(), "jpg", input_stream)?;
 
-        let mut updated_manifest = placed_manifest.clone();
-        // Is this necessary? So far, only because we have to hand back
-        // placed_Manifest to embed_placed-manifest.
-
-        self.rewrite_placed_manifest(&mut updated_manifest)
+        let updated_manifest = self
+            .rewrite_placed_manifest(&placed_manifest)
             .await
             .ok_or(c2pa::Error::ClaimEncoding)?;
 
@@ -75,7 +72,7 @@ impl ManifestBuilder {
     async fn rewrite_placed_manifest(&mut self, manifest_store: &[u8]) -> Option<Vec<u8>> {
         let mut updated_ms = manifest_store.to_vec();
 
-        let ms = crate::c2pa::ManifestStore::from_slice(&manifest_store)?;
+        let ms = crate::c2pa::ManifestStore::from_slice(manifest_store)?;
         let m = ms.active_manifest()?;
 
         let claim = m.claim()?;
