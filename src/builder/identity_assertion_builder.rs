@@ -77,13 +77,74 @@ impl IdentityAssertion {
         }
     }
 
+    #[allow(unused_variables)] // TEMPORARY while building
     pub(crate) async fn update_with_signature(
-        &self,
+        &mut self,
         manifest_store: Vec<u8>,
-        _assertion_offset: usize,
-        _assertion_size: usize,
-        _claim: &crate::c2pa::Claim,
+        assertion_offset: usize,
+        assertion_size: usize,
+        claim: &crate::c2pa::Claim,
     ) -> Option<Vec<u8>> {
+        // Update TBS with actual assertion references.
+
+        // TO DO: Update to respond correctly when identity assertions refer to each
+        // other.
+        for ref_assertion in self.tbs.referenced_assertions.iter_mut() {
+            let claim_assertion =
+                if ref_assertion.url == "self#jumbf=c2pa.assertions/c2pa.hash.to_be_determined" {
+                    claim
+                        .assertions
+                        .iter()
+                        .find(|a| a.url.starts_with("self#jumbf=c2pa.assertions/c2pa.hash."))
+                } else {
+                    claim.assertions.iter().find(|a| a.url == ref_assertion.url)
+                }?;
+
+            ref_assertion.url = claim_assertion.url.clone();
+            ref_assertion.hash = claim_assertion.hash.clone();
+
+            ref_assertion.alg = Some(
+                match claim_assertion.alg.as_ref() {
+                    Some(alg) => alg,
+                    None => claim.alg.as_ref()?,
+                }
+                .clone(),
+            );
+        }
+
+        self.signature = self
+            .builder
+            .as_ref()?
+            .credential_holder
+            .sign(&self.tbs)
+            .await
+            .ok()?;
+        self.pad1 = vec![];
+
+        let mut assertion_cbor: Vec<u8> = vec![];
+        ciborium::into_writer(&self, &mut assertion_cbor).ok()?;
+
+        if assertion_cbor.len() > assertion_size {
+            // TO DO: Think about how to signal this in such a way that
+            // the CredentialHolder implementor understands the problem.
+            eprintln!("ERROR: Serialized assertion is {len} bytes, which exceeds the planned size of {assertion_size} bytes", len = assertion_cbor.len());
+
+            return None;
+        }
+
+        self.pad1 = vec![0u8; assertion_size - assertion_cbor.len() - 15];
+
+        assertion_cbor.clear();
+        ciborium::into_writer(&self, &mut assertion_cbor).ok()?;
+
+        self.pad2 = Some(vec![0u8; assertion_size - assertion_cbor.len() - 6]);
+
+        assertion_cbor.clear();
+        ciborium::into_writer(&self, &mut assertion_cbor).ok()?;
+
+        // TO DO: See if this approach ever fails. IMHO it "should" work for all cases.
+        assert_eq!(assertion_size, assertion_cbor.len());
+
         Some(manifest_store)
     }
 }

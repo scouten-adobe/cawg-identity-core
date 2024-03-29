@@ -26,7 +26,7 @@ impl CredentialHolder for NaiveCredentialHolder {
     }
 
     fn reserve_size(&self) -> usize {
-        10000
+        1000
     }
 
     async fn sign(&self, tbs: &Tbs) -> c2pa::Result<Vec<u8>> {

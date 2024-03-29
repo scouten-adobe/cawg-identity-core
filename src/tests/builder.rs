@@ -72,6 +72,5 @@ async fn simple_case() {
     let manifest_store = ManifestStore::from_file(&dest).unwrap();
     assert!(manifest_store.validation_status().is_none());
 
-    panic!("What now?");
-    // TO DO: Validate identity assertion.
+    panic!("Now validate the assertion ...");
 }

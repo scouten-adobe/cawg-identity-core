@@ -72,18 +72,16 @@ impl ManifestBuilder {
         .map(|_| ())
     }
 
-    async fn rewrite_placed_manifest(&self, manifest_store: &[u8]) -> Option<Vec<u8>> {
+    async fn rewrite_placed_manifest(&mut self, manifest_store: &[u8]) -> Option<Vec<u8>> {
         let mut updated_ms = manifest_store.to_vec();
 
         let ms = crate::c2pa::ManifestStore::from_slice(&manifest_store)?;
         let m = ms.active_manifest()?;
 
         let claim = m.claim()?;
-        dbg!(&claim);
-
         let ast = m.assertion_store()?;
 
-        for ia in self.identity_assertions.iter() {
+        for ia in self.identity_assertions.iter_mut() {
             // TO DO: Support for multiple identity assertions.
 
             let assertion = ast.find_by_label("cawg.identity")?;
@@ -91,10 +89,6 @@ impl ManifestBuilder {
 
             let assertion_offset = assertion_dbox.offset_within_superbox(&ms.sbox)?;
             let assertion_size = assertion_dbox.data.len();
-
-            dbg!(&assertion);
-            dbg!(assertion_offset);
-            dbg!(assertion_size);
 
             updated_ms = ia
                 .update_with_signature(updated_ms, assertion_offset, assertion_size, &claim)
@@ -107,13 +101,9 @@ impl ManifestBuilder {
 
 impl ManifestPatchCallback for ManifestBuilder {
     fn patch_manifest(&self, manifest_store: &[u8]) -> c2pa::Result<Vec<u8>> {
-        // TO DO: Rethink error handling. For now, we fail
-        // with "ClaimDecoding" reason regardless of the failure mode.
-
-        // match self.patch_manifest_imp(manifest_store) {
-        //     Some(ms_buffer) => Ok(ms_buffer),
-        //     None => Err(c2pa::Error::ClaimDecoding),
-        // }
-        Ok(manifest_store.to_vec())
+        match self.patched_manifest_store.as_ref() {
+            Some(ms) => Ok(ms.clone()),
+            None => Err(c2pa::Error::ClaimEncoding),
+        }
     }
 }
