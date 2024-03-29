@@ -23,6 +23,8 @@ use crate::{c2pa::HashedUri, Tbs};
 /// An `IdentityAssertionBuilder` gathers together the necessary components
 /// for an identity assertion. When added to a [`ManifestBuilder`],
 /// it ensures that the proper data is added to the final C2PA Manifest.
+/// 
+/// [`ManifestBuilder`]: crate::builder::ManifestBuilder
 pub struct IdentityAssertionBuilder {
     credential_holder: Box<dyn CredentialHolder>,
     // referenced_assertions: Vec<MumbleSomething>,
