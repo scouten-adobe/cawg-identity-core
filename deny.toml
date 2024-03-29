@@ -15,6 +15,11 @@ targets = [
 [advisories]
 yanked = "allow" # "deny" # TODO: Re-enable when possible.
 
+ignore = [
+  "RUSTSEC-2021-0127", # serde_cbor
+  "RUSTSEC-2024-0320", # yaml-rust
+]
+
 # Deny multiple versions unless explicitly skipped.
 [bans]
 multiple-versions = "allow" # "deny" # TODO: Re-enable when possible.
@@ -47,4 +52,6 @@ license-files = [
 unknown-registry = "deny"
 unknown-git = "deny"
 allow-registry = ["https://github.com/rust-lang/crates.io-index"]
-allow-git = []
+allow-git = [
+  "https://github.com/contentauth/c2pa-rs.git"
+]
