@@ -11,4 +11,5 @@
 // specific language governing permissions and limitations under
 // each license.
 
-mod parser;
+pub(crate) mod c2pa_parser;
+pub(crate) mod debug_byte_slice;

@@ -11,10 +11,8 @@
 // specific language governing permissions and limitations under
 // each license.
 
-use std::fmt::{Debug, Formatter};
-
 use hex_literal::hex;
-use jumbf::parser::{ChildBox, DataBox, SuperBox};
+use jumbf::parser::SuperBox;
 
 pub(crate) const LABEL: &str = "c2pa.assertions";
 const UUID: &[u8; 16] = &hex!("63326173 0011 0010 8000 00aa00389b71");

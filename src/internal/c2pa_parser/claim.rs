@@ -11,10 +11,10 @@
 // specific language governing permissions and limitations under
 // each license.
 
-use std::fmt::{Debug, Formatter};
+use std::fmt::Debug;
 
 use hex_literal::hex;
-use jumbf::parser::{ChildBox, DataBox, SuperBox};
+use jumbf::parser::SuperBox;
 use serde::Deserialize;
 
 use crate::HashedUri;

@@ -15,7 +15,7 @@ use std::fs;
 
 use hex_literal::hex;
 
-use crate::{c2pa::ManifestStore, tests::fixtures::*, HashedUri};
+use crate::{internal::c2pa_parser::ManifestStore, tests::fixtures::*, HashedUri};
 
 #[test]
 fn basic_case() {
