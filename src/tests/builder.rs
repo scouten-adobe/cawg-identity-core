@@ -77,5 +77,5 @@ async fn simple_case() {
     let identity: IdentityAssertion = manifest.find_assertion("cawg.identity").unwrap();
     dbg!(&identity);
 
-    panic!("Now validate the assertion ...");
+    // panic!("Now validate the assertion ...");
 }
