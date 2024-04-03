@@ -77,5 +77,16 @@ async fn simple_case() {
     let identity: IdentityAssertion = manifest.find_assertion("cawg.identity").unwrap();
     dbg!(&identity);
 
-    // panic!("Now validate the assertion ...");
+    let report = identity.report();
+    dbg!(&subject);
+
+    assert!(report.status().unwrap());
+
+    assert_eq!(report.sig_type(), "INVALID.identity.naive_credential");
+
+    assert!(report.sig_valid());
+    assert!(report.trusted());
+
+    let subject = identity.subject().unwrap();
+    dbg!(&subject);
 }
