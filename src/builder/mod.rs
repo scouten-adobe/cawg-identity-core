@@ -20,3 +20,9 @@
 
 pub(crate) mod credential_holder;
 pub use credential_holder::CredentialHolder;
+
+pub(crate) mod identity_assertion_builder;
+pub use identity_assertion_builder::IdentityAssertionBuilder;
+
+mod manifest_builder;
+pub use manifest_builder::ManifestBuilder;

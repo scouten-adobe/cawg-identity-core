@@ -11,6 +11,8 @@
 // specific language governing permissions and limitations under
 // each license.
 
+use crate::{builder::CredentialHolder, Tbs};
+
 /// Naive implementation of [`CredentialHolder`] trait for
 /// proof-of-concept/testing purposes.
 ///
@@ -24,7 +26,7 @@ impl CredentialHolder for NaiveCredentialHolder {
     }
 
     fn reserve_size(&self) -> usize {
-        10000
+        1000
     }
 
     async fn sign(&self, tbs: &Tbs) -> c2pa::Result<Vec<u8>> {

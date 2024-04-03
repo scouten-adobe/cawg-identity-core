@@ -25,7 +25,7 @@ const UUID: &[u8; 16] = &hex!("6332706100110010800000aa00389b71");
 /// structure and will parse lower layers only as needed.
 pub(crate) struct ManifestStore<'a> {
     /// Parsed manifest boxes
-    sbox: SuperBox<'a>,
+    pub(crate) sbox: SuperBox<'a>,
 
     /// Raw JUMBF data
     jumbf: &'a [u8],

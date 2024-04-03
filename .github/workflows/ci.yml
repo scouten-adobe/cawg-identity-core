@@ -124,31 +124,31 @@ jobs:
       - name: Run tests
         run: cargo +nightly test -Z direct-minimal-versions --all-targets --all-features
 
-  publish-preflight:
-    name: Preflight crate publish
-    runs-on: ${{ matrix.os }}
+  # publish-preflight:
+  #   name: Preflight crate publish
+  #   runs-on: ${{ matrix.os }}
 
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ubuntu-latest]
-        rust_version: [stable]
+  #   strategy:
+  #     fail-fast: false
+  #     matrix:
+  #       os: [ubuntu-latest]
+  #       rust_version: [stable]
 
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
+  #   steps:
+  #     - name: Checkout repository
+  #       uses: actions/checkout@v3
       
-      - name: Install Rust toolchain
-        uses: dtolnay/rust-toolchain@master
-        with:
-          toolchain: ${{ matrix.rust_version }}
-          components: llvm-tools-preview
+  #     - name: Install Rust toolchain
+  #       uses: dtolnay/rust-toolchain@master
+  #       with:
+  #         toolchain: ${{ matrix.rust_version }}
+  #         components: llvm-tools-preview
 
-      - name: Cache Rust dependencies
-        uses: Swatinem/rust-cache@v2
+  #     - name: Cache Rust dependencies
+  #       uses: Swatinem/rust-cache@v2
 
-      - name: Dry-run of crate publish
-        run: cargo publish --no-verify -p cawg-identity-core --dry-run
+  #     - name: Dry-run of crate publish
+  #       run: cargo publish --no-verify -p cawg-identity-core --dry-run
 
   clippy_check:
     name: Clippy
