@@ -23,7 +23,7 @@ pub mod c2pa;
 mod debug_byte_slice;
 
 mod identity_assertion;
-pub use identity_assertion::{IdentityAssertion, Tbs};
+pub use identity_assertion::{IdentityAssertion, SignerPayload};
 
 #[cfg(test)]
 mod tests;

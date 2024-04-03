@@ -11,7 +11,7 @@
 // specific language governing permissions and limitations under
 // each license.
 
-use crate::{builder::CredentialHolder, Tbs};
+use crate::{builder::CredentialHolder, SignerPayload};
 
 /// Naive implementation of [`CredentialHolder`] trait for
 /// proof-of-concept/testing purposes.
@@ -29,12 +29,12 @@ impl CredentialHolder for NaiveCredentialHolder {
         1000
     }
 
-    async fn sign(&self, tbs: &Tbs) -> c2pa::Result<Vec<u8>> {
-        // Naive implementation simply serializes Tbs
+    async fn sign(&self, signer_payload: &SignerPayload) -> c2pa::Result<Vec<u8>> {
+        // Naive implementation simply serializes SignerPayload
         // in CBOR format and calls it a "signature."
         let mut result: Vec<u8> = vec![];
 
-        match ciborium::into_writer(tbs, &mut result) {
+        match ciborium::into_writer(signer_payload, &mut result) {
             Ok(()) => Ok(result),
             Err(_) => Err(c2pa::Error::ClaimEncoding),
         }

@@ -11,16 +11,16 @@
 // specific language governing permissions and limitations under
 // each license.
 
-mod tbs {
+mod signer_payload {
     use hex_literal::hex;
 
-    use crate::{c2pa::HashedUri, Tbs};
+    use crate::{c2pa::HashedUri, SignerPayload};
 
     #[test]
     fn impl_clone() {
         // Silly test to ensure code coverage on #[derive] line.
 
-        let tbs = Tbs {
+        let signer_payload = SignerPayload {
             referenced_assertions: vec![{
                 HashedUri {
                     url: "self#jumbf=c2pa/urn:uuid:F9168C5E-CEB2-4faa-B6BF-329BF39FA1E4/c2pa.assertions/c2pa.hash.data".to_owned(),
@@ -29,6 +29,6 @@ mod tbs {
             }],
         };
 
-        assert_eq!(tbs, tbs.clone());
+        assert_eq!(signer_payload, signer_payload.clone());
     }
 }

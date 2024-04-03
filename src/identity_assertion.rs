@@ -33,7 +33,7 @@ pub struct IdentityAssertion {
     #[serde(skip)]
     builder: Option<IdentityAssertionBuilder>,
 
-    tbs: Tbs,
+    signer_payload: SignerPayload,
     sig_type: String,
 
     #[serde(with = "serde_bytes")]
@@ -50,7 +50,7 @@ pub struct IdentityAssertion {
 
 impl IdentityAssertion {
     pub(crate) fn from_builder(builder: IdentityAssertionBuilder) -> Self {
-        let tbs = Tbs {
+        let signer_payload = SignerPayload {
             referenced_assertions: vec![HashedUri {
                 url: "self#jumbf=c2pa.assertions/c2pa.hash.to_be_determined".to_owned(),
                 alg: None,
@@ -63,7 +63,7 @@ impl IdentityAssertion {
 
         Self {
             builder: Some(builder),
-            tbs,
+            signer_payload,
             sig_type,
             signature,
             pad1: vec![0; 32],
@@ -84,7 +84,7 @@ impl IdentityAssertion {
 
         // TO DO: Update to respond correctly when identity assertions refer to each
         // other.
-        for ref_assertion in self.tbs.referenced_assertions.iter_mut() {
+        for ref_assertion in self.signer_payload.referenced_assertions.iter_mut() {
             let claim_assertion =
                 if ref_assertion.url == "self#jumbf=c2pa.assertions/c2pa.hash.to_be_determined" {
                     claim
@@ -111,7 +111,7 @@ impl IdentityAssertion {
             .builder
             .as_ref()?
             .credential_holder
-            .sign(&self.tbs)
+            .sign(&self.signer_payload)
             .await
             .ok()?;
         self.pad1 = vec![];
@@ -154,7 +154,7 @@ impl IdentityAssertion {
 impl Debug for IdentityAssertion {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
         f.debug_struct("IdentityAssertion")
-            .field("tbs", &self.tbs)
+            .field("signer_payload", &self.signer_payload)
             .field("sig_type", &self.sig_type)
             .field("signature", &DebugByteSlice(&self.signature))
             .finish()
@@ -163,7 +163,7 @@ impl Debug for IdentityAssertion {
 
 /// The set of data to be signed by the credential holder.
 #[derive(Clone, Debug, Deserialize, Eq, Serialize, PartialEq)]
-pub struct Tbs {
+pub struct SignerPayload {
     /// List of assertions referenced by this credential signature
     pub referenced_assertions: Vec<HashedUri>,
 }
