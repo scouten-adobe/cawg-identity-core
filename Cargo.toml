@@ -12,6 +12,7 @@ hex-literal = "0.4.1"
 jumbf = "0.4.0"
 serde = { version = "1.0.197", features = ["derive"] }
 serde_bytes = "0.11.14"
+thiserror = "1.0.58"
 
 [dependencies.c2pa]
 git = "https://github.com/contentauth/c2pa-rs.git"

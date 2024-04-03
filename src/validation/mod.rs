@@ -11,21 +11,7 @@
 // specific language governing permissions and limitations under
 // each license.
 
-#![deny(clippy::expect_used)]
-#![deny(clippy::panic)]
-#![deny(clippy::unwrap_used)]
-#![deny(missing_docs)]
-#![deny(warnings)]
-#![doc = include_str!("../README.md")]
+//! TO DO: Docs. This groups types related to identity assertion validation.
 
-pub mod builder;
-
-mod identity_assertion;
-pub use identity_assertion::{HashedUri, IdentityAssertion, SignerPayload};
-
-pub(crate) mod internal;
-
-pub mod validation;
-
-#[cfg(test)]
-mod tests;
+mod error;
+pub use error::{Error, Result};
