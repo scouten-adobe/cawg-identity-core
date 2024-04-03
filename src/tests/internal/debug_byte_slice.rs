@@ -13,7 +13,7 @@
 
 use hex_literal::hex;
 
-use crate::debug_byte_slice::*;
+use crate::internal::debug_byte_slice::*;
 
 #[test]
 fn debug_byte_slice() {

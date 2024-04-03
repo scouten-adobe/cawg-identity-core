@@ -11,19 +11,5 @@
 // specific language governing permissions and limitations under
 // each license.
 
-//! A set of very lightweight utilities for working with C2PA data structures.
-
-#![allow(dead_code)] // TEMPORARY while building
-#![allow(unused_imports)] // TEMPORARY while building
-
-mod assertion_store;
-pub(crate) use assertion_store::AssertionStore;
-
-mod claim;
-pub(crate) use claim::Claim;
-
-mod manifest;
-pub(crate) use manifest::Manifest;
-
-mod manifest_store;
-pub(crate) use manifest_store::ManifestStore;
+mod c2pa_parser;
+mod debug_byte_slice;

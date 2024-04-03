@@ -11,14 +11,16 @@
 // specific language governing permissions and limitations under
 // each license.
 
-// Tests are grouped under this module so as to avoid
-// having the test code itself included in coverage numbers.
+//! A set of very lightweight utilities for working with C2PA data structures.
 
-#![allow(clippy::expect_used)]
-#![allow(clippy::panic)]
-#![allow(clippy::unwrap_used)]
+mod assertion_store;
+pub(crate) use assertion_store::AssertionStore;
 
-mod builder;
-mod fixtures;
-mod identity_assertion;
-mod internal;
+mod claim;
+pub(crate) use claim::Claim;
+
+mod manifest;
+pub(crate) use manifest::Manifest;
+
+mod manifest_store;
+pub(crate) use manifest_store::ManifestStore;

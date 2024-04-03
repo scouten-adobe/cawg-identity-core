@@ -11,10 +11,8 @@
 // specific language governing permissions and limitations under
 // each license.
 
-use std::fmt::{Debug, Formatter};
-
 use hex_literal::hex;
-use jumbf::parser::{ChildBox, DataBox, SuperBox};
+use jumbf::parser::{DataBox, SuperBox};
 
 use super::{AssertionStore, Claim};
 
@@ -26,6 +24,7 @@ pub(crate) struct Manifest<'a> {
     sbox: SuperBox<'a>,
 
     /// Raw JUMBF data
+    #[allow(dead_code)]
     jumbf: &'a [u8],
 }
 

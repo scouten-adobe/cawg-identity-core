@@ -11,15 +11,14 @@
 // specific language governing permissions and limitations under
 // each license.
 
-#![allow(dead_code)] // TEMPORARY while building
-#![allow(missing_docs)] // TEMPORARY while building
-
 use std::fmt::{Debug, Formatter};
 
 use serde::{Deserialize, Serialize};
 use serde_bytes::ByteBuf;
 
-use crate::{builder::IdentityAssertionBuilder, debug_byte_slice::DebugByteSlice};
+use crate::{
+    builder::IdentityAssertionBuilder, internal, internal::debug_byte_slice::DebugByteSlice,
+};
 
 /// This struct represents the raw content of the identity assertion.
 ///
@@ -45,7 +44,7 @@ pub struct IdentityAssertion {
     // Must use explicit ByteBuf here because #[serde(with = "serde_bytes")]
     // does not working if Option<Vec<u8>>.
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub pad2: Option<serde_bytes::ByteBuf>,
+    pad2: Option<serde_bytes::ByteBuf>,
 }
 
 impl IdentityAssertion {
@@ -78,7 +77,7 @@ impl IdentityAssertion {
         mut manifest_store: Vec<u8>,
         assertion_offset: usize,
         assertion_size: usize,
-        claim: &crate::c2pa::Claim,
+        claim: &internal::c2pa_parser::Claim,
     ) -> Option<Vec<u8>> {
         // Update TBS with actual assertion references.
 

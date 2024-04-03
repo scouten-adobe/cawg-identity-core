@@ -15,7 +15,7 @@
 
 use c2pa::{CAIRead, CAIReadWrite, Manifest, ManifestPatchCallback, Signer};
 
-use crate::{builder::IdentityAssertionBuilder, IdentityAssertion};
+use crate::{builder::IdentityAssertionBuilder, internal, IdentityAssertion};
 
 /// TO DO: Docs
 #[derive(Default)]
@@ -72,7 +72,7 @@ impl ManifestBuilder {
     async fn rewrite_placed_manifest(&mut self, manifest_store: &[u8]) -> Option<Vec<u8>> {
         let mut updated_ms = manifest_store.to_vec();
 
-        let ms = crate::c2pa::ManifestStore::from_slice(manifest_store)?;
+        let ms = internal::c2pa_parser::ManifestStore::from_slice(manifest_store)?;
         let m = ms.active_manifest()?;
 
         let claim = m.claim()?;
