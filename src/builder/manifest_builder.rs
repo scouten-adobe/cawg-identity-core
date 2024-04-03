@@ -15,7 +15,7 @@
 
 use c2pa::{CAIRead, CAIReadWrite, Manifest, ManifestPatchCallback, Signer};
 
-use super::{identity_assertion_builder::IdentityAssertion, IdentityAssertionBuilder};
+use crate::{builder::IdentityAssertionBuilder, IdentityAssertion};
 
 /// TO DO: Docs
 #[derive(Default)]

@@ -19,10 +19,9 @@ use std::fs::OpenOptions;
 use c2pa::{create_signer, Manifest, ManifestStore, SigningAlg};
 
 use crate::{
-    builder::{
-        identity_assertion_builder::IdentityAssertion, IdentityAssertionBuilder, ManifestBuilder,
-    },
+    builder::{IdentityAssertionBuilder, ManifestBuilder},
     tests::fixtures::{fixture_path, temp_dir_path, NaiveCredentialHolder},
+    IdentityAssertion,
 };
 
 #[actix::test]
