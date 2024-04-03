@@ -14,11 +14,14 @@
 #![allow(dead_code)] // TEMPORARY while building
 #![allow(missing_docs)] // TEMPORARY while building
 
+use std::fmt::{Debug, Formatter};
+
 use c2pa::{Assertion, AssertionBase, AssertionCbor};
 use serde::{Deserialize, Serialize};
+use serde_bytes::ByteBuf;
 
 use super::CredentialHolder;
-use crate::{c2pa::HashedUri, Tbs};
+use crate::{c2pa::HashedUri, debug_byte_slice::DebugByteSlice, Tbs};
 
 /// An `IdentityAssertionBuilder` gathers together the necessary components
 /// for an identity assertion. When added to a [`ManifestBuilder`],
@@ -48,11 +51,17 @@ pub(crate) struct IdentityAssertion {
 
     tbs: Tbs,
     sig_type: String,
+
+    #[serde(with = "serde_bytes")]
     signature: Vec<u8>,
+
+    #[serde(with = "serde_bytes")]
     pad1: Vec<u8>,
 
+    // Must use explicit ByteBuf here because #[serde(with = "serde_bytes")]
+    // does not working if Option<Vec<u8>>.
     #[serde(skip_serializing_if = "Option::is_none")]
-    pad2: Option<Vec<u8>>,
+    pub pad2: Option<serde_bytes::ByteBuf>,
 }
 
 impl IdentityAssertion {
@@ -82,7 +91,7 @@ impl IdentityAssertion {
     #[allow(unused_variables)] // TEMPORARY while building
     pub(crate) async fn update_with_signature(
         &mut self,
-        manifest_store: Vec<u8>,
+        mut manifest_store: Vec<u8>,
         assertion_offset: usize,
         assertion_size: usize,
         claim: &crate::c2pa::Claim,
@@ -139,13 +148,20 @@ impl IdentityAssertion {
         assertion_cbor.clear();
         ciborium::into_writer(&self, &mut assertion_cbor).ok()?;
 
-        self.pad2 = Some(vec![0u8; assertion_size - assertion_cbor.len() - 6]);
+        self.pad2 = Some(ByteBuf::from(vec![
+            0u8;
+            assertion_size - assertion_cbor.len() - 6
+        ]));
 
         assertion_cbor.clear();
         ciborium::into_writer(&self, &mut assertion_cbor).ok()?;
 
         // TO DO: See if this approach ever fails. IMHO it "should" work for all cases.
         assert_eq!(assertion_size, assertion_cbor.len());
+
+        // Replace placeholder assertion content with signed version.
+        manifest_store[assertion_offset..assertion_offset + assertion_size]
+            .copy_from_slice(&assertion_cbor);
 
         Some(manifest_store)
     }
@@ -156,7 +172,7 @@ impl AssertionBase for IdentityAssertion {
     const VERSION: Option<usize> = None;
 
     fn to_assertion(&self) -> c2pa::Result<Assertion> {
-        self.to_cbor_assertion()
+        Self::to_cbor_assertion(self)
     }
 
     fn from_assertion(_assertion: &Assertion) -> c2pa::Result<Self> {
@@ -165,3 +181,13 @@ impl AssertionBase for IdentityAssertion {
 }
 
 impl AssertionCbor for IdentityAssertion {}
+
+impl Debug for IdentityAssertion {
+    fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
+        f.debug_struct("IdentityAssertion")
+            .field("tbs", &self.tbs)
+            .field("sig_type", &self.sig_type)
+            .field("signature", &DebugByteSlice(&self.signature))
+            .finish()
+    }
+}

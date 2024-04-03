@@ -43,7 +43,7 @@ impl ManifestBuilder {
         signer: &dyn Signer,
     ) -> c2pa::Result<()> {
         for ia in self.identity_assertions.iter() {
-            manifest.add_assertion(ia)?;
+            manifest.add_cbor_assertion("cawg.identity", ia)?;
         }
 
         let (placed_manifest, active_manifest_label) =

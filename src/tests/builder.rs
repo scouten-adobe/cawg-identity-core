@@ -19,7 +19,9 @@ use std::fs::OpenOptions;
 use c2pa::{create_signer, Manifest, ManifestStore, SigningAlg};
 
 use crate::{
-    builder::{IdentityAssertionBuilder, ManifestBuilder},
+    builder::{
+        identity_assertion_builder::IdentityAssertion, IdentityAssertionBuilder, ManifestBuilder,
+    },
     tests::fixtures::{fixture_path, temp_dir_path, NaiveCredentialHolder},
 };
 
@@ -72,5 +74,9 @@ async fn simple_case() {
     let manifest_store = ManifestStore::from_file(&dest).unwrap();
     assert!(manifest_store.validation_status().is_none());
 
-    // panic!("Now validate the assertion ...");
+    let manifest = manifest_store.get_active().unwrap();
+    let identity: IdentityAssertion = manifest.find_assertion("cawg.identity").unwrap();
+    dbg!(&identity);
+
+    panic!("Now validate the assertion ...");
 }
