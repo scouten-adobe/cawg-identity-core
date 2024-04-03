@@ -16,7 +16,6 @@
 
 use std::fmt::{Debug, Formatter};
 
-use c2pa::{Assertion, AssertionBase, AssertionCbor};
 use serde::{Deserialize, Serialize};
 use serde_bytes::ByteBuf;
 
@@ -166,21 +165,6 @@ impl IdentityAssertion {
         Some(manifest_store)
     }
 }
-
-impl AssertionBase for IdentityAssertion {
-    const LABEL: &'static str = "cawg.identity";
-    const VERSION: Option<usize> = None;
-
-    fn to_assertion(&self) -> c2pa::Result<Assertion> {
-        Self::to_cbor_assertion(self)
-    }
-
-    fn from_assertion(_assertion: &Assertion) -> c2pa::Result<Self> {
-        unimplemented!();
-    }
-}
-
-impl AssertionCbor for IdentityAssertion {}
 
 impl Debug for IdentityAssertion {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
