@@ -19,9 +19,7 @@ use std::fmt::{Debug, Formatter};
 use serde::{Deserialize, Serialize};
 use serde_bytes::ByteBuf;
 
-use crate::{
-    builder::IdentityAssertionBuilder, c2pa::HashedUri, debug_byte_slice::DebugByteSlice, Tbs,
-};
+use crate::{builder::IdentityAssertionBuilder, c2pa::HashedUri, debug_byte_slice::DebugByteSlice};
 
 /// This struct represents the raw content of the identity assertion.
 ///
@@ -161,4 +159,11 @@ impl Debug for IdentityAssertion {
             .field("signature", &DebugByteSlice(&self.signature))
             .finish()
     }
+}
+
+/// The set of data to be signed by the credential holder.
+#[derive(Clone, Debug, Deserialize, Eq, Serialize, PartialEq)]
+pub struct Tbs {
+    /// List of assertions referenced by this credential signature
+    pub referenced_assertions: Vec<HashedUri>,
 }
