@@ -19,9 +19,7 @@ use std::fmt::{Debug, Formatter};
 use serde::{Deserialize, Serialize};
 use serde_bytes::ByteBuf;
 
-use crate::{
-    builder::IdentityAssertionBuilder, c2pa::HashedUri, debug_byte_slice::DebugByteSlice, Tbs,
-};
+use crate::{builder::IdentityAssertionBuilder, debug_byte_slice::DebugByteSlice};
 
 /// This struct represents the raw content of the identity assertion.
 ///
@@ -35,7 +33,7 @@ pub struct IdentityAssertion {
     #[serde(skip)]
     builder: Option<IdentityAssertionBuilder>,
 
-    tbs: Tbs,
+    signer_payload: SignerPayload,
     sig_type: String,
 
     #[serde(with = "serde_bytes")]
@@ -52,7 +50,7 @@ pub struct IdentityAssertion {
 
 impl IdentityAssertion {
     pub(crate) fn from_builder(builder: IdentityAssertionBuilder) -> Self {
-        let tbs = Tbs {
+        let signer_payload = SignerPayload {
             referenced_assertions: vec![HashedUri {
                 url: "self#jumbf=c2pa.assertions/c2pa.hash.to_be_determined".to_owned(),
                 alg: None,
@@ -65,7 +63,7 @@ impl IdentityAssertion {
 
         Self {
             builder: Some(builder),
-            tbs,
+            signer_payload,
             sig_type,
             signature,
             pad1: vec![0; 32],
@@ -86,7 +84,7 @@ impl IdentityAssertion {
 
         // TO DO: Update to respond correctly when identity assertions refer to each
         // other.
-        for ref_assertion in self.tbs.referenced_assertions.iter_mut() {
+        for ref_assertion in self.signer_payload.referenced_assertions.iter_mut() {
             let claim_assertion =
                 if ref_assertion.url == "self#jumbf=c2pa.assertions/c2pa.hash.to_be_determined" {
                     claim
@@ -113,7 +111,7 @@ impl IdentityAssertion {
             .builder
             .as_ref()?
             .credential_holder
-            .sign(&self.tbs)
+            .sign(&self.signer_payload)
             .await
             .ok()?;
         self.pad1 = vec![];
@@ -156,9 +154,48 @@ impl IdentityAssertion {
 impl Debug for IdentityAssertion {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
         f.debug_struct("IdentityAssertion")
-            .field("tbs", &self.tbs)
+            .field("signer_payload", &self.signer_payload)
             .field("sig_type", &self.sig_type)
             .field("signature", &DebugByteSlice(&self.signature))
+            .finish()
+    }
+}
+
+/// The set of data to be signed by the credential holder.
+#[derive(Clone, Debug, Deserialize, Eq, Serialize, PartialEq)]
+pub struct SignerPayload {
+    /// List of assertions referenced by this credential signature
+    pub referenced_assertions: Vec<HashedUri>,
+}
+
+/// A `HashedUri` provides a reference to content available within the same
+/// manifest store.
+///
+/// This is described in §8.3, “[URI References],” of the C2PA Technical
+/// Specification.
+///
+/// [URI References]: https://c2pa.org/specifications/specifications/2.0/specs/C2PA_Specification.html#_uri_references
+#[derive(Clone, Deserialize, Eq, PartialEq, Serialize)]
+pub struct HashedUri {
+    /// JUMBF URI reference
+    pub url: String,
+
+    /// A string identifying the cryptographic hash algorithm used to compute
+    /// the hash
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub alg: Option<String>,
+
+    /// Byte string containing the hash value
+    #[serde(with = "serde_bytes")]
+    pub hash: Vec<u8>,
+}
+
+impl Debug for HashedUri {
+    fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
+        f.debug_struct("HashedUri")
+            .field("url", &self.url)
+            .field("alg", &self.alg)
+            .field("hash", &DebugByteSlice(&self.hash))
             .finish()
     }
 }

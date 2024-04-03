@@ -22,9 +22,6 @@ pub(crate) use assertion_store::AssertionStore;
 mod claim;
 pub(crate) use claim::Claim;
 
-mod hashed_uri;
-pub use hashed_uri::HashedUri;
-
 mod manifest;
 pub(crate) use manifest::Manifest;
 

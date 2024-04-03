@@ -22,4 +22,4 @@ mod builder;
 mod c2pa;
 mod debug_byte_slice;
 mod fixtures;
-mod tbs;
+mod identity_assertion;

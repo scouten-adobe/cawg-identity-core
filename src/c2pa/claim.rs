@@ -17,7 +17,7 @@ use hex_literal::hex;
 use jumbf::parser::{ChildBox, DataBox, SuperBox};
 use serde::Deserialize;
 
-use super::HashedUri;
+use crate::HashedUri;
 
 pub(crate) const LABEL: &str = "c2pa.claim";
 const UUID: &[u8; 16] = &hex!("6332636c 0011 0010 8000 00aa00389b71");

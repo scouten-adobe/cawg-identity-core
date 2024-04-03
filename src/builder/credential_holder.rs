@@ -11,10 +11,10 @@
 // specific language governing permissions and limitations under
 // each license.
 
-use crate::Tbs;
+use crate::SignerPayload;
 
 /// An implementation of `CredentialHolder` is able to generate a signature over
-/// the [`Tbs`] data structure on behalf of a credential holder.
+/// the [`SignerPayload`] data structure on behalf of a credential holder.
 ///
 /// Implementations of this trait will specialize based on the kind of
 /// credential as specified in
@@ -33,7 +33,8 @@ pub trait CredentialHolder {
     /// [`sign`]: Self::sign
     fn reserve_size(&self) -> usize;
 
-    /// Signs the [`Tbs`] data structure on behalf of the credential holder.
+    /// Signs the [`SignerPayload`] data structure on behalf of the credential
+    /// holder.
     ///
     /// If successful, returns the exact binary content to be placed in
     /// the `signature` field for this identity assertion.
@@ -42,5 +43,5 @@ pub trait CredentialHolder {
     /// by the [`reserve_size`] function.
     ///
     /// [`reserve_size`]: Self::reserve_size
-    async fn sign(&self, tbs: &Tbs) -> c2pa::Result<Vec<u8>>;
+    async fn sign(&self, signer_payload: &SignerPayload) -> c2pa::Result<Vec<u8>>;
 }
