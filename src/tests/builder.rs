@@ -75,10 +75,8 @@ async fn simple_case() {
 
     let manifest = manifest_store.get_active().unwrap();
     let identity: IdentityAssertion = manifest.find_assertion("cawg.identity").unwrap();
-    dbg!(&identity);
 
     let sp = identity.check_signer_payload(manifest).unwrap();
-    dbg!(&sp);
 
     // let report = identity.report();
     // dbg!(&subject);

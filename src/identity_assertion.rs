@@ -13,7 +13,10 @@
 
 #![allow(dead_code)] // TEMPORARY while building
 
-use std::fmt::{Debug, Formatter};
+use std::{
+    collections::HashSet,
+    fmt::{Debug, Formatter},
+};
 
 use serde::{Deserialize, Serialize};
 use serde_bytes::ByteBuf;
@@ -188,8 +191,9 @@ impl SignerPayload {
         // All assertions mentioned in referenced_assertions
         // also need to be referenced in the claim.
 
-        eprintln!("cfm:194");
-        dbg!(&manifest);
+        #[allow(unused_variables)]
+        let manifest_assertion_references: Vec<&c2pa::HashedUri> =
+            manifest.assertion_references().collect();
 
         for ref_assertion in self.referenced_assertions.iter() {
             if let Some(claim_assertion) = manifest
@@ -219,15 +223,36 @@ impl SignerPayload {
             }
         }
 
-        let mut ref_assertion_labels: Vec<String> = self
+        // Ensure that a hard binding assertion is present.
+
+        let ref_assertion_labels: Vec<String> = self
             .referenced_assertions
             .iter()
             .map(|ra| ra.url.to_owned())
             .collect();
 
-        ref_assertion_labels.sort();
+        if !ref_assertion_labels.iter().any(|ra| {
+            if let Some((_jumbf_prefix, label)) = ra.rsplit_once("/") {
+                dbg!(&label);
+                label.starts_with("c2pa.hash.")
+            } else {
+                false
+            }
+        }) {
+            return Err(ValidationError::NoHardBindingAssertion);
+        }
 
-        dbg!(&ref_assertion_labels);
+        // Make sure no assertion references are duplicated.
+
+        let mut labels = HashSet::<String>::new();
+
+        for label in &ref_assertion_labels {
+            let label = label.clone();
+            if labels.contains(&label) {
+                return Err(ValidationError::MultipleAssertionReferenced(label));
+            }
+            labels.insert(label);
+        }
 
         Ok(())
     }
