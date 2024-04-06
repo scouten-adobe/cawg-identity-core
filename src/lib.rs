@@ -25,7 +25,5 @@ pub use identity_assertion::{HashedUri, IdentityAssertion, SignerPayload};
 
 pub(crate) mod internal;
 
-pub mod validation;
-
 #[cfg(test)]
 mod tests;

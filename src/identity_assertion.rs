@@ -11,6 +11,8 @@
 // specific language governing permissions and limitations under
 // each license.
 
+#![allow(dead_code)] // TEMPORARY while building
+
 use std::fmt::{Debug, Formatter};
 
 use serde::{Deserialize, Serialize};
@@ -148,6 +150,20 @@ impl IdentityAssertion {
 
         Some(manifest_store)
     }
+
+    /// Return the [`SignerPayload`] from this identity assertion
+    /// but only if it meets the requirements as described in
+    /// [§7. Validating the identity assertion].
+    ///
+    /// [§7. Validating the identity assertion]: https://creator-assertions.github.io/identity/1.0-draft/#_validating_the_identity_assertion
+    pub fn check_signer_payload<'a>(
+        &'a self,
+        manifest: &c2pa::Manifest,
+    ) -> ValidationResult<&'a SignerPayload> {
+        self.signer_payload
+            .check_against_manifest(manifest)
+            .map(|_| &self.signer_payload)
+    }
 }
 
 impl Debug for IdentityAssertion {
@@ -165,6 +181,56 @@ impl Debug for IdentityAssertion {
 pub struct SignerPayload {
     /// List of assertions referenced by this credential signature
     pub referenced_assertions: Vec<HashedUri>,
+}
+
+impl SignerPayload {
+    fn check_against_manifest(&self, manifest: &c2pa::Manifest) -> ValidationResult<()> {
+        // All assertions mentioned in referenced_assertions
+        // also need to be referenced in the claim.
+
+        eprintln!("cfm:194");
+        dbg!(&manifest);
+
+        for ref_assertion in self.referenced_assertions.iter() {
+            if let Some(claim_assertion) = manifest
+                .assertion_references()
+                .find(|a| a.url() == ref_assertion.url)
+            {
+                if claim_assertion.hash() != ref_assertion.hash {
+                    return Err(ValidationError::AssertionMismatch(
+                        ref_assertion.url.to_owned(),
+                    ));
+                }
+                if let Some(alg) = claim_assertion.alg().as_ref() {
+                    if Some(alg) != ref_assertion.alg.as_ref() {
+                        return Err(ValidationError::AssertionMismatch(
+                            ref_assertion.url.to_owned(),
+                        ));
+                    }
+                } else {
+                    return Err(ValidationError::AssertionMismatch(
+                        ref_assertion.url.to_owned(),
+                    ));
+                }
+            } else {
+                return Err(ValidationError::AssertionNotInClaim(
+                    ref_assertion.url.to_owned(),
+                ));
+            }
+        }
+
+        let mut ref_assertion_labels: Vec<String> = self
+            .referenced_assertions
+            .iter()
+            .map(|ra| ra.url.to_owned())
+            .collect();
+
+        ref_assertion_labels.sort();
+
+        dbg!(&ref_assertion_labels);
+
+        Ok(())
+    }
 }
 
 /// A `HashedUri` provides a reference to content available within the same
@@ -198,3 +264,48 @@ impl Debug for HashedUri {
             .finish()
     }
 }
+
+/// Describes the ways in which a CAWG identity
+/// assertion can fail validation as described in
+/// [§7. Validating the identity assertion].
+///
+/// [§7. Validating the identity assertion]: https://creator-assertions.github.io/identity/1.0-draft/#_validating_the_identity_assertion
+/// [`IdentityAssertion`]: crate::IdentityAssertion
+#[derive(Clone, Debug, Eq, thiserror::Error, PartialEq)]
+pub enum ValidationError {
+    /// The named assertion could not be found in the claim.
+    #[error("No assertion with the label {0:#?} in the claim")]
+    AssertionNotInClaim(String),
+
+    /// The named assertion exists in the claim, but the hash does not match.
+    #[error("The assertion with the label {0:#?} is not the same as in the claim")]
+    AssertionMismatch(String),
+
+    /// The named assertion was referenced more than once in the identity
+    /// assertion.
+    #[error("The assertion with the label {0:#?} is referenced multiple times")]
+    MultipleAssertionReferenced(String),
+
+    /// No hard-binding assertion was referenced in the identity assertion.
+    #[error("No hard binding assertion is referenced")]
+    NoHardBindingAssertion,
+
+    /// The `sig_type` field is not recognized.
+    #[error("Unable to parse a signature of type {0:#?}")]
+    UnknownSignatureType(String),
+
+    /// The signature is not valid.
+    #[error("Signature is invalid")]
+    InvalidSignature,
+
+    /// The `pad1` or `pad2` fields contain values other than 0x00 bytes.
+    #[error("Invalid padding")]
+    InvalidPadding,
+
+    /// Unexpected error while parsing or validating the identity assertion.
+    #[error("Unexpected error")]
+    UnexpectedError,
+}
+
+/// Result type for validation operations.
+pub type ValidationResult<T> = std::result::Result<T, ValidationError>;
