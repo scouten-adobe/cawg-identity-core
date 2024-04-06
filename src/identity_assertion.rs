@@ -225,7 +225,7 @@ impl SignerPayload {
             .collect();
 
         if !ref_assertion_labels.iter().any(|ra| {
-            if let Some((_jumbf_prefix, label)) = ra.rsplit_once("/") {
+            if let Some((_jumbf_prefix, label)) = ra.rsplit_once('/') {
                 dbg!(&label);
                 label.starts_with("c2pa.hash.")
             } else {
