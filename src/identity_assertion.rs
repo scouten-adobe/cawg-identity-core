@@ -76,7 +76,6 @@ impl IdentityAssertion {
         }
     }
 
-    #[allow(unused_variables)] // TEMPORARY while building
     pub(crate) async fn update_with_signature(
         &mut self,
         mut manifest_store: Vec<u8>,
@@ -190,10 +189,6 @@ impl SignerPayload {
     fn check_against_manifest(&self, manifest: &c2pa::Manifest) -> ValidationResult<()> {
         // All assertions mentioned in referenced_assertions
         // also need to be referenced in the claim.
-
-        #[allow(unused_variables)]
-        let manifest_assertion_references: Vec<&c2pa::HashedUri> =
-            manifest.assertion_references().collect();
 
         for ref_assertion in self.referenced_assertions.iter() {
             if let Some(claim_assertion) = manifest
