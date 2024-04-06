@@ -11,8 +11,6 @@
 // specific language governing permissions and limitations under
 // each license.
 
-#![allow(dead_code)] // TEMPORARY while building
-
 use std::{
     collections::HashSet,
     fmt::{Debug, Formatter},

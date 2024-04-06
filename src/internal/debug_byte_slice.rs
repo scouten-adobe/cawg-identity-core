@@ -11,8 +11,6 @@
 // specific language governing permissions and limitations under
 // each license.
 
-#![allow(dead_code)] // TEMPORARY while building
-
 use std::fmt::{Debug, Error, Formatter};
 
 pub(crate) struct DebugByteSlice<'a>(pub(crate) &'a [u8]);

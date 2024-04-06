@@ -11,9 +11,6 @@
 // specific language governing permissions and limitations under
 // each license.
 
-#![allow(unused_mut)] // TEMPORARY while building
-#![allow(unused_variables)] // TEMPORARY while building
-
 use std::fs::OpenOptions;
 
 use c2pa::{create_signer, Manifest, ManifestStore, SigningAlg};
@@ -50,12 +47,12 @@ async fn simple_case() {
         .open(&dest)
         .unwrap();
 
-    let mut manifest: Manifest = Manifest::new("identity_test/simple_case");
+    let manifest: Manifest = Manifest::new("identity_test/simple_case");
 
     // TO DO: Add a metadata assertion as an example.
 
     let naive_credential = NaiveCredentialHolder {};
-    let mut iab = IdentityAssertionBuilder::for_credential_holder(naive_credential);
+    let iab = IdentityAssertionBuilder::for_credential_holder(naive_credential);
 
     let mut mb = ManifestBuilder::default();
     mb.add_assertion(iab);

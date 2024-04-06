@@ -11,9 +11,6 @@
 // specific language governing permissions and limitations under
 // each license.
 
-#![allow(dead_code)] // TEMPORARY while building
-#![allow(missing_docs)] // TEMPORARY while building
-
 use crate::builder::CredentialHolder;
 
 /// An `IdentityAssertionBuilder` gathers together the necessary components
@@ -27,6 +24,8 @@ pub struct IdentityAssertionBuilder {
 }
 
 impl IdentityAssertionBuilder {
+    /// Create an `IdentityAssertionBuilder` for the given
+    /// `CredentialHolder` instance.
     pub fn for_credential_holder<CH: CredentialHolder + 'static>(credential_holder: CH) -> Self {
         Self {
             credential_holder: Box::new(credential_holder),
