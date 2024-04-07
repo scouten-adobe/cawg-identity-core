@@ -17,7 +17,8 @@ use c2pa::{create_signer, Manifest, ManifestStore, SigningAlg};
 
 use crate::{
     builder::{IdentityAssertionBuilder, ManifestBuilder},
-    tests::fixtures::{fixture_path, temp_dir_path, NaiveCredentialHolder},
+    internal::naive_credential_handler::NaiveCredentialHolder,
+    tests::fixtures::{fixture_path, temp_dir_path},
     IdentityAssertion,
 };
 
@@ -76,16 +77,23 @@ async fn simple_case() {
     let _sp = identity.check_signer_payload(manifest).unwrap();
     identity.check_padding().unwrap();
 
-    // let report = identity.report();
-    // dbg!(&subject);
+    let report = identity.validate(manifest).await.unwrap();
 
-    // assert!(report.status().unwrap());
+    let sp = report.signer_payload;
+    let ra = &sp.referenced_assertions;
+    assert_eq!(ra.len(), 1);
 
-    // assert_eq!(report.sig_type(), "INVALID.identity.naive_credential");
+    let ra1 = ra.first().unwrap();
+    assert_eq!(ra1.url, "self#jumbf=c2pa.assertions/c2pa.hash.data");
+    assert_eq!(ra1.alg, Some("sha256".to_owned()));
 
-    // assert!(report.sig_valid());
-    // assert!(report.trusted());
+    assert_eq!(report.sig_type, "INVALID.identity.naive_credential");
 
-    // let subject = identity.subject().unwrap();
-    // dbg!(&subject);
+    let ch = report.credential_subject;
+    assert_eq!(
+        ch.display_name(),
+        Some("Credential for internal testing purposes only".to_string())
+    );
+
+    assert!(!ch.is_trusted());
 }

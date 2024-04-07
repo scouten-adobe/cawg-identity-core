@@ -13,3 +13,6 @@
 
 pub(crate) mod c2pa_parser;
 pub(crate) mod debug_byte_slice;
+
+#[allow(dead_code)] // used only in test cases
+pub(crate) mod naive_credential_handler;

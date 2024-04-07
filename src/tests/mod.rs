@@ -19,6 +19,6 @@
 #![allow(clippy::unwrap_used)]
 
 mod builder;
-mod fixtures;
+pub(crate) mod fixtures;
 mod identity_assertion;
 mod internal;
