@@ -164,6 +164,21 @@ impl IdentityAssertion {
             .check_against_manifest(manifest)
             .map(|_| &self.signer_payload)
     }
+
+    /// Check that padding values are acceptable (i.e. all zero-value bytes).
+    pub fn check_padding(&self) -> ValidationResult<()> {
+        if !self.pad1.iter().all(|b| *b == 0) {
+            return Err(ValidationError::InvalidPadding);
+        }
+
+        if let Some(pad2) = self.pad2.as_ref() {
+            if !pad2.iter().all(|b| *b == 0) {
+                return Err(ValidationError::InvalidPadding);
+            }
+        }
+
+        Ok(())
+    }
 }
 
 impl Debug for IdentityAssertion {
