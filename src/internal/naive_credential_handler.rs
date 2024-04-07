@@ -14,6 +14,10 @@
 //! Naive implementation of credential-handling traits for
 //! proof-of-concept/testing purposes.
 //!
+//! The "signature" in this example is simply the CBOR encoding
+//! of the `signer_payload` struct. This is really intended to test
+//! the signature mechanism, not to be a meaningful signature itself.
+//!
 //! Not suitable for production use.
 
 use std::fmt::{Debug, Formatter};
