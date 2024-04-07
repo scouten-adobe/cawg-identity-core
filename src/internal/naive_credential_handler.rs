@@ -62,7 +62,7 @@ impl SignatureHandler for NaiveSignatureHandler {
         ciborium::into_writer(signer_payload, &mut signer_payload_cbor)
             .map_err(|_| ValidationError::UnexpectedError)?;
 
-        if &signer_payload_cbor != signature {
+        if signer_payload_cbor != signature {
             Err(ValidationError::InvalidSignature)
         } else {
             Ok(Box::new(NaiveCredentialSubject {}))
