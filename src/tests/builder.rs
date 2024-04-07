@@ -11,9 +11,6 @@
 // specific language governing permissions and limitations under
 // each license.
 
-#![allow(unused_mut)] // TEMPORARY while building
-#![allow(unused_variables)] // TEMPORARY while building
-
 use std::fs::OpenOptions;
 
 use c2pa::{create_signer, Manifest, ManifestStore, SigningAlg};
@@ -50,12 +47,12 @@ async fn simple_case() {
         .open(&dest)
         .unwrap();
 
-    let mut manifest: Manifest = Manifest::new("identity_test/simple_case");
+    let manifest: Manifest = Manifest::new("identity_test/simple_case");
 
     // TO DO: Add a metadata assertion as an example.
 
     let naive_credential = NaiveCredentialHolder {};
-    let mut iab = IdentityAssertionBuilder::for_credential_holder(naive_credential);
+    let iab = IdentityAssertionBuilder::for_credential_holder(naive_credential);
 
     let mut mb = ManifestBuilder::default();
     mb.add_assertion(iab);
@@ -75,7 +72,19 @@ async fn simple_case() {
 
     let manifest = manifest_store.get_active().unwrap();
     let identity: IdentityAssertion = manifest.find_assertion("cawg.identity").unwrap();
-    dbg!(&identity);
 
-    // panic!("Now validate the assertion ...");
+    let _sp = identity.check_signer_payload(manifest).unwrap();
+
+    // let report = identity.report();
+    // dbg!(&subject);
+
+    // assert!(report.status().unwrap());
+
+    // assert_eq!(report.sig_type(), "INVALID.identity.naive_credential");
+
+    // assert!(report.sig_valid());
+    // assert!(report.trusted());
+
+    // let subject = identity.subject().unwrap();
+    // dbg!(&subject);
 }

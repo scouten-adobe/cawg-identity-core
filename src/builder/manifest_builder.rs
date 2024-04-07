@@ -11,8 +11,6 @@
 // specific language governing permissions and limitations under
 // each license.
 
-#![allow(unused_variables)] // TEMPORARY while building
-
 use c2pa::{CAIRead, CAIReadWrite, Manifest, ManifestPatchCallback, Signer};
 
 use crate::{builder::IdentityAssertionBuilder, internal, IdentityAssertion};
@@ -37,7 +35,7 @@ impl ManifestBuilder {
     pub async fn build(
         mut self,
         mut manifest: Manifest,
-        format: &str,
+        _format: &str,
         input_stream: &mut dyn CAIRead,
         output_stream: &mut dyn CAIReadWrite,
         signer: &dyn Signer,
@@ -46,7 +44,7 @@ impl ManifestBuilder {
             manifest.add_cbor_assertion("cawg.identity", ia)?;
         }
 
-        let (placed_manifest, active_manifest_label) =
+        let (placed_manifest, _active_manifest_label) =
             manifest.get_placed_manifest(signer.reserve_size(), "jpg", input_stream)?;
 
         let updated_manifest = self
@@ -97,7 +95,7 @@ impl ManifestBuilder {
 }
 
 impl ManifestPatchCallback for ManifestBuilder {
-    fn patch_manifest(&self, manifest_store: &[u8]) -> c2pa::Result<Vec<u8>> {
+    fn patch_manifest(&self, _manifest_store: &[u8]) -> c2pa::Result<Vec<u8>> {
         match self.patched_manifest_store.as_ref() {
             Some(ms) => Ok(ms.clone()),
             None => Err(c2pa::Error::ClaimEncoding),
