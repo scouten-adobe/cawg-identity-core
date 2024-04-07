@@ -11,12 +11,13 @@
 // specific language governing permissions and limitations under
 // each license.
 
+//! Naive implementation of credential-handling traits for
+//! proof-of-concept/testing purposes.
+//!
+//! Not suitable for production use.
+
 use crate::{builder::CredentialHolder, SignerPayload};
 
-/// Naive implementation of [`CredentialHolder`] trait for
-/// proof-of-concept/testing purposes.
-///
-/// Not suitable for production use.
 pub(crate) struct NaiveCredentialHolder {}
 
 #[async_trait::async_trait]
