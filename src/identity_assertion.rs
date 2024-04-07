@@ -185,7 +185,7 @@ impl IdentityAssertion {
     /// [§7. Validating the identity assertion].
     ///
     /// [§7. Validating the identity assertion]: https://creator-assertions.github.io/identity/1.0-draft/#_validating_the_identity_assertion
-    pub fn check_signer_payload<'a>(
+    pub(crate) fn check_signer_payload<'a>(
         &'a self,
         manifest: &c2pa::Manifest,
     ) -> ValidationResult<&'a SignerPayload> {
@@ -195,7 +195,7 @@ impl IdentityAssertion {
     }
 
     /// Check that padding values are acceptable (i.e. all zero-value bytes).
-    pub fn check_padding(&self) -> ValidationResult<()> {
+    pub(crate) fn check_padding(&self) -> ValidationResult<()> {
         if !self.pad1.iter().all(|b| *b == 0) {
             return Err(ValidationError::InvalidPadding);
         }
