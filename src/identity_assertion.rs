@@ -16,6 +16,7 @@ use std::{
     fmt::{Debug, Formatter},
 };
 
+use async_trait::async_trait;
 use serde::{Deserialize, Serialize};
 use serde_bytes::ByteBuf;
 
@@ -151,6 +152,34 @@ impl IdentityAssertion {
         Some(manifest_store)
     }
 
+    /// Check the validity of the identity assertion.
+    pub async fn validate<'a>(
+        &'a self,
+        manifest: &c2pa::Manifest,
+    ) -> ValidationResult<IdentityAssertionReport<'a>> {
+        self.check_padding()?;
+
+        let signer_payload = self.check_signer_payload(manifest)?;
+
+        // TO DO: Allow configuration of signature handler list.
+        // For the moment, we only have the "naive" one. :-/
+
+        if cfg!(test) {
+            let nsh = crate::internal::naive_credential_handler::NaiveSignatureHandler {};
+            let credential_subject = nsh.check_signature(signer_payload, &self.signature).await?;
+
+            Ok(IdentityAssertionReport {
+                signer_payload,
+                sig_type: &self.sig_type,
+                credential_subject,
+            })
+        } else {
+            Err(ValidationError::UnknownSignatureType(
+                self.sig_type.to_string(),
+            ))
+        }
+    }
+
     /// Return the [`SignerPayload`] from this identity assertion
     /// but only if it meets the requirements as described in
     /// [§7. Validating the identity assertion].
@@ -241,7 +270,6 @@ impl SignerPayload {
 
         if !ref_assertion_labels.iter().any(|ra| {
             if let Some((_jumbf_prefix, label)) = ra.rsplit_once('/') {
-                dbg!(&label);
                 label.starts_with("c2pa.hash.")
             } else {
                 false
@@ -264,6 +292,31 @@ impl SignerPayload {
 
         Ok(())
     }
+}
+
+/// A `SignatureHandler` can read one kind of signature from an identity
+/// assertion, assess the validity of the signature, and return information
+/// about the corresponding credential subject.
+#[async_trait]
+pub trait SignatureHandler {
+    /// Check the signature, returning an instance of [`CredentialSubject`] if
+    /// the signature is valid.
+    async fn check_signature<'a>(
+        &self,
+        signer_payload: &SignerPayload,
+        signature: &'a [u8],
+    ) -> ValidationResult<Box<dyn CredentialSubject<'a>>>;
+}
+
+/// A `CredentialSubject` is the actor named by a signature in an identity
+/// assertion.
+pub trait CredentialSubject<'a>: Debug {
+    /// Return the name of the subject suitable for user experience display.
+    fn display_name(&self) -> Option<String>;
+
+    /// Return `true` if the subject's credentials chain up to a suitable trust
+    /// list for this kind of signature.
+    fn is_trusted(&self) -> bool;
 }
 
 /// A `HashedUri` provides a reference to content available within the same
@@ -342,3 +395,12 @@ pub enum ValidationError {
 
 /// Result type for validation operations.
 pub type ValidationResult<T> = std::result::Result<T, ValidationError>;
+
+/// This struct is returned when the data in an identity assertion is deemed
+/// valid.
+#[derive(Debug)]
+pub struct IdentityAssertionReport<'a> {
+    pub signer_payload: &'a SignerPayload,
+    pub sig_type: &'a str,
+    pub credential_subject: Box<dyn CredentialSubject<'a>>,
+}

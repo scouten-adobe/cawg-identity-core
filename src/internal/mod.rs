@@ -13,3 +13,4 @@
 
 pub(crate) mod c2pa_parser;
 pub(crate) mod debug_byte_slice;
+pub(crate) mod naive_credential_handler;

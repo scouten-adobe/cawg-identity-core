@@ -21,9 +21,12 @@
 pub mod builder;
 
 mod identity_assertion;
-pub use identity_assertion::{HashedUri, IdentityAssertion, SignerPayload};
+pub use identity_assertion::{
+    CredentialSubject, HashedUri, IdentityAssertion, SignatureHandler, SignerPayload,
+    ValidationError, ValidationResult,
+};
 
 pub(crate) mod internal;
 
 #[cfg(test)]
-mod tests;
+pub(crate) mod tests;

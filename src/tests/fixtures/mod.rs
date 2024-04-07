@@ -15,11 +15,8 @@
 // This code should only used from unit tests.
 // Silence warnings about unused code when not building tests.
 
-mod naive_credential_handler;
-
 use std::{env, path::PathBuf};
 
-pub(crate) use naive_credential_handler::NaiveCredentialHolder;
 use tempfile::TempDir;
 
 pub(crate) fn fixture_path(name: &str) -> PathBuf {
