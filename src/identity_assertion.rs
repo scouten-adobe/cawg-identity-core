@@ -401,7 +401,7 @@ pub type ValidationResult<T> = std::result::Result<T, ValidationError>;
 #[derive(Debug)]
 pub struct IdentityAssertionReport<'a> {
     /// The data that was presented to the [`CredentialHolder`] for signature
-    /// 
+    ///
     /// [`CredentialHolder`]: crate::builder::CredentialHolder
     pub signer_payload: &'a SignerPayload,
 
@@ -409,7 +409,7 @@ pub struct IdentityAssertionReport<'a> {
     pub sig_type: &'a str,
 
     /// The subject of the [`CredentialHolder`]'s signature
-    /// 
+    ///
     /// [`CredentialHolder`]: crate::builder::CredentialHolder
     pub credential_subject: Box<dyn CredentialSubject<'a>>,
 }
