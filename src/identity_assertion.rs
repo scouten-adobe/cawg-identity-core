@@ -352,9 +352,8 @@ impl Debug for HashedUri {
     }
 }
 
-/// Describes the ways in which a CAWG identity
-/// assertion can fail validation as described in
-/// [§7. Validating the identity assertion].
+/// Describes the ways in which a CAWG identity assertion can fail validation as
+/// described in [§7. Validating the identity assertion].
 ///
 /// [§7. Validating the identity assertion]: https://creator-assertions.github.io/identity/1.0-draft/#_validating_the_identity_assertion
 /// [`IdentityAssertion`]: crate::IdentityAssertion
@@ -392,6 +391,27 @@ pub enum ValidationError {
     /// Unexpected error while parsing or validating the identity assertion.
     #[error("Unexpected error")]
     UnexpectedError,
+}
+
+impl ValidationError {
+    /// Convert a `ValidationError` into a validation status code
+    /// as described in [§7. Validating the identity assertion].
+    ///
+    /// [§7. Validating the identity assertion]: https://creator-assertions.github.io/identity/1.0-draft/#_validating_the_identity_assertion
+    pub fn code(&self) -> &'static str {
+        match self {
+            Self::AssertionNotInClaim(_) | Self::AssertionMismatch(_) => {
+                "cawg.identity.assertion.mismatch"
+            }
+
+            Self::MultipleAssertionReferenced(_) => "cawg.identity.assertion.duplicate",
+            Self::NoHardBindingAssertion => "cawg.identity.hard_binding_missing",
+            Self::UnknownSignatureType(_) => "cawg.identity.sig_type.unknown",
+            Self::InvalidSignature => "cawg.identity.signature.invalid",
+            Self::InvalidPadding => "cawg.identity.pad.invalid",
+            Self::UnexpectedError => "cawg.identity.unknown_error",
+        }
+    }
 }
 
 /// Result type for validation operations.
