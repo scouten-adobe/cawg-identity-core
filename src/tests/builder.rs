@@ -13,12 +13,12 @@
 
 use std::fs::OpenOptions;
 
-use c2pa::{create_signer, Manifest, ManifestStore, SigningAlg};
+use c2pa::{Manifest, ManifestStore};
 
 use crate::{
     builder::{IdentityAssertionBuilder, ManifestBuilder},
     internal::naive_credential_handler::NaiveCredentialHolder,
-    tests::fixtures::{fixture_path, temp_dir_path},
+    tests::fixtures::{fixture_path, temp_c2pa_signer, temp_dir_path},
     IdentityAssertion,
 };
 
@@ -27,18 +27,12 @@ async fn simple_case() {
     // TO DO: Clean up code and extract into builder interface.
     // For now, just looking for a simple proof-of-concept.
 
-    let signcert_path = fixture_path("certs/ps256.pub");
-    let pkey_path = fixture_path("certs/ps256.pem");
-
-    let signer =
-        create_signer::from_files(signcert_path, pkey_path, SigningAlg::Ps256, None).unwrap();
-
     let source = fixture_path("cloud.jpg");
+
+    let mut input_stream = OpenOptions::new().read(true).open(&source).unwrap();
 
     let temp_dir = tempfile::tempdir().unwrap();
     let dest = temp_dir_path(&temp_dir, "cloud_output.jpg");
-
-    let mut input_stream = OpenOptions::new().read(true).open(&source).unwrap();
 
     let mut output_stream = OpenOptions::new()
         .read(true)
@@ -48,16 +42,16 @@ async fn simple_case() {
         .open(&dest)
         .unwrap();
 
-    let manifest: Manifest = Manifest::new("identity_test/simple_case");
-
     // TO DO: Add a metadata assertion as an example.
 
     let naive_credential = NaiveCredentialHolder {};
     let iab = IdentityAssertionBuilder::for_credential_holder(naive_credential);
 
+    let signer = temp_c2pa_signer();
     let mut mb = ManifestBuilder::default();
     mb.add_assertion(iab);
 
+    let manifest: Manifest = Manifest::new("identity_test/simple_case");
     mb.build(
         manifest,
         "jpg",
