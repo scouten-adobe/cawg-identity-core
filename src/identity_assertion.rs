@@ -166,11 +166,11 @@ impl IdentityAssertion {
 
         if cfg!(test) {
             let nsh = crate::internal::naive_credential_handler::NaiveSignatureHandler {};
-            let credential_subject = nsh.check_signature(signer_payload, &self.signature).await?;
+            let named_actor = nsh.check_signature(signer_payload, &self.signature).await?;
 
             Ok(IdentityAssertionReport {
                 signer_payload,
-                credential_subject,
+                named_actor,
             })
         } else {
             Err(ValidationError::UnknownSignatureType(
@@ -300,18 +300,18 @@ impl SignerPayload {
 /// about the corresponding credential subject.
 #[async_trait]
 pub trait SignatureHandler {
-    /// Check the signature, returning an instance of [`CredentialSubject`] if
+    /// Check the signature, returning an instance of [`NamedActor`] if
     /// the signature is valid.
     async fn check_signature<'a>(
         &self,
         signer_payload: &SignerPayload,
         signature: &'a [u8],
-    ) -> ValidationResult<Box<dyn CredentialSubject<'a>>>;
+    ) -> ValidationResult<Box<dyn NamedActor<'a>>>;
 }
 
-/// A `CredentialSubject` is the actor named by a signature in an identity
+/// A `NamedActor` is the actor named by a signature in an identity
 /// assertion.
-pub trait CredentialSubject<'a>: Debug {
+pub trait NamedActor<'a>: Debug {
     /// Return the name of the subject suitable for user experience display.
     fn display_name(&self) -> Option<String>;
 
@@ -409,5 +409,5 @@ pub struct IdentityAssertionReport<'a> {
     /// The subject of the [`CredentialHolder`]'s signature
     ///
     /// [`CredentialHolder`]: crate::builder::CredentialHolder
-    pub credential_subject: Box<dyn CredentialSubject<'a>>,
+    pub named_actor: Box<dyn NamedActor<'a>>,
 }

@@ -22,7 +22,7 @@ pub mod builder;
 
 mod identity_assertion;
 pub use identity_assertion::{
-    CredentialSubject, HashedUri, IdentityAssertion, IdentityAssertionReport, SignatureHandler,
+    HashedUri, IdentityAssertion, IdentityAssertionReport, NamedActor, SignatureHandler,
     SignerPayload, ValidationError, ValidationResult,
 };
 

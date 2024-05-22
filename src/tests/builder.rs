@@ -92,11 +92,11 @@ async fn simple_case() {
         "INVALID.identity.naive_credential"
     );
 
-    let ch = report.credential_subject;
+    let na = report.named_actor;
     assert_eq!(
-        ch.display_name(),
+        na.display_name(),
         Some("Credential for internal testing purposes only".to_string())
     );
 
-    assert!(!ch.is_trusted());
+    assert!(!na.is_trusted());
 }

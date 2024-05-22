@@ -25,8 +25,8 @@ use std::fmt::{Debug, Formatter};
 use async_trait::async_trait;
 
 use crate::{
-    builder::CredentialHolder, identity_assertion::ValidationError, CredentialSubject,
-    SignatureHandler, SignerPayload, ValidationResult,
+    builder::CredentialHolder, identity_assertion::ValidationError, NamedActor, SignatureHandler,
+    SignerPayload, ValidationResult,
 };
 
 pub(crate) struct NaiveCredentialHolder {}
@@ -61,7 +61,7 @@ impl SignatureHandler for NaiveSignatureHandler {
         &self,
         signer_payload: &SignerPayload,
         signature: &'a [u8],
-    ) -> ValidationResult<Box<dyn CredentialSubject<'a>>> {
+    ) -> ValidationResult<Box<dyn NamedActor<'a>>> {
         let mut signer_payload_cbor: Vec<u8> = vec![];
         ciborium::into_writer(signer_payload, &mut signer_payload_cbor)
             .map_err(|_| ValidationError::UnexpectedError)?;
@@ -69,14 +69,14 @@ impl SignatureHandler for NaiveSignatureHandler {
         if signer_payload_cbor != signature {
             Err(ValidationError::InvalidSignature)
         } else {
-            Ok(Box::new(NaiveCredentialSubject {}))
+            Ok(Box::new(NaiveNamedActor {}))
         }
     }
 }
 
-pub(crate) struct NaiveCredentialSubject {}
+pub(crate) struct NaiveNamedActor {}
 
-impl<'a> CredentialSubject<'a> for NaiveCredentialSubject {
+impl<'a> NamedActor<'a> for NaiveNamedActor {
     fn display_name(&self) -> Option<String> {
         Some("Credential for internal testing purposes only".to_string())
     }
@@ -86,8 +86,8 @@ impl<'a> CredentialSubject<'a> for NaiveCredentialSubject {
     }
 }
 
-impl Debug for NaiveCredentialSubject {
+impl Debug for NaiveNamedActor {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
-        f.write_str("NaiveCredentialSubject (for internal testing purposes only)")
+        f.write_str("NaiveNamedActor (for internal testing purposes only)")
     }
 }
