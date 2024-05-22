@@ -37,7 +37,6 @@ pub struct IdentityAssertion {
     builder: Option<IdentityAssertionBuilder>,
 
     signer_payload: SignerPayload,
-    sig_type: String,
 
     #[serde(with = "serde_bytes")]
     signature: Vec<u8>,
@@ -53,21 +52,22 @@ pub struct IdentityAssertion {
 
 impl IdentityAssertion {
     pub(crate) fn from_builder(builder: IdentityAssertionBuilder) -> Self {
+        let sig_type = builder.credential_holder.sig_type().to_owned();
+
         let signer_payload = SignerPayload {
             referenced_assertions: vec![HashedUri {
                 url: "self#jumbf=c2pa.assertions/c2pa.hash.to_be_determined".to_owned(),
                 alg: None,
                 hash: vec![0; 32],
             }],
+            sig_type,
         };
 
-        let sig_type = builder.credential_holder.sig_type().to_owned();
         let signature = vec![0; builder.credential_holder.reserve_size()];
 
         Self {
             builder: Some(builder),
             signer_payload,
-            sig_type,
             signature,
             pad1: vec![0; 32],
             // a bit of padding just in case
@@ -170,12 +170,11 @@ impl IdentityAssertion {
 
             Ok(IdentityAssertionReport {
                 signer_payload,
-                sig_type: &self.sig_type,
                 credential_subject,
             })
         } else {
             Err(ValidationError::UnknownSignatureType(
-                self.sig_type.to_string(),
+                self.signer_payload.sig_type.clone(),
             ))
         }
     }
@@ -214,7 +213,6 @@ impl Debug for IdentityAssertion {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
         f.debug_struct("IdentityAssertion")
             .field("signer_payload", &self.signer_payload)
-            .field("sig_type", &self.sig_type)
             .field("signature", &DebugByteSlice(&self.signature))
             .finish()
     }
@@ -225,6 +223,9 @@ impl Debug for IdentityAssertion {
 pub struct SignerPayload {
     /// List of assertions referenced by this credential signature
     pub referenced_assertions: Vec<HashedUri>,
+
+    /// A string identifying the data type of the `signature` field
+    pub sig_type: String,
 }
 
 impl SignerPayload {
@@ -404,9 +405,6 @@ pub struct IdentityAssertionReport<'a> {
     ///
     /// [`CredentialHolder`]: crate::builder::CredentialHolder
     pub signer_payload: &'a SignerPayload,
-
-    /// The designated signature type for this signature
-    pub sig_type: &'a str,
 
     /// The subject of the [`CredentialHolder`]'s signature
     ///

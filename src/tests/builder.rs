@@ -87,7 +87,10 @@ async fn simple_case() {
     assert_eq!(ra1.url, "self#jumbf=c2pa.assertions/c2pa.hash.data");
     assert_eq!(ra1.alg, Some("sha256".to_owned()));
 
-    assert_eq!(report.sig_type, "INVALID.identity.naive_credential");
+    assert_eq!(
+        report.signer_payload.sig_type,
+        "INVALID.identity.naive_credential"
+    );
 
     let ch = report.credential_subject;
     assert_eq!(

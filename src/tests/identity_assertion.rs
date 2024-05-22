@@ -27,6 +27,7 @@ mod signer_payload {
                     alg: Some("sha256".to_owned()),
                     hash: hex!("53d1b2cf4e6d9a97ed9281183fa5d836c32751b9d2fca724b40836befee7d67f").to_vec(),            }
             }],
+            sig_type: "NONSENSE".to_owned(),
         };
 
         assert_eq!(signer_payload, signer_payload.clone());
