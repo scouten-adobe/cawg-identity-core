@@ -97,8 +97,8 @@ impl IdentityAssertion {
                     claim.assertions.iter().find(|a| a.url == ref_assertion.url)
                 }?;
 
-            ref_assertion.url = claim_assertion.url.clone();
-            ref_assertion.hash = claim_assertion.hash.clone();
+            ref_assertion.url.clone_from(&claim_assertion.url);
+            ref_assertion.hash.clone_from(&claim_assertion.hash);
 
             ref_assertion.alg = Some(
                 match claim_assertion.alg.as_ref() {
