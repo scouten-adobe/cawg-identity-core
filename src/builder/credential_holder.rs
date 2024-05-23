@@ -17,9 +17,10 @@ use crate::SignerPayload;
 /// the [`SignerPayload`] data structure on behalf of a credential holder.
 ///
 /// Implementations of this trait will specialize based on the kind of
-/// credential as specified in
-/// [Credentials, signatures, and validation methods](https://creator-assertions.github.io/identity/1.0-draft/#_credentials_signatures_and_validation_methods)
-/// from the CAWG Identity Assertion specification.
+/// credential as specified in [§8. Credentials, signatures, and validation
+/// methods] from the CAWG Identity Assertion specification.
+///
+/// [§8. Credentials, signatures, and validation methods]: https://creator-assertions.github.io/identity/1.0-draft/#_credentials_signatures_and_validation_methods
 #[async_trait::async_trait]
 pub trait CredentialHolder {
     /// Returns the designated `sig_type` value for this kind of credential.
