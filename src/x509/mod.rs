@@ -11,6 +11,13 @@
 // specific language governing permissions and limitations under
 // each license.
 
+//! Contains implementations of [`CredentialHolder`] and [`CredentialHandler`]
+//! for the X.509/COSE credential types described as
+/// specified in [§8.2, X.509 certificates and COSE signatures].
+///
+/// [`CredentialHolder`]: crate::builder::CredentialHolder
+/// [`CredentialHandler`]: crate::CredentialHandler
+/// [§8.2, X.509 certificates and COSE signatures]: https://creator-assertions.github.io/identity/1.0-draft/#_x_509_certificates_and_cose_signatures
 use c2pa::{create_signer, SigningAlg};
 
 use crate::{builder::CredentialHolder, SignerPayload};

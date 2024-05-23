@@ -21,8 +21,6 @@
 pub(crate) mod credential_holder;
 pub use credential_holder::CredentialHolder;
 
-pub mod credential_holders;
-
 pub(crate) mod identity_assertion_builder;
 pub use identity_assertion_builder::IdentityAssertionBuilder;
 
