@@ -11,20 +11,11 @@
 // specific language governing permissions and limitations under
 // each license.
 
-//! This module contains the APIs you will use to build a
-//! C2PA manifest that contains one or more CAWG identity assertions.
+//! Contains implementations of [`CredentialHolder`] for the credential types
+//! described in [§8. Credentials, signatures, and validation methods].
 //!
-//! This code must be used instead of the APIs in [`c2pa::Manifest`]
-//! to ensure that the identity assertion properly references the
-//! finalized hard binding assertion.
+//! [§8. Credentials, signatures, and validation methods]: https://creator-assertions.github.io/identity/1.0-draft/#_credentials_signatures_and_validation_methods
+//! [`CredentialHolder`]: crate::builder::CredentialHolder
 
-pub(crate) mod credential_holder;
-pub use credential_holder::CredentialHolder;
-
-pub mod credential_holders;
-
-pub(crate) mod identity_assertion_builder;
-pub use identity_assertion_builder::IdentityAssertionBuilder;
-
-mod manifest_builder;
-pub use manifest_builder::ManifestBuilder;
+mod x509;
+pub use x509::X509CredentialHolder;
