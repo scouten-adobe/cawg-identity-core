@@ -300,8 +300,15 @@ impl SignerPayload {
 /// about the corresponding credential subject.
 #[async_trait]
 pub trait SignatureHandler {
+    /// Returns true if this handler can process a signature with
+    /// the given `sig_type` code.
+    fn can_handle_sig_type(sig_type: &str) -> bool;
+
     /// Check the signature, returning an instance of [`NamedActor`] if
     /// the signature is valid.
+    ///
+    /// Will only be called if `can_handle_sig_type` returns `true`
+    /// for this signature.
     async fn check_signature<'a>(
         &self,
         signer_payload: &SignerPayload,
