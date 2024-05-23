@@ -11,16 +11,21 @@
 // specific language governing permissions and limitations under
 // each license.
 
-//! Contains implementations of [`CredentialHolder`] and [`CredentialHandler`]
-//! for the X.509/COSE credential types described as
-/// specified in [§8.2, X.509 certificates and COSE signatures].
-///
-/// [`CredentialHolder`]: crate::builder::CredentialHolder
-/// [`CredentialHandler`]: crate::CredentialHandler
-/// [§8.2, X.509 certificates and COSE signatures]: https://creator-assertions.github.io/identity/1.0-draft/#_x_509_certificates_and_cose_signatures
+//! Contains implementations of [`CredentialHolder`] and [`SignatureHandler`]
+//! for the X.509/COSE credential types described as specified in [§8.2, X.509
+//! certificates and COSE signatures].
+//!
+//! [`CredentialHolder`]: crate::builder::CredentialHolder
+//! [`SignatureHandler`]: crate::SignatureHandler
+//! [§8.2, X.509 certificates and COSE signatures]: https://creator-assertions.github.io/identity/1.0-draft/#_x_509_certificates_and_cose_signatures
+use std::fmt::{Debug, Formatter};
+
+use async_trait::async_trait;
 use c2pa::{create_signer, SigningAlg};
 
-use crate::{builder::CredentialHolder, SignerPayload};
+use crate::{
+    builder::CredentialHolder, NamedActor, SignatureHandler, SignerPayload, ValidationResult,
+};
 
 /// An implementation of [`CredentialHolder`] that supports X.509
 /// certificates as the credential and generates COSE signatures as
@@ -80,5 +85,59 @@ impl CredentialHolder for X509CredentialHolder {
         ciborium::into_writer(signer_payload, &mut sp).map_err(|_| c2pa::Error::ClaimEncoding)?;
 
         temp_signer.sign(&sp)
+    }
+}
+
+/// An implementation of [`SignatureHandler`] that supports COSE signatures
+/// derived from X.509 certificates as specified in [§8.2, X.509 certificates
+/// and COSE signatures].
+///
+/// [`SignatureHandler`]: crate::SignatureHandler
+/// [§8.2, X.509 certificates and COSE signatures]: https://creator-assertions.github.io/identity/1.0-draft/#_x_509_certificates_and_cose_signatures
+pub struct X509CoseSignatureHandler {}
+
+#[async_trait]
+impl SignatureHandler for X509CoseSignatureHandler {
+    fn can_handle_sig_type(sig_type: &str) -> bool {
+        sig_type == "cawg.x509.cose"
+    }
+
+    async fn check_signature<'a>(
+        &self,
+        _signer_payload: &SignerPayload,
+        _signature: &'a [u8],
+    ) -> ValidationResult<Box<dyn NamedActor<'a>>> {
+        todo!("Re-implement for X.509 + COSE");
+        // let mut signer_payload_cbor: Vec<u8> = vec![];
+        // ciborium::into_writer(signer_payload, &mut signer_payload_cbor)
+        //     .map_err(|_| ValidationError::UnexpectedError)?;
+
+        // if signer_payload_cbor != signature {
+        //     Err(ValidationError::InvalidSignature)
+        // } else {
+        //     Ok(Box::new(X509NamedActor {}))
+        // }
+    }
+}
+
+/// An implementation of [`NamedActor`] that describes the subject of an X.509
+/// credential.
+///
+/// [`NamedActor`]: crate::NamedActor
+pub struct X509NamedActor {}
+
+impl<'a> NamedActor<'a> for X509NamedActor {
+    fn display_name(&self) -> Option<String> {
+        todo!("Extract subject name from X.509");
+    }
+
+    fn is_trusted(&self) -> bool {
+        todo!("Is this on trust list?");
+    }
+}
+
+impl Debug for X509NamedActor {
+    fn fmt(&self, _f: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
+        unimplemented!();
     }
 }
