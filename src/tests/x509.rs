@@ -29,7 +29,9 @@ async fn simple_case() {
     // TO DO: Clean up code and extract into builder interface.
     // For now, just looking for a simple proof-of-concept.
 
-    let source = fixture_path("cloud.jpg");
+    // let source = fixture_path("cloud.jpg");
+    let source =
+        std::path::PathBuf::from("/Users/scouten/Adobe/identity-core/src/tests/fixtures/cloud.jpg");
 
     let mut input_stream = OpenOptions::new().read(true).open(&source).unwrap();
 
