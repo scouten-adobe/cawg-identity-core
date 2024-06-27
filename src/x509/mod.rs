@@ -21,10 +21,13 @@
 use std::fmt::{Debug, Formatter};
 
 use async_trait::async_trait;
-use c2pa::{create_signer, SigningAlg};
+use c2pa::{
+    cose_validator::verify_cose_async, create_signer, trust_handler::TrustHandlerConfig, SigningAlg,
+};
 
 use crate::{
-    builder::CredentialHolder, NamedActor, SignatureHandler, SignerPayload, ValidationResult,
+    builder::CredentialHolder, NamedActor, SignatureHandler, SignerPayload, ValidationError,
+    ValidationResult,
 };
 
 /// An implementation of [`CredentialHolder`] that supports X.509
@@ -104,19 +107,48 @@ impl SignatureHandler for X509CoseSignatureHandler {
 
     async fn check_signature<'a>(
         &self,
-        _signer_payload: &SignerPayload,
-        _signature: &'a [u8],
+        signer_payload: &SignerPayload,
+        signature: &'a [u8],
     ) -> ValidationResult<Box<dyn NamedActor<'a>>> {
-        todo!("Re-implement for X.509 + COSE");
-        // let mut signer_payload_cbor: Vec<u8> = vec![];
-        // ciborium::into_writer(signer_payload, &mut signer_payload_cbor)
-        //     .map_err(|_| ValidationError::UnexpectedError)?;
+        // MAJOR TO DO (POSSIBLE SPEC REVISION): Need to ensure
+        // that the signer_payload we're verifying against is
+        // byte-for-byte identical with what was used for signature.
+        // Current implementation glosses over this.
 
+        let mut signer_payload_cbor: Vec<u8> = vec![];
+        ciborium::into_writer(signer_payload, &mut signer_payload_cbor)
+            .map_err(|_| ValidationError::UnexpectedError)?;
+
+        // -- FROM C2PA CLAIM VALIDATION --
+        // // Parse COSE signed data (signature) and validate it.
+        // let sig = claim.signature_val().clone();
+        // let additional_bytes: Vec<u8> = Vec::new();
+        // let claim_data = claim.data()?;
+
+        let additional_data: Vec<u8> = vec![];
+
+        // TO DO: Allow config of TrustHandler
+        let trust_handler: Box<dyn TrustHandlerConfig> =
+            Box::new(c2pa::openssl::OpenSSLTrustHandlerConfig::new());
+
+        let verified = verify_cose_async(
+            signature.to_owned(),
+            signer_payload_cbor,
+            additional_data,
+            true, /* signature_only ??? */
+            trust_handler.as_ref(),
+            validation_log,
+        )
+        .await;
+
+        // -- FROM NAIVE CREDENTIAL HANDLER --
         // if signer_payload_cbor != signature {
         //     Err(ValidationError::InvalidSignature)
         // } else {
         //     Ok(Box::new(X509NamedActor {}))
         // }
+
+        todo!("Re-implement for X.509 + COSE");
     }
 }
 
