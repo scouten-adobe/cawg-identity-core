@@ -52,10 +52,15 @@ async fn simple_case() {
     let sign_cert = include_bytes!("../tests/fixtures/certs/ps384.pub").to_vec();
     let pem_key = include_bytes!("../tests/fixtures/certs/ps384.pem").to_vec();
 
+    let openssl = crate::TEMP_OPENSSL_MUTEX
+        .lock()
+        .expect("Failed to acquire OpenSSL mutex");
+
     let x509_credential =
         X509CredentialHolder::from_keys(sign_cert, pem_key, c2pa::SigningAlg::Ps384, None).unwrap();
 
     let iab = IdentityAssertionBuilder::for_credential_holder(x509_credential);
+    drop(openssl);
 
     let signer = temp_c2pa_signer();
     let mut mb = ManifestBuilder::default();
