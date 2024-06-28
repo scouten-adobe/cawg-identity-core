@@ -22,9 +22,8 @@ use std::fmt::{Debug, Formatter};
 
 use async_trait::async_trait;
 use c2pa::{
-    cose_sign::cose_sign, cose_validator::verify_cose, create_signer,
-    status_tracker::OneShotStatusTracker, trust_handler::TrustHandlerConfig,
-    validator::ValidationInfo, SigningAlg,
+    cose_sign::cose_sign, cose_validator::verify_cose, status_tracker::OneShotStatusTracker,
+    trust_handler::TrustHandlerConfig, validator::ValidationInfo, SigningAlg,
 };
 
 use crate::{
@@ -60,7 +59,7 @@ impl X509CredentialHolder {
     ) -> c2pa::Result<Self> {
         // Sadly, we can't cache the signer because `c2pa::Signer` doesn't
         // implement `Send`.
-        let temp_signer = create_signer::from_keys(&signcert, &pkey, alg, tsa_url.clone())?;
+        let temp_signer = c2pa::create_signer::from_keys(&signcert, &pkey, alg, tsa_url.clone())?;
 
         Ok(Self {
             signcert,
@@ -83,8 +82,12 @@ impl CredentialHolder for X509CredentialHolder {
     }
 
     async fn sign(&self, signer_payload: &SignerPayload) -> c2pa::Result<Vec<u8>> {
-        let temp_signer =
-            create_signer::from_keys(&self.signcert, &self.pkey, self.alg, self.tsa_url.clone())?;
+        let temp_signer = c2pa::create_signer::from_keys(
+            &self.signcert,
+            &self.pkey,
+            self.alg,
+            self.tsa_url.clone(),
+        )?;
 
         let mut sp: Vec<u8> = vec![];
         ciborium::into_writer(signer_payload, &mut sp).map_err(|_| c2pa::Error::ClaimEncoding)?;
