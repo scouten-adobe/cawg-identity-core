@@ -42,5 +42,11 @@ pub(crate) fn temp_c2pa_signer() -> Box<dyn Signer> {
     let sign_cert = include_bytes!("../../tests/fixtures/certs/ps256.pub").to_vec();
     let pem_key = include_bytes!("../../tests/fixtures/certs/ps256.pem").to_vec();
 
-    create_signer::from_keys(&sign_cert, &pem_key, SigningAlg::Ps256, None).unwrap()
+    let openssl = crate::TEMP_OPENSSL_MUTEX
+        .lock()
+        .expect("Failed to acquire OpenSSL mutex");
+
+    let signer = create_signer::from_keys(&sign_cert, &pem_key, SigningAlg::Ps256, None).unwrap();
+    drop(openssl);
+    signer
 }

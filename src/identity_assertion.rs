@@ -161,22 +161,35 @@ impl IdentityAssertion {
 
         let signer_payload = self.check_signer_payload(manifest)?;
 
-        // TO DO: Allow configuration of signature handler list.
-        // For the moment, we only have the "naive" one. :-/
-
         if cfg!(test) {
-            let nsh = crate::internal::naive_credential_handler::NaiveSignatureHandler {};
-            let named_actor = nsh.check_signature(signer_payload, &self.signature).await?;
+            // Allow "naive" signature handler when in unit-test mode.
 
-            Ok(IdentityAssertionReport {
+            let nsh = crate::internal::naive_credential_handler::NaiveSignatureHandler {};
+            if let Ok(named_actor) = nsh.check_signature(signer_payload, &self.signature).await {
+                return Ok(IdentityAssertionReport {
+                    signer_payload,
+                    named_actor,
+                });
+            }
+        }
+
+        // TO DO: Allow configuration of signature handler list.
+        // For now, we hard-code the X.509/COSE signature handler.
+
+        let cose_handler = crate::x509::X509CoseSignatureHandler {};
+        if let Ok(named_actor) = cose_handler
+            .check_signature(signer_payload, &self.signature)
+            .await
+        {
+            return Ok(IdentityAssertionReport {
                 signer_payload,
                 named_actor,
-            })
-        } else {
-            Err(ValidationError::UnknownSignatureType(
-                self.signer_payload.sig_type.clone(),
-            ))
+            });
         }
+
+        Err(ValidationError::UnknownSignatureType(
+            self.signer_payload.sig_type.clone(),
+        ))
     }
 
     /// Return the [`SignerPayload`] from this identity assertion
@@ -300,8 +313,15 @@ impl SignerPayload {
 /// about the corresponding credential subject.
 #[async_trait]
 pub trait SignatureHandler {
+    /// Returns true if this handler can process a signature with
+    /// the given `sig_type` code.
+    fn can_handle_sig_type(sig_type: &str) -> bool;
+
     /// Check the signature, returning an instance of [`NamedActor`] if
     /// the signature is valid.
+    ///
+    /// Will only be called if `can_handle_sig_type` returns `true`
+    /// for this signature.
     async fn check_signature<'a>(
         &self,
         signer_payload: &SignerPayload,

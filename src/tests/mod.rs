@@ -22,3 +22,4 @@ mod builder;
 pub(crate) mod fixtures;
 mod identity_assertion;
 mod internal;
+mod x509;
