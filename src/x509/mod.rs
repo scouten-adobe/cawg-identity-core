@@ -22,7 +22,8 @@ use std::fmt::{Debug, Formatter};
 
 use async_trait::async_trait;
 use c2pa::{
-    cose_validator::verify_cose_async, create_signer, trust_handler::TrustHandlerConfig, SigningAlg,
+    cose_sign::cose_sign, cose_validator::verify_cose, create_signer,
+    status_tracker::OneShotStatusTracker, trust_handler::TrustHandlerConfig, SigningAlg,
 };
 
 use crate::{
@@ -87,7 +88,7 @@ impl CredentialHolder for X509CredentialHolder {
         let mut sp: Vec<u8> = vec![];
         ciborium::into_writer(signer_payload, &mut sp).map_err(|_| c2pa::Error::ClaimEncoding)?;
 
-        temp_signer.sign(&sp)
+        cose_sign(temp_signer.as_ref(), &sp, None)
     }
 }
 
@@ -127,19 +128,38 @@ impl SignatureHandler for X509CoseSignatureHandler {
 
         let additional_data: Vec<u8> = vec![];
 
-        // TO DO: Allow config of TrustHandler
-        let trust_handler: Box<dyn TrustHandlerConfig> =
-            Box::new(c2pa::openssl::OpenSSLTrustHandlerConfig::new());
+        // TO DO: Allow config of TrustHandler.
+        let mut trust_handler = c2pa::openssl::OpenSSLTrustHandlerConfig::new();
 
-        let verified = verify_cose_async(
-            signature.to_owned(),
-            signer_payload_cbor,
-            additional_data,
+        // TO DO: Allow config of StatusTracker.
+        let mut status_tracker = OneShotStatusTracker::new();
+
+        //
+        //
+        //
+        //
+
+        // --- NOW START WATCHING CLOSELY!!! ---
+        let verified = verify_cose(
+            signature,
+            &signer_payload_cbor,
+            &additional_data,
             true, /* signature_only ??? */
-            trust_handler.as_ref(),
-            validation_log,
-        )
-        .await;
+            &mut trust_handler,
+            &mut status_tracker,
+        );
+
+        // let verified = verify_cose_async(
+        //     signature.to_owned(),
+        //     signer_payload_cbor,
+        //     additional_data,
+        //     true, /* signature_only ??? */
+        //     &mut trust_handler,
+        //     &mut status_tracker,
+        // )
+        // .await;
+
+        dbg!(&verified);
 
         // -- FROM NAIVE CREDENTIAL HANDLER --
         // if signer_payload_cbor != signature {
