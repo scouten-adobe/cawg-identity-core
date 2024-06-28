@@ -58,7 +58,7 @@ async fn simple_case() {
         .lock()
         .expect("Failed to acquire OpenSSL mutex");
 
-    // -- DEMO: CREATING A C2PA ASSET WITH IDENTITY ASSERTION STARTS HERE --
+    // Here we act as an identity assertion creator.
 
     let x509_credential =
         X509CredentialHolder::from_keys(sign_cert, pem_key, c2pa::SigningAlg::Ps384, None).unwrap();
@@ -81,7 +81,7 @@ async fn simple_case() {
     .await
     .unwrap();
 
-    // -- DEMO: READING BACK THE C2PA MANIFEST WITH IDENTITY ASSERTION STARTS HERE --
+    // Here we act as an identity assertion consumer.
 
     let manifest_store = ManifestStore::from_file(&dest).unwrap();
     assert!(manifest_store.validation_status().is_none());
