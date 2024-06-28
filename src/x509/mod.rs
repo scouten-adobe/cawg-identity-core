@@ -173,7 +173,15 @@ impl<'a> NamedActor<'a> for X509NamedActor {
 }
 
 impl Debug for X509NamedActor {
-    fn fmt(&self, _f: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
-        unimplemented!();
+    fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
+        let display_name = if let Some(dn) = self.display_name() {
+            dn
+        } else {
+            "(none)".to_owned()
+        };
+
+        f.debug_struct("X509NamedActor")
+            .field("display_name", &display_name)
+            .finish()
     }
 }
