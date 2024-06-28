@@ -23,7 +23,8 @@ use std::fmt::{Debug, Formatter};
 use async_trait::async_trait;
 use c2pa::{
     cose_sign::cose_sign, cose_validator::verify_cose, create_signer,
-    status_tracker::OneShotStatusTracker, trust_handler::TrustHandlerConfig, SigningAlg,
+    status_tracker::OneShotStatusTracker, trust_handler::TrustHandlerConfig,
+    validator::ValidationInfo, SigningAlg,
 };
 
 use crate::{
@@ -134,41 +135,20 @@ impl SignatureHandler for X509CoseSignatureHandler {
         // TO DO: Allow config of StatusTracker.
         let mut status_tracker = OneShotStatusTracker::new();
 
-        //
-        //
-        //
-        //
-
-        // --- NOW START WATCHING CLOSELY!!! ---
         let verified = verify_cose(
             signature,
             &signer_payload_cbor,
             &additional_data,
-            true, /* signature_only ??? */
+            false,
             &mut trust_handler,
             &mut status_tracker,
-        );
+        )
+        .unwrap();
+        // TO DO: Error handling.
 
-        // let verified = verify_cose_async(
-        //     signature.to_owned(),
-        //     signer_payload_cbor,
-        //     additional_data,
-        //     true, /* signature_only ??? */
-        //     &mut trust_handler,
-        //     &mut status_tracker,
-        // )
-        // .await;
+        // dbg!(&verified);
 
-        dbg!(&verified);
-
-        // -- FROM NAIVE CREDENTIAL HANDLER --
-        // if signer_payload_cbor != signature {
-        //     Err(ValidationError::InvalidSignature)
-        // } else {
-        //     Ok(Box::new(X509NamedActor {}))
-        // }
-
-        todo!("Re-implement for X.509 + COSE");
+        Ok(Box::new(X509NamedActor(verified)))
     }
 }
 
@@ -176,15 +156,16 @@ impl SignatureHandler for X509CoseSignatureHandler {
 /// credential.
 ///
 /// [`NamedActor`]: crate::NamedActor
-pub struct X509NamedActor {}
+pub struct X509NamedActor(ValidationInfo);
 
 impl<'a> NamedActor<'a> for X509NamedActor {
     fn display_name(&self) -> Option<String> {
-        todo!("Extract subject name from X.509");
+        self.0.issuer_org.clone()
     }
 
     fn is_trusted(&self) -> bool {
-        todo!("Is this on trust list?");
+        false
+        // todo!("Is this on trust list?");
     }
 }
 

@@ -98,15 +98,12 @@ async fn simple_case() {
     assert_eq!(ra1.url, "self#jumbf=c2pa.assertions/c2pa.hash.data");
     assert_eq!(ra1.alg, Some("sha256".to_owned()));
 
-    assert_eq!(
-        report.signer_payload.sig_type,
-        "INVALID.identity.naive_credential"
-    );
+    assert_eq!(report.signer_payload.sig_type, "cawg.x509.cose");
 
     let na = report.named_actor;
     assert_eq!(
         na.display_name(),
-        Some("Credential for internal testing purposes only".to_string())
+        Some("C2PA Test Signing Cert".to_string())
     );
 
     assert!(!na.is_trusted());
