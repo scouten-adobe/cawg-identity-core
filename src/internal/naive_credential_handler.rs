@@ -57,6 +57,10 @@ pub(crate) struct NaiveSignatureHandler {}
 
 #[async_trait]
 impl SignatureHandler for NaiveSignatureHandler {
+    fn can_handle_sig_type(sig_type: &str) -> bool {
+        sig_type == "INVALID.identity.naive_credential"
+    }
+
     async fn check_signature<'a>(
         &self,
         signer_payload: &SignerPayload,
