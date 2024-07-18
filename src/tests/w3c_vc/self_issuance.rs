@@ -23,13 +23,29 @@ async fn default_case() {
 #[should_panic] // TEMPORARY until error results are implemented
 async fn error_no_issuer() {
     let ti = TestIssuer::from_asset_vc(
-        r#"
-            {
-                "@context": "https://www.w3.org/2018/credentials/v1",
-                "type": "VerifiableCredential",
-                "credentialSubject": {
-                    "id": "did:key:z6Mkmf541wxtnV7n5YAnToRw5JRHJUMQYHBzpkCzyRTHpuL8"
-                }
+        r#"{
+            "@context": "https://www.w3.org/2018/credentials/v1",
+            "type": "VerifiableCredential",
+            "credentialSubject": {
+                "id": "did:key:z6Mkmf541wxtnV7n5YAnToRw5JRHJUMQYHBzpkCzyRTHpuL8"
+            }
+        }"#,
+    );
+
+    ti.test_basic_case().await;
+}
+
+#[actix::test]
+#[should_panic] // TEMPORARY until error results are implemented
+async fn error_no_issuance_date() {
+    let ti = TestIssuer::from_asset_vc(
+        r#"{
+            "@context": "https://www.w3.org/2018/credentials/v1",
+            "type": "VerifiableCredential",
+            "credentialSubject": {
+                "id": "did:key:z6Mkp4n6JaXdECTcy7GLsWrc2bUmSYi3nbKt5grWQznFdYKz"
+            },
+            "issuer": "did:key:z6MkmJhxUFcNhqWqapiPMWhCk6QjSnqRGdiUfmBdVw6Haf7G"
         }"#,
     );
 

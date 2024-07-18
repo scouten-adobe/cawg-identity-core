@@ -11,9 +11,6 @@
 // specific language governing permissions and limitations under
 // each license.
 
-//! WARNING: did:key is great for simple test cases such as this
-//! but is strongly discouraged as a production use case.
-
 use std::{fs::OpenOptions, io::Cursor};
 
 use c2pa::{Manifest, ManifestStore};
@@ -21,7 +18,7 @@ use did_method_key::DIDKey;
 use ssi::{
     did::{DIDMethods, Source},
     jwk::JWK,
-    vc::{Context, Contexts, Credential, CredentialSubject, OneOrMany, URI},
+    vc::{Context, Contexts, Credential, CredentialSubject, Issuer, OneOrMany, URI},
 };
 
 use crate::{
@@ -31,7 +28,6 @@ use crate::{
 };
 
 /// TO DO: Move what we can from this to more generic code in pub mod w3c_vc.
-
 pub(super) struct TestIssuer {
     setup: TestSetup,
 }
@@ -54,16 +50,21 @@ impl CredentialHolder for TestIssuer {
     async fn sign(&self, _signer_payload: &SignerPayload) -> c2pa::Result<Vec<u8>> {
         // TO DO: ERROR HANDLING
         let asset_vc = match &self.setup {
-            TestSetup::UserAndIssuerJwk(_user_jwk, _issuer_jwk) => {
-                let actor_vc = self.credential().await;
+            TestSetup::UserAndIssuerJwk(user_jwk, issuer_jwk) => {
+                // WARNING: did:key is great for simple test cases such as this
+                // but is strongly discouraged for production use cases. In other words,
+                // please don't copy and paste this into your own implementation!
 
-                let OneOrMany::One(ref subject) = actor_vc.credential_subject else {
-                    panic!("HANDLE THIS ERROR: Credential must name exactly one subject");
-                };
+                let mut methods: DIDMethods = DIDMethods::default();
+                methods.insert(Box::new(DIDKey));
 
-                let Some(ref subject) = subject.id else {
-                    panic!("HANDLE THIS ERROR: Credential subject must exist");
-                };
+                let user_did = methods
+                    .generate(&Source::KeyAndPattern(user_jwk, "key"))
+                    .unwrap();
+
+                let issuer_did = methods
+                    .generate(&Source::KeyAndPattern(issuer_jwk, "key"))
+                    .unwrap();
 
                 Credential {
                     context: Contexts::One(Context::URI(URI::String(
@@ -71,9 +72,9 @@ impl CredentialHolder for TestIssuer {
                     ))),
                     id: None,
                     type_: OneOrMany::One("VerifiableCredential".to_string()),
-                    issuer: None,
+                    issuer: Some(Issuer::URI(URI::String(issuer_did))),
                     credential_subject: OneOrMany::One(CredentialSubject {
-                        id: Some(subject.to_owned()),
+                        id: Some(URI::String(user_did)),
                         property_set: None,
                     }),
                     proof: None,
@@ -116,78 +117,6 @@ impl TestIssuer {
             setup: TestSetup::Credential(vc),
         }
     }
-
-    async fn credential(&self) -> Credential {
-        match &self.setup {
-            TestSetup::UserAndIssuerJwk(user_jwk, issuer_jwk) => {
-                // TO DO: ERROR HANDLING
-
-                let mut methods = DIDMethods::default();
-                methods.insert(Box::new(DIDKey));
-
-                let user_did = methods
-                    .generate(&Source::KeyAndPattern(user_jwk, "key"))
-                    .unwrap();
-
-                let issuer_did = methods
-                    .generate(&Source::KeyAndPattern(issuer_jwk, "key"))
-                    .unwrap();
-
-                let id_vc: Credential = Credential::from_json_unsigned(
-                    &serde_json::json!(
-                    {
-                        "@context": ["https://www.w3.org/2018/credentials/v1","https://schema.org/"],
-                        "id": "http://example.org/credentials/3731",
-                        "type": [
-                        "VerifiableCredential",
-                        "Person"
-                        ],
-                        "credentialSubject": {
-                        "id": user_did,
-                        "name": "Sample User Fred",
-                        },
-                        "issuer": issuer_did,
-                        "issuanceDate": "2023-11-06T21:43:29Z",
-
-                    })
-                    .to_string(),
-                )
-                .unwrap();
-
-                // id_vc.add_proof(
-                //     id_vc
-                //         .generate_proof(
-                //             &self.issuer_jwk,
-                //             &LinkedDataProofOptions::default(),
-                //             &DIDKey,
-                //             &mut ContextLoader::default(),
-                //         )
-                //         .await
-                //         .unwrap(),
-                // );
-
-                id_vc
-            }
-            TestSetup::Credential(_vc) => {
-                unimplemented!()
-            }
-        }
-    }
-
-    // async fn add_proof(&self, presentation: &mut Presentation, options:
-    // &LinkedDataProofOptions) {     // TO DO: ERROR HANDLING
-    //     presentation.add_proof(
-    //         presentation
-    //             .generate_proof(
-    //                 &self.user_jwk,
-    //                 &options,
-    //                 &DIDKey,
-    //                 &mut ContextLoader::default(),
-    //             )
-    //             .await
-    //             .unwrap(),
-    //     );
-    // }
 
     pub(super) async fn test_basic_case(self) {
         // TO DO: See if we can make this a non-consuming function.
