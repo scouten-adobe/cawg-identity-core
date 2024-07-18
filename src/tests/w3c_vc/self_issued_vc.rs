@@ -15,7 +15,7 @@
 //! but is strongly discouraged as a production use case.
 
 #![allow(unused)] // TEMPORARY while building
-use std::fs::OpenOptions;
+use std::{collections::HashMap, fs::OpenOptions};
 
 use async_trait::async_trait;
 use c2pa::{Manifest, ManifestStore};
@@ -25,8 +25,8 @@ use ssi::{
     jsonld::ContextLoader,
     jwk::JWK,
     vc::{
-        Context, Contexts, Credential, CredentialOrJWT, LinkedDataProofOptions, OneOrMany,
-        Presentation, URI,
+        Context, Contexts, Credential, CredentialOrJWT, CredentialSubject, LinkedDataProofOptions,
+        OneOrMany, URI,
     },
 };
 
@@ -87,35 +87,35 @@ impl DidKeySelfIssuer {
         )
         .unwrap();
 
-        id_vc.add_proof(
-            id_vc
-                .generate_proof(
-                    &self.issuer_jwk,
-                    &LinkedDataProofOptions::default(),
-                    &DIDKey,
-                    &mut ContextLoader::default(),
-                )
-                .await
-                .unwrap(),
-        );
+        // id_vc.add_proof(
+        //     id_vc
+        //         .generate_proof(
+        //             &self.issuer_jwk,
+        //             &LinkedDataProofOptions::default(),
+        //             &DIDKey,
+        //             &mut ContextLoader::default(),
+        //         )
+        //         .await
+        //         .unwrap(),
+        // );
 
         id_vc
     }
 
-    async fn add_proof(&self, presentation: &mut Presentation, options: &LinkedDataProofOptions) {
-        // TO DO: ERROR HANDLING
-        presentation.add_proof(
-            presentation
-                .generate_proof(
-                    &self.user_jwk,
-                    &options,
-                    &DIDKey,
-                    &mut ContextLoader::default(),
-                )
-                .await
-                .unwrap(),
-        );
-    }
+    // async fn add_proof(&self, presentation: &mut Presentation, options:
+    // &LinkedDataProofOptions) {     // TO DO: ERROR HANDLING
+    //     presentation.add_proof(
+    //         presentation
+    //             .generate_proof(
+    //                 &self.user_jwk,
+    //                 &options,
+    //                 &DIDKey,
+    //                 &mut ContextLoader::default(),
+    //             )
+    //             .await
+    //             .unwrap(),
+    //     );
+    // }
 }
 
 #[async_trait::async_trait]
@@ -142,26 +142,26 @@ impl CredentialHolder for DidKeySelfIssuer {
             panic!("HANDLE THIS ERROR: Credential subject must exist");
         };
 
-        let URI::String(subject) = subject;
-        // ^^ No `else` clause because URI enum has no other
-        // current values.
-
-        let subject = subject.clone();
-
-        // TO DO: Verify that did method is on the allow list.
-        // TO DO: Perform independent verification on VC now?
-
-        let mut vp = Presentation {
+        let mut asset_vc = Credential {
             context: Contexts::One(Context::URI(URI::String(
                 "https://www.w3.org/2018/credentials/v1".to_string(),
             ))),
             id: None,
-            type_: OneOrMany::One("VerifiablePresentation".to_string()),
-            verifiable_credential: Some(OneOrMany::One(CredentialOrJWT::Credential(actor_vc))),
+            type_: OneOrMany::One("VerifiableCredential".to_string()),
+            issuer: None,
+            credential_subject: OneOrMany::One(CredentialSubject {
+                id: Some(subject.to_owned()),
+                property_set: None,
+            }),
             proof: None,
-            holder: Some(URI::String(subject)),
-            holder_binding: None,
+            expiration_date: None,
+            credential_status: None,
             property_set: None,
+            issuance_date: None,
+            terms_of_use: None,
+            evidence: None,
+            credential_schema: None,
+            refresh_service: None,
         };
 
         let vp_options = LinkedDataProofOptions {
@@ -170,12 +170,15 @@ impl CredentialHolder for DidKeySelfIssuer {
             ..LinkedDataProofOptions::default()
         };
 
-        self.add_proof(&mut vp, &vp_options).await;
+        // self.add_proof(&mut vp, &vp_options).await;
 
-        eprintln!("VP is\n{}\n\n", serde_json::to_string_pretty(&vp).unwrap());
+        eprintln!(
+            "Asset VC is\n{}\n\n",
+            serde_json::to_string_pretty(&asset_vc).unwrap()
+        );
 
-        let vp = serde_json::to_string(&vp)?;
-        Ok(vp.as_bytes().to_owned())
+        let asset_vc = serde_json::to_string(&asset_vc)?;
+        Ok(asset_vc.as_bytes().to_owned())
     }
 }
 
