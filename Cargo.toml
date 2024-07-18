@@ -17,4 +17,4 @@ thiserror = "1.0.58"
 actix = "0.13.3"
 c2pa = { version = "0.32.4", features = ["file_io", "openssl_sign"] }
 serde = { version = "1.0.197", features = ["derive"] }
-tempfile = "3.1.0"
+tempfile = "3.10.1"
