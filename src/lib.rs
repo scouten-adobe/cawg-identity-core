@@ -30,3 +30,11 @@ pub(crate) mod internal;
 
 #[cfg(test)]
 pub(crate) mod tests;
+
+pub mod w3c_vc;
+
+// Hopefully temporary hack while we sort out OpenSSL thread-safety
+// issues in c2pa-rs.
+use std::sync::Mutex;
+#[allow(dead_code)] // Only used in test code.
+static TEMP_OPENSSL_MUTEX: Mutex<()> = Mutex::new(());
