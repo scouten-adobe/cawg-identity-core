@@ -21,10 +21,10 @@ use crate::{NamedActor, SignatureHandler, SignerPayload, ValidationResult};
 
 /// An implementation of [`SignatureHandler`] that supports Creator Identity
 /// Assertions (a specific grammar of W3C Verifiable Credentials) as specified
-/// in [§8.1, W3C verifiable credential].
+/// in [§8.1, W3C verifiable credentials].
 ///
 /// [`SignatureHandler`]: crate::SignatureHandler
-/// [§8.1, W3C verifiable credential]: https://creator-assertions.github.io/identity/1.x-add-vc-v3/#_w3c_verifiable_credential_2
+/// [§8.1, W3C verifiable credentials]: https://creator-assertions.github.io/identity/1.x-add-vc-v3/#_w3c_verifiable_credentials
 pub struct VcSignatureHandler {}
 
 #[async_trait]

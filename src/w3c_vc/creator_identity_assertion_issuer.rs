@@ -12,11 +12,11 @@
 // each license.
 
 //! Contains implementations of [`CredentialHolder`] and [`SignatureHandler`]
-//! for verifiable credential as specified in [§8.1, W3C verifiable credential].
+//! for verifiable credential as specified in [§8.1, W3C verifiable credentials].
 //!
 //! [`CredentialHolder`]: crate::builder::CredentialHolder
 //! [`SignatureHandler`]: crate::SignatureHandler
-//! [§8.1, W3C verifiable credential]: https://creator-assertions.github.io/identity/1.x-add-vc-v3/#_w3c_verifiable_credential_2
+//! [§8.1, W3C verifiable credentials]: https://creator-assertions.github.io/identity/1.x-add-vc-v3/#_w3c_verifiable_credentials
 
 #![allow(unused)] // TEMPORARY while building
 
@@ -24,6 +24,13 @@ use std::fmt::{Debug, Formatter};
 
 use async_trait::async_trait;
 use c2pa::SigningAlg;
+use ssi::{
+    did::DIDMethods,
+    vc::{
+        Context, Contexts, Credential, CredentialOrJWT, LinkedDataProofOptions, OneOrMany,
+        Presentation, URI,
+    },
+};
 
 use crate::{
     builder::CredentialHolder, NamedActor, SignatureHandler, SignerPayload, ValidationError,
@@ -32,10 +39,10 @@ use crate::{
 
 /// An implementation of [`CredentialHolder`] that supports varying forms of
 /// credentials and generates W3C verifiable credential as the identity
-/// assertino signature as specified in [§8.1, W3C verifiable credential].
+/// assertion signature as specified in [§8.1, W3C verifiable credentials].
 ///
 /// [`CredentialHolder`]: crate::builder::CredentialHolder
-/// [§8.1, W3C verifiable credential]: https://creator-assertions.github.io/identity/1.x-add-vc-v3/#_w3c_verifiable_credential_2
+/// [§8.1, W3C verifiable credentials]: https://creator-assertions.github.io/identity/1.x-add-vc-v3/#_w3c_verifiable_credentials
 pub struct CredentialIdentityAssertionIssuer {}
 
 impl CredentialIdentityAssertionIssuer {
@@ -56,18 +63,6 @@ impl CredentialHolder for CredentialIdentityAssertionIssuer {
     }
 
     async fn sign(&self, signer_payload: &SignerPayload) -> c2pa::Result<Vec<u8>> {
-        // #[allow(unused_imports)]
-        // use ssi::{
-        //     did::DIDMethods,
-        //     vc::{
-        //         Context, Contexts, Credential, CredentialOrJWT, LinkedDataProofOptions, OneOrMany,
-        //         Presentation, URI,
-        //     },
-        // };
-        
-
-
-
         // // VC holder's countersignature references the SHA-256
         // // hash of the partial claim.
         // let claim_id = id_for_partial_claim(partial_claim);
@@ -97,7 +92,8 @@ impl CredentialHolder for CredentialIdentityAssertionIssuer {
         //     ))),
         //     id: None,
         //     type_: OneOrMany::One("VerifiablePresentation".to_string()),
-        //     verifiable_credential: Some(OneOrMany::One(CredentialOrJWT::Credential(actor_vc))),
+        //     verifiable_credential:
+        // Some(OneOrMany::One(CredentialOrJWT::Credential(actor_vc))),
         //     proof: None,
         //     holder: Some(URI::String(subject)),
         //     holder_binding: None,

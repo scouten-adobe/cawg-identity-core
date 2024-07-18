@@ -17,7 +17,7 @@
 //!
 //! [`CredentialHolder`]: crate::builder::CredentialHolder
 //! [`SignatureHandler`]: crate::SignatureHandler
-//! [§8.1, W3C verifiable credential]: https://creator-assertions.github.io/identity/1.x-add-vc-v3+schema/#_w3c_verifiable_credential_2
+//! [§8.1, W3C verifiable credentials]: https://creator-assertions.github.io/identity/1.x-add-vc-v3+schema/#_w3c_verifiable_credentials
 
 mod creator_identity_assertion_issuer;
 pub use creator_identity_assertion_issuer::CredentialIdentityAssertionIssuer;
