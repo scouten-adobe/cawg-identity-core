@@ -16,6 +16,13 @@
 use std::fmt::{Debug, Formatter};
 
 use async_trait::async_trait;
+use ssi::{
+    did::DIDMethods,
+    vc::{
+        Context, Contexts, Credential, CredentialOrJWT, LinkedDataProofOptions, OneOrMany,
+        Presentation, URI,
+    },
+};
 
 use crate::{NamedActor, SignatureHandler, SignerPayload, ValidationResult};
 
@@ -38,16 +45,16 @@ impl SignatureHandler for VcSignatureHandler {
         signer_payload: &SignerPayload,
         signature: &'a [u8],
     ) -> ValidationResult<Box<dyn NamedActor<'a>>> {
+        // TO DO: ERROR HANDLING
+        let vc_str = std::str::from_utf8(signature).unwrap();
+
+        let vc = Credential::from_json(&vc_str).unwrap();
+        vc.validate().unwrap();
+
+        dbg!(&vc);
+
         /* ---- From older identity prototype ----
         // NOTE vp is: &Presentation
-
-        // use ssi::{
-        //     did::DIDMethods,
-        //     vc::{
-        //         Context, Contexts, Credential, CredentialOrJWT, LinkedDataProofOptions, OneOrMany,
-        //         Presentation, URI,
-        //     },
-        // };
 
         vp.validate().unwrap();
 
@@ -177,7 +184,8 @@ pub struct VcNamedActor();
 
 impl<'a> NamedActor<'a> for VcNamedActor {
     fn display_name(&self) -> Option<String> {
-        unimplemented!();
+        // TO DO: Extract this from VC
+        None
     }
 
     fn is_trusted(&self) -> bool {

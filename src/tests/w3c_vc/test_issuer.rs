@@ -33,8 +33,12 @@ use crate::{
 /// TO DO: Move what we can from this to more generic code in pub mod w3c_vc.
 
 pub(super) struct TestIssuer {
-    user_jwk: JWK,
-    issuer_jwk: JWK,
+    setup: TestSetup,
+}
+
+enum TestSetup {
+    UserAndIssuerJwk(JWK, JWK),
+    Credential(Credential),
 }
 
 #[async_trait::async_trait]
@@ -49,36 +53,41 @@ impl CredentialHolder for TestIssuer {
 
     async fn sign(&self, _signer_payload: &SignerPayload) -> c2pa::Result<Vec<u8>> {
         // TO DO: ERROR HANDLING
-        let actor_vc = self.credential().await;
+        let asset_vc = match &self.setup {
+            TestSetup::UserAndIssuerJwk(_user_jwk, _issuer_jwk) => {
+                let actor_vc = self.credential().await;
 
-        let OneOrMany::One(ref subject) = actor_vc.credential_subject else {
-            panic!("HANDLE THIS ERROR: Credential must name exactly one subject");
-        };
+                let OneOrMany::One(ref subject) = actor_vc.credential_subject else {
+                    panic!("HANDLE THIS ERROR: Credential must name exactly one subject");
+                };
 
-        let Some(ref subject) = subject.id else {
-            panic!("HANDLE THIS ERROR: Credential subject must exist");
-        };
+                let Some(ref subject) = subject.id else {
+                    panic!("HANDLE THIS ERROR: Credential subject must exist");
+                };
 
-        let asset_vc = Credential {
-            context: Contexts::One(Context::URI(URI::String(
-                "https://www.w3.org/2018/credentials/v1".to_string(),
-            ))),
-            id: None,
-            type_: OneOrMany::One("VerifiableCredential".to_string()),
-            issuer: None,
-            credential_subject: OneOrMany::One(CredentialSubject {
-                id: Some(subject.to_owned()),
-                property_set: None,
-            }),
-            proof: None,
-            expiration_date: None,
-            credential_status: None,
-            property_set: None,
-            issuance_date: None,
-            terms_of_use: None,
-            evidence: None,
-            credential_schema: None,
-            refresh_service: None,
+                Credential {
+                    context: Contexts::One(Context::URI(URI::String(
+                        "https://www.w3.org/2018/credentials/v1".to_string(),
+                    ))),
+                    id: None,
+                    type_: OneOrMany::One("VerifiableCredential".to_string()),
+                    issuer: None,
+                    credential_subject: OneOrMany::One(CredentialSubject {
+                        id: Some(subject.to_owned()),
+                        property_set: None,
+                    }),
+                    proof: None,
+                    expiration_date: None,
+                    credential_status: None,
+                    property_set: None,
+                    issuance_date: None,
+                    terms_of_use: None,
+                    evidence: None,
+                    credential_schema: None,
+                    refresh_service: None,
+                }
+            }
+            TestSetup::Credential(vc) => vc.clone(),
         };
 
         eprintln!(
@@ -94,59 +103,75 @@ impl CredentialHolder for TestIssuer {
 impl TestIssuer {
     pub(super) fn new() -> Self {
         Self {
-            user_jwk: JWK::generate_ed25519().unwrap(),
-            issuer_jwk: JWK::generate_ed25519().unwrap(),
+            setup: TestSetup::UserAndIssuerJwk(
+                JWK::generate_ed25519().unwrap(),
+                JWK::generate_ed25519().unwrap(),
+            ),
+        }
+    }
+
+    pub(super) fn from_asset_vc(asset_vc_json: &str) -> Self {
+        let vc = Credential::from_json(asset_vc_json).unwrap();
+        Self {
+            setup: TestSetup::Credential(vc),
         }
     }
 
     async fn credential(&self) -> Credential {
-        // TO DO: ERROR HANDLING
+        match &self.setup {
+            TestSetup::UserAndIssuerJwk(user_jwk, issuer_jwk) => {
+                // TO DO: ERROR HANDLING
 
-        let mut methods = DIDMethods::default();
-        methods.insert(Box::new(DIDKey));
+                let mut methods = DIDMethods::default();
+                methods.insert(Box::new(DIDKey));
 
-        let user_did = methods
-            .generate(&Source::KeyAndPattern(&self.user_jwk, "key"))
-            .unwrap();
+                let user_did = methods
+                    .generate(&Source::KeyAndPattern(user_jwk, "key"))
+                    .unwrap();
 
-        let issuer_did = methods
-            .generate(&Source::KeyAndPattern(&self.issuer_jwk, "key"))
-            .unwrap();
+                let issuer_did = methods
+                    .generate(&Source::KeyAndPattern(issuer_jwk, "key"))
+                    .unwrap();
 
-        let id_vc: Credential = Credential::from_json_unsigned(
-            &serde_json::json!(
-            {
-                "@context": ["https://www.w3.org/2018/credentials/v1","https://schema.org/"],
-                "id": "http://example.org/credentials/3731",
-                "type": [
-                  "VerifiableCredential",
-                  "Person"
-                ],
-                "credentialSubject": {
-                  "id": user_did,
-                  "name": "Sample User Fred",
-                },
-                "issuer": issuer_did,
-                "issuanceDate": "2023-11-06T21:43:29Z",
+                let id_vc: Credential = Credential::from_json_unsigned(
+                    &serde_json::json!(
+                    {
+                        "@context": ["https://www.w3.org/2018/credentials/v1","https://schema.org/"],
+                        "id": "http://example.org/credentials/3731",
+                        "type": [
+                        "VerifiableCredential",
+                        "Person"
+                        ],
+                        "credentialSubject": {
+                        "id": user_did,
+                        "name": "Sample User Fred",
+                        },
+                        "issuer": issuer_did,
+                        "issuanceDate": "2023-11-06T21:43:29Z",
 
-              })
-            .to_string(),
-        )
-        .unwrap();
+                    })
+                    .to_string(),
+                )
+                .unwrap();
 
-        // id_vc.add_proof(
-        //     id_vc
-        //         .generate_proof(
-        //             &self.issuer_jwk,
-        //             &LinkedDataProofOptions::default(),
-        //             &DIDKey,
-        //             &mut ContextLoader::default(),
-        //         )
-        //         .await
-        //         .unwrap(),
-        // );
+                // id_vc.add_proof(
+                //     id_vc
+                //         .generate_proof(
+                //             &self.issuer_jwk,
+                //             &LinkedDataProofOptions::default(),
+                //             &DIDKey,
+                //             &mut ContextLoader::default(),
+                //         )
+                //         .await
+                //         .unwrap(),
+                // );
 
-        id_vc
+                id_vc
+            }
+            TestSetup::Credential(_vc) => {
+                unimplemented!()
+            }
+        }
     }
 
     // async fn add_proof(&self, presentation: &mut Presentation, options:

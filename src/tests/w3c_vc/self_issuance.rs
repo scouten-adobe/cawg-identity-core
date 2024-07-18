@@ -11,13 +11,27 @@
 // specific language governing permissions and limitations under
 // each license.
 
-//! WARNING: did:key is great for simple test cases such as this
-//! but is strongly discouraged as a production use case.
-
 use super::test_issuer::TestIssuer;
 
 #[actix::test]
 async fn default_case() {
     let ti = TestIssuer::new();
+    ti.test_basic_case().await;
+}
+
+#[actix::test]
+#[should_panic] // TEMPORARY until error results are implemented
+async fn error_no_issuer() {
+    let ti = TestIssuer::from_asset_vc(
+        r#"
+            {
+                "@context": "https://www.w3.org/2018/credentials/v1",
+                "type": "VerifiableCredential",
+                "credentialSubject": {
+                    "id": "did:key:z6Mkmf541wxtnV7n5YAnToRw5JRHJUMQYHBzpkCzyRTHpuL8"
+                }
+        }"#,
+    );
+
     ti.test_basic_case().await;
 }
