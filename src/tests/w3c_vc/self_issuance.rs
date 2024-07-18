@@ -51,3 +51,21 @@ async fn error_no_issuance_date() {
 
     ti.test_basic_case().await;
 }
+
+#[actix::test]
+#[should_panic] // TEMPORARY until error results are implemented
+async fn error_no_proof() {
+    let ti = TestIssuer::from_asset_vc(
+        r#"{
+            "@context": "https://www.w3.org/2018/credentials/v1",
+            "type": "VerifiableCredential",
+            "credentialSubject": {
+                "id": "did:key:z6Mktf2a2pRkJuiwUKPcyWSNnWMwgCoUvqtjmYfYUwiqVx3u"
+            },
+            "issuer": "did:key:z6MkicKWYcotCaNY2aPz6rftxr9wkj8K6JzfRhQadycEApnB",
+            "issuanceDate": "2024-07-18T21:20:08Z"
+        }"#,
+    );
+
+    ti.test_basic_case().await;
+}
