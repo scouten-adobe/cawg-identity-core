@@ -11,5 +11,13 @@
 // specific language governing permissions and limitations under
 // each license.
 
-mod self_issuance;
-pub(self) mod test_issuer;
+//! WARNING: did:key is great for simple test cases such as this
+//! but is strongly discouraged as a production use case.
+
+use super::test_issuer::TestIssuer;
+
+#[actix::test]
+async fn default_case() {
+    let ti = TestIssuer::new();
+    ti.test_basic_case().await;
+}

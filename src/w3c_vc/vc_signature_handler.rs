@@ -30,7 +30,7 @@ pub struct VcSignatureHandler {}
 #[async_trait]
 impl SignatureHandler for VcSignatureHandler {
     fn can_handle_sig_type(sig_type: &str) -> bool {
-        sig_type == "cawg.x509.cose"
+        sig_type == "cawg.w3c.vc"
     }
 
     async fn check_signature<'a>(

@@ -176,8 +176,8 @@ impl IdentityAssertion {
         // TO DO: Allow configuration of signature handler list.
         // For now, we hard-code the VC/creator identity assertion signature handler.
 
-        let cose_handler = crate::w3c_vc::VcSignatureHandler {};
-        if let Ok(named_actor) = cose_handler
+        let vc_handler = crate::w3c_vc::VcSignatureHandler {};
+        if let Ok(named_actor) = vc_handler
             .check_signature(signer_payload, &self.signature)
             .await
         {
