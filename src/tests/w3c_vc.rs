@@ -52,6 +52,7 @@ async fn simple_case() {
     // NOTE: We're using the ps384 key/cert pair to differentiate from the
     // ps256 key/cert pair used for the C2PA signing below.
 
+    /*
     let sign_cert = include_bytes!("../tests/fixtures/certs/ps384.pub").to_vec();
     let pem_key = include_bytes!("../tests/fixtures/certs/ps384.pem").to_vec();
 
@@ -61,7 +62,6 @@ async fn simple_case() {
 
     unimplemented!();
 
-    /*
     // Here we act as an identity assertion creator.
 
     let x509_credential =
