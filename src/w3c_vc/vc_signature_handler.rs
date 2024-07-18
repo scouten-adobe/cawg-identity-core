@@ -53,12 +53,22 @@ impl SignatureHandler for VcSignatureHandler {
 
         dbg!(&vc);
 
+        let mut options = LinkedDataProofOptions::default();
+        options.proof_purpose = Some(ssi_dids::VerificationRelationship::AssertionMethod);
+
+        // TO DO: Support other DID methods.
+        let key_resolver = did_method_key::DIDKey {};
+        let mut loader = ssi_json_ld::ContextLoader::empty().with_static_loader();
+
+        let result = vc.verify(Some(options), &key_resolver, &mut loader).await;
+        assert!(result.checks.len() == 1);
+        assert!(result.warnings.is_empty());
+        assert!(result.errors.is_empty());
+
+        dbg!(&result);
+
         /* ---- From older identity prototype ----
         // NOTE vp is: &Presentation
-
-        vp.validate().unwrap();
-
-        let partial_claim_id = id_for_partial_claim(partial_claim);
 
         let mut options = LinkedDataProofOptions::default();
         options.proof_purpose = Some(ssi_dids::VerificationRelationship::AssertionMethod);
@@ -125,6 +135,7 @@ impl SignatureHandler for VcSignatureHandler {
             panic!("HANDLE THIS ERROR: Proof doesn't match credential holder");
         }
 
+        let partial_claim_id = id_for_partial_claim(partial_claim);
         if domain != &partial_claim_id {
             panic!("HANDLE THIS ERROR: Proof doesn't match partial claim ID");
         }
