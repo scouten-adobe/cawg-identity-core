@@ -12,7 +12,8 @@
 // each license.
 
 //! Contains implementations of [`CredentialHolder`] and [`SignatureHandler`]
-//! for verifiable credential as specified in [§8.1, W3C verifiable credentials].
+//! for verifiable credential as specified in [§8.1, W3C verifiable
+//! credentials].
 //!
 //! [`CredentialHolder`]: crate::builder::CredentialHolder
 //! [`SignatureHandler`]: crate::SignatureHandler
