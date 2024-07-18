@@ -12,6 +12,9 @@ hex-literal = "0.4.1"
 jumbf = "0.4.0"
 serde = { version = "1.0.197", features = ["derive"] }
 serde_bytes = "0.11.14"
+ssi = "0.7.0"
+ssi-dids = "0.1.1"
+ssi-json-ld = "0.2.2"
 thiserror = "1.0.61"
 
 [dev-dependencies]
