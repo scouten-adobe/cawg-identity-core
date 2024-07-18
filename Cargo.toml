@@ -11,7 +11,7 @@ hex-literal = "0.4.1"
 jumbf = "0.4.0"
 serde = { version = "1.0.197", features = ["derive"] }
 serde_bytes = "0.11.14"
-thiserror = "1.0.58"
+thiserror = "1.0.61"
 
 [dev-dependencies]
 actix = "0.13.3"
