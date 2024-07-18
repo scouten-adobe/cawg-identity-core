@@ -38,8 +38,94 @@ impl SignatureHandler for VcSignatureHandler {
         signer_payload: &SignerPayload,
         signature: &'a [u8],
     ) -> ValidationResult<Box<dyn NamedActor<'a>>> {
-        unimplemented!();
-        /*
+        /* ---- From older identity prototype ----
+        // NOTE vp is: &Presentation
+
+        // use ssi::{
+        //     did::DIDMethods,
+        //     vc::{
+        //         Context, Contexts, Credential, CredentialOrJWT, LinkedDataProofOptions, OneOrMany,
+        //         Presentation, URI,
+        //     },
+        // };
+
+        vp.validate().unwrap();
+
+        let partial_claim_id = id_for_partial_claim(partial_claim);
+
+        let mut options = LinkedDataProofOptions::default();
+        options.proof_purpose = Some(ssi_dids::VerificationRelationship::AssertionMethod);
+
+        // TO DO: Support other DID methods.
+        let key_resolver = did_method_key::DIDKey {};
+        let mut loader = ssi_json_ld::ContextLoader::empty().with_static_loader();
+
+        let result = vp.verify(Some(options), &key_resolver, &mut loader).await;
+        assert!(result.checks.len() == 1);
+        assert!(result.warnings.is_empty());
+        assert!(result.errors.is_empty());
+
+        // Ensure that the proof and VC holder are properly bound.
+        let Some(ref actor_vc) = vp.verifiable_credential else {
+            panic!("HANDLE THIS ERROR: No VC in the VP.")
+        };
+
+        let OneOrMany::One(actor_vc) = actor_vc else {
+            panic!("HANDLE THIS ERROR: VC has multiple credentials.");
+        };
+
+        let CredentialOrJWT::Credential(actor_vc) = actor_vc else {
+            panic!("HANDLE THIS ERROR: VC is actually a JWT.");
+        };
+
+        let OneOrMany::One(ref subject) = actor_vc.credential_subject else {
+            panic!("HANDLE THIS ERROR: Multiple credential subjects.");
+        };
+
+        let Some(ref subject) = subject.id else {
+            panic!("HANDLE THIS ERROR: subject.id missing.");
+        };
+
+        let URI::String(subject) = subject;
+        // ^^ No `else` clause because URI enum has no other
+        // current values.
+
+        // Make sure the presentation correctly identifies the partial claim.
+        let Some(ref proof) = vp.proof else {
+            panic!("HANDLE THIS ERROR: VP doesn't contain a proof.");
+        };
+
+        let OneOrMany::One(proof) = proof else {
+            panic!("HANDLE THIS ERROR: VP contains multiple proofs.");
+        };
+
+        let Some(ref verification_method) = proof.verification_method else {
+            panic!("HANDLE THIS ERROR: VP doens't contain a verification method");
+        };
+
+        // Ignore multibaseValue for this comparison.
+        // TO DO: Is this specific to `did:key`?
+        let verification_method = match verification_method.split_once('#') {
+            Some((vm, _)) => vm,
+            _ => verification_method,
+        };
+
+        let Some(ref domain) = proof.domain else {
+            panic!("HANDLE THIS ERROR: VP doesn't contain a domain");
+        };
+
+        if verification_method != subject {
+            panic!("HANDLE THIS ERROR: Proof doesn't match credential holder");
+        }
+
+        if domain != &partial_claim_id {
+            panic!("HANDLE THIS ERROR: Proof doesn't match partial claim ID");
+        }
+
+        Ok(())
+        */
+
+        /* ---- From CAWG X.509 branch ----
         // MAJOR TO DO (POSSIBLE SPEC REVISION): Need to ensure
         // that the signer_payload we're verifying against is
         // byte-for-byte identical with what was used for signature.
@@ -78,6 +164,8 @@ impl SignatureHandler for VcSignatureHandler {
 
         Ok(Box::new(VcNamedActor(verified)))
         */
+
+        unimplemented!();
     }
 }
 
