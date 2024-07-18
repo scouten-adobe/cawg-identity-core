@@ -11,14 +11,14 @@
 // specific language governing permissions and limitations under
 // each license.
 
-use std::{fs::OpenOptions, io::Cursor};
+use std::{fs::OpenOptions, io::Cursor, str::FromStr};
 
 use c2pa::{Manifest, ManifestStore};
 use did_method_key::DIDKey;
 use ssi::{
     did::{DIDMethods, Source},
     jwk::JWK,
-    vc::{Context, Contexts, Credential, CredentialSubject, Issuer, OneOrMany, URI},
+    vc::{Context, Contexts, Credential, CredentialSubject, Issuer, OneOrMany, VCDateTime, URI},
 };
 
 use crate::{
@@ -72,16 +72,16 @@ impl CredentialHolder for TestIssuer {
                     ))),
                     id: None,
                     type_: OneOrMany::One("VerifiableCredential".to_string()),
-                    issuer: Some(Issuer::URI(URI::String(issuer_did))),
                     credential_subject: OneOrMany::One(CredentialSubject {
                         id: Some(URI::String(user_did)),
                         property_set: None,
                     }),
+                    issuer: Some(Issuer::URI(URI::String(issuer_did))),
+                    issuance_date: Some(VCDateTime::from_str("2024-07-18T21:20:08Z").unwrap()),
                     proof: None,
                     expiration_date: None,
                     credential_status: None,
                     property_set: None,
-                    issuance_date: None,
                     terms_of_use: None,
                     evidence: None,
                     credential_schema: None,
