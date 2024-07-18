@@ -17,8 +17,12 @@ use c2pa::{Manifest, ManifestStore};
 use did_method_key::DIDKey;
 use ssi::{
     did::{DIDMethods, Source},
+    jsonld::ContextLoader,
     jwk::JWK,
-    vc::{Context, Contexts, Credential, CredentialSubject, Issuer, OneOrMany, VCDateTime, URI},
+    vc::{
+        Context, Contexts, Credential, CredentialSubject, Issuer, LinkedDataProofOptions,
+        OneOrMany, VCDateTime, URI,
+    },
 };
 
 use crate::{
@@ -66,7 +70,7 @@ impl CredentialHolder for TestIssuer {
                     .generate(&Source::KeyAndPattern(issuer_jwk, "key"))
                     .unwrap();
 
-                Credential {
+                let mut asset_vc = Credential {
                     context: Contexts::One(Context::URI(URI::String(
                         "https://www.w3.org/2018/credentials/v1".to_string(),
                     ))),
@@ -86,7 +90,21 @@ impl CredentialHolder for TestIssuer {
                     evidence: None,
                     credential_schema: None,
                     refresh_service: None,
-                }
+                };
+
+                asset_vc.add_proof(
+                    asset_vc
+                        .generate_proof(
+                            &issuer_jwk,
+                            &LinkedDataProofOptions::default(),
+                            &DIDKey,
+                            &mut ContextLoader::default(),
+                        )
+                        .await
+                        .unwrap(),
+                );
+
+                asset_vc
             }
             TestSetup::Credential(vc) => vc.clone(),
         };
