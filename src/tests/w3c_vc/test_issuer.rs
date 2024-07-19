@@ -17,7 +17,6 @@ use c2pa::{Manifest, ManifestStore};
 use did_method_key::DIDKey;
 use ssi::{
     did::{DIDMethods, Source},
-    jsonld::ContextLoader,
     jwk::JWK,
     vc::{
         Context, Contexts, Credential, CredentialSubject, Issuer, LinkedDataProofOptions,
@@ -28,6 +27,7 @@ use ssi::{
 use crate::{
     builder::{CredentialHolder, IdentityAssertionBuilder, ManifestBuilder},
     tests::fixtures::{temp_c2pa_signer, temp_dir_path},
+    w3c_vc::cawg_identity_context::{cawg_context_loader, CAWG_IDENTITY_CONTEXT_URI},
     IdentityAssertion, SignerPayload,
 };
 
@@ -71,9 +71,12 @@ impl CredentialHolder for TestIssuer {
                     .unwrap();
 
                 let mut asset_vc = Credential {
-                    context: Contexts::One(Context::URI(URI::String(
-                        "https://www.w3.org/2018/credentials/v1".to_string(),
-                    ))),
+                    context: Contexts::Many(vec![
+                        Context::URI(URI::String(
+                            "https://www.w3.org/2018/credentials/v1".to_string(),
+                        )),
+                        Context::URI(URI::String(CAWG_IDENTITY_CONTEXT_URI.to_string())),
+                    ]),
                     id: None,
                     type_: OneOrMany::One("VerifiableCredential".to_string()),
                     credential_subject: OneOrMany::One(CredentialSubject {
@@ -92,13 +95,16 @@ impl CredentialHolder for TestIssuer {
                     refresh_service: None,
                 };
 
+                // Last step: Add proof binding this to issuer.
+
+                let mut context_loader = cawg_context_loader();
                 asset_vc.add_proof(
                     asset_vc
                         .generate_proof(
                             &issuer_jwk,
                             &LinkedDataProofOptions::default(),
                             &DIDKey,
-                            &mut ContextLoader::default(),
+                            &mut context_loader,
                         )
                         .await
                         .unwrap(),

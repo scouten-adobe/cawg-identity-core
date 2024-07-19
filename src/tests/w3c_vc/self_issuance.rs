@@ -69,3 +69,55 @@ async fn error_no_proof() {
 
     ti.test_basic_case().await;
 }
+
+/* TEMPORARY: Holding off on this one until SSI crate handles VC V2. :-(
+#[actix::test]
+#[should_panic] // TEMPORARY until error results are implemented
+async fn error_v1_vc() {
+    let ti = TestIssuer::from_asset_vc(
+        r#"{
+            "@context": "https://www.w3.org/2018/credentials/v1",
+            "type": "VerifiableCredential",
+            "credentialSubject": {
+                "id": "did:key:z6MkuaqcTbHDF7dEYjBgpH2ZHobFXSF4Z6yrr99RVmopZSap"
+            },
+            "issuer": "did:key:z6Mkeh5pnxVsa5Goi4FKjKA3NPq5Ruu1geu8BX1J2sxGw8uZ",
+            "issuanceDate": "2024-07-18T21:20:08Z",
+            "proof": {
+                "type": "Ed25519Signature2018",
+                "proofPurpose": "assertionMethod",
+                "verificationMethod": "did:key:z6Mkeh5pnxVsa5Goi4FKjKA3NPq5Ruu1geu8BX1J2sxGw8uZ#z6Mkeh5pnxVsa5Goi4FKjKA3NPq5Ruu1geu8BX1J2sxGw8uZ",
+                "created": "2024-07-18T22:35:10.956893Z",
+                "jws": "eyJhbGciOiJFZERTQSIsImNyaXQiOlsiYjY0Il0sImI2NCI6ZmFsc2V9..-njhADD8Lw60cBtXY3SB9QAntpMwzqeoQH01vHPh3hKohGgSsJFwDwhlZv0cCchIhxvkofR48BxICIb8yDDDAQ"
+            }
+        }"#,
+    );
+
+    ti.test_basic_case().await;
+}
+*/
+
+#[actix::test]
+#[should_panic] // TEMPORARY until error results are implemented
+async fn error_missing_cawg_context() {
+    let ti = TestIssuer::from_asset_vc(
+        r#"{
+            "@context": "https://www.w3.org/2018/credentials/v1",
+            "type": "VerifiableCredential",
+            "credentialSubject": {
+                "id": "did:key:z6MkrF1rgvo8xrdNuiEEQ4wWNcGY9Y5DxHhmX47StpEpRKNP"
+            },
+            "issuer": "did:key:z6Mkufa8L8baH4zhPsG5g9zrC6bSYcptVxf4ZLe5tp6fN95P",
+            "issuanceDate": "2024-07-18T21:20:08Z",
+            "proof": {
+                "type": "Ed25519Signature2018",
+                "proofPurpose": "assertionMethod",
+                "verificationMethod": "did:key:z6Mkufa8L8baH4zhPsG5g9zrC6bSYcptVxf4ZLe5tp6fN95P#z6Mkufa8L8baH4zhPsG5g9zrC6bSYcptVxf4ZLe5tp6fN95P",
+                "created": "2024-07-18T23:00:42.691817Z",
+                "jws": "eyJhbGciOiJFZERTQSIsImNyaXQiOlsiYjY0Il0sImI2NCI6ZmFsc2V9..CIX3bgpS-0fdDrioNTEl4ajNpDKGRQ_t4cJNpAIZM5rSVr8EikFzLLdp6TfRPj_oCb_CunMH_pGJt7UYx8mBBA"
+            }
+        }"#,
+    );
+
+    ti.test_basic_case().await;
+}

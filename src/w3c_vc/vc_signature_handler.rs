@@ -13,7 +13,10 @@
 
 #![allow(unused)] // TEMPORARY while building
 
-use std::fmt::{Debug, Formatter};
+use std::{
+    collections::{hash_map, HashMap},
+    fmt::{Debug, Formatter},
+};
 
 use async_trait::async_trait;
 use ssi::{
@@ -24,7 +27,10 @@ use ssi::{
     },
 };
 
-use crate::{NamedActor, SignatureHandler, SignerPayload, ValidationResult};
+use crate::{
+    w3c_vc::cawg_identity_context::{cawg_context_loader, CAWG_IDENTITY_CONTEXT_URI},
+    NamedActor, SignatureHandler, SignerPayload, ValidationResult,
+};
 
 /// An implementation of [`SignatureHandler`] that supports Creator Identity
 /// Assertions (a specific grammar of W3C Verifiable Credentials) as specified
@@ -58,29 +64,28 @@ impl SignatureHandler for VcSignatureHandler {
 
         // TO DO: Support other DID methods.
         let key_resolver = did_method_key::DIDKey {};
-        let mut loader = ssi_json_ld::ContextLoader::empty().with_static_loader();
-
+        let mut loader = cawg_context_loader();
         let result = vc.verify(Some(options), &key_resolver, &mut loader).await;
+
         assert!(result.checks.len() == 1);
         assert!(result.warnings.is_empty());
         assert!(result.errors.is_empty());
 
         dbg!(&result);
 
+        // Check VC context requirements.
+
+        // TEMPORARY: Skip this for now because ssi crate isn't ready
+        // for VC V2.
+        // assert!(vc
+        //     .context
+        //     .contains_uri("https://www.w3.org/ns/credentials/v2"));
+
+        assert!(vc.context.contains_uri(CAWG_IDENTITY_CONTEXT_URI));
+
         /* ---- From older identity prototype ----
         // NOTE vp is: &Presentation
 
-        let mut options = LinkedDataProofOptions::default();
-        options.proof_purpose = Some(ssi_dids::VerificationRelationship::AssertionMethod);
-
-        // TO DO: Support other DID methods.
-        let key_resolver = did_method_key::DIDKey {};
-        let mut loader = ssi_json_ld::ContextLoader::empty().with_static_loader();
-
-        let result = vp.verify(Some(options), &key_resolver, &mut loader).await;
-        assert!(result.checks.len() == 1);
-        assert!(result.warnings.is_empty());
-        assert!(result.errors.is_empty());
 
         // Ensure that the proof and VC holder are properly bound.
         let Some(ref actor_vc) = vp.verifiable_credential else {
