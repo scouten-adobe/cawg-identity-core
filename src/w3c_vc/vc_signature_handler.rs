@@ -83,6 +83,11 @@ impl SignatureHandler for VcSignatureHandler {
 
         assert!(vc.context.contains_uri(CAWG_IDENTITY_CONTEXT_URI));
 
+        // Check VC type requirements.
+
+        assert!(vc.type_.contains(&"VerifiableCredential".to_owned()));
+        assert!(vc.type_.contains(&"CreatorIdentityAssertion".to_owned()));
+
         /* ---- From older identity prototype ----
         // NOTE vp is: &Presentation
 

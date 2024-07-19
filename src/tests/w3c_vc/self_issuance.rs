@@ -121,3 +121,31 @@ async fn error_missing_cawg_context() {
 
     ti.test_basic_case().await;
 }
+
+#[actix::test]
+#[should_panic] // TEMPORARY until error results are implemented
+async fn error_missing_cawg_type() {
+    let ti = TestIssuer::from_asset_vc(
+        r#"{
+            "@context": [
+                "https://www.w3.org/2018/credentials/v1",
+                "https://creator-assertions.github.io/tbd/tbd"
+            ],
+            "type": "VerifiableCredential",
+            "credentialSubject": {
+                "id": "did:key:z6MkkJiN1FEMbZ4RizjY72KHKSn5sNaXdyf49eXYXRCpGqSZ"
+            },
+            "issuer": "did:key:z6MkuDQroB2sPU2ZW45csYLU7yy2Z1BCpFbFf4TwJhEnFj7j",
+            "issuanceDate": "2024-07-18T21:20:08Z",
+            "proof": {
+                "type": "Ed25519Signature2018",
+                "proofPurpose": "assertionMethod",
+                "verificationMethod": "did:key:z6MkuDQroB2sPU2ZW45csYLU7yy2Z1BCpFbFf4TwJhEnFj7j#z6MkuDQroB2sPU2ZW45csYLU7yy2Z1BCpFbFf4TwJhEnFj7j",
+                "created": "2024-07-19T01:04:33.677700Z",
+                "jws": "eyJhbGciOiJFZERTQSIsImNyaXQiOlsiYjY0Il0sImI2NCI6ZmFsc2V9..Ze5lql1iCV5fyIStYt1ji2cSc8yORrqDhkk5VJDcsIAduhjqua3KDQ7BVmnm2XOW5sDomp4KSvr7kNZAQWuIDg"
+            }
+        }"#,
+    );
+
+    ti.test_basic_case().await;
+}

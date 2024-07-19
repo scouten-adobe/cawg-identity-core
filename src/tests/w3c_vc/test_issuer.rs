@@ -78,7 +78,10 @@ impl CredentialHolder for TestIssuer {
                         Context::URI(URI::String(CAWG_IDENTITY_CONTEXT_URI.to_string())),
                     ]),
                     id: None,
-                    type_: OneOrMany::One("VerifiableCredential".to_string()),
+                    type_: OneOrMany::Many(vec![
+                        "VerifiableCredential".to_string(),
+                        "CreatorIdentityAssertion".to_string(),
+                    ]),
                     credential_subject: OneOrMany::One(CredentialSubject {
                         id: Some(URI::String(user_did)),
                         property_set: None,
