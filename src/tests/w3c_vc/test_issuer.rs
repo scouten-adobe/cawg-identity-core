@@ -11,34 +11,29 @@
 // specific language governing permissions and limitations under
 // each license.
 
-use std::{fs::OpenOptions, io::Cursor, str::FromStr};
+use std::{fs::OpenOptions, io::Cursor};
 
 use c2pa::{Manifest, ManifestStore};
-use did_method_key::DIDKey;
-use ssi::{
-    did::{DIDMethods, Source},
-    jwk::JWK,
-    vc::{
-        Context, Contexts, Credential, CredentialSubject, Issuer, LinkedDataProofOptions,
-        OneOrMany, VCDateTime, URI,
-    },
-};
+use ssi::jwk::JWK;
 
 use crate::{
     builder::{CredentialHolder, IdentityAssertionBuilder, ManifestBuilder},
     tests::fixtures::{temp_c2pa_signer, temp_dir_path},
-    w3c_vc::cawg_identity_context::{cawg_context_loader, CAWG_IDENTITY_CONTEXT_URI},
-    IdentityAssertion, SignerPayload,
+    // w3c_vc::cawg_identity_context::{cawg_context_loader, CAWG_IDENTITY_CONTEXT_URI},
+    IdentityAssertion,
+    SignerPayload,
 };
 
 /// TO DO: Move what we can from this to more generic code in pub mod w3c_vc.
 pub(super) struct TestIssuer {
+    #[allow(dead_code)] // TEMPORARY during ssi 0.8.0 rebuild
     setup: TestSetup,
 }
 
 enum TestSetup {
+    #[allow(dead_code)] // TEMPORARY during ssi 0.8.0 rebuild
     UserAndIssuerJwk(JWK, JWK),
-    Credential(Credential),
+    // Credential(Credential), // redo for ssi 0.8.0
 }
 
 #[async_trait::async_trait]
@@ -52,6 +47,9 @@ impl CredentialHolder for TestIssuer {
     }
 
     async fn sign(&self, _signer_payload: &SignerPayload) -> c2pa::Result<Vec<u8>> {
+        unimplemented!("Redo for ssi 0.8.0");
+
+        /*
         // TO DO: ERROR HANDLING
         let asset_vc = match &self.setup {
             TestSetup::UserAndIssuerJwk(user_jwk, issuer_jwk) => {
@@ -125,6 +123,7 @@ impl CredentialHolder for TestIssuer {
 
         let asset_vc = serde_json::to_string(&asset_vc)?;
         Ok(asset_vc.as_bytes().to_owned())
+        */
     }
 }
 
@@ -138,11 +137,14 @@ impl TestIssuer {
         }
     }
 
-    pub(super) fn from_asset_vc(asset_vc_json: &str) -> Self {
+    pub(super) fn from_asset_vc(_asset_vc_json: &str) -> Self {
+        unimplemented!("Rebuild for ssi 0.8.0");
+        /*
         let vc = Credential::from_json(asset_vc_json).unwrap();
         Self {
             setup: TestSetup::Credential(vc),
         }
+        */
     }
 
     pub(super) async fn test_basic_case(self) {

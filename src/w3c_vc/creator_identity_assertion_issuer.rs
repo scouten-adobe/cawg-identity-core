@@ -26,11 +26,8 @@ use std::fmt::{Debug, Formatter};
 use async_trait::async_trait;
 use c2pa::SigningAlg;
 use ssi::{
-    did::DIDMethods,
-    vc::{
-        Context, Contexts, Credential, CredentialOrJWT, LinkedDataProofOptions, OneOrMany,
-        Presentation, URI,
-    },
+    // dids::DIDMethods,
+    claims::vc::v1::{Context, Credential, Presentation},
 };
 
 use crate::{

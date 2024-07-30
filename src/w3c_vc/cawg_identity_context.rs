@@ -13,7 +13,7 @@
 
 use std::collections::HashMap;
 
-use ssi::jsonld::ContextLoader;
+use ssi::json_ld::ContextLoader;
 
 pub(crate) const CAWG_IDENTITY_CONTEXT_URI: &str = "https://creator-assertions.github.io/tbd/tbd";
 

@@ -19,13 +19,7 @@ use std::{
 };
 
 use async_trait::async_trait;
-use ssi::{
-    did::DIDMethods,
-    vc::{
-        Context, Contexts, Credential, CredentialOrJWT, LinkedDataProofOptions, OneOrMany,
-        Presentation, URI,
-    },
-};
+use ssi::claims::vc::v1::{Context, Credential, Presentation};
 
 use crate::{
     w3c_vc::cawg_identity_context::{cawg_context_loader, CAWG_IDENTITY_CONTEXT_URI},
@@ -53,6 +47,11 @@ impl SignatureHandler for VcSignatureHandler {
     ) -> ValidationResult<Box<dyn NamedActor<'a>>> {
         // TO DO: ERROR HANDLING
         let vc_str = std::str::from_utf8(signature).unwrap();
+
+        unimplemented!("Rebuild with new ssi 0.8.0 APIs");
+
+        /* REBUILD with SSI 0.8.0
+
 
         let vc = Credential::from_json(&vc_str).unwrap();
         vc.validate().unwrap();
@@ -87,6 +86,8 @@ impl SignatureHandler for VcSignatureHandler {
 
         assert!(vc.type_.contains(&"VerifiableCredential".to_owned()));
         assert!(vc.type_.contains(&"CreatorIdentityAssertion".to_owned()));
+
+        */
 
         /* ---- From older identity prototype ----
         // NOTE vp is: &Presentation
@@ -192,8 +193,6 @@ impl SignatureHandler for VcSignatureHandler {
 
         Ok(Box::new(VcNamedActor(verified)))
         */
-
-        unimplemented!();
     }
 }
 
