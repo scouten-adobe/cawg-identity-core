@@ -11,10 +11,12 @@
 // specific language governing permissions and limitations under
 // each license.
 
+#![allow(unused)] // TEMPORARY while rebuilding
+
 use std::{fs::OpenOptions, io::Cursor};
 
 use c2pa::{Manifest, ManifestStore};
-use ssi::jwk::JWK;
+use ssi::{dids::DIDJWK, JWK};
 
 use crate::{
     builder::{CredentialHolder, IdentityAssertionBuilder, ManifestBuilder},
@@ -31,7 +33,6 @@ pub(super) struct TestIssuer {
 }
 
 enum TestSetup {
-    #[allow(dead_code)] // TEMPORARY during ssi 0.8.0 rebuild
     UserAndIssuerJwk(JWK, JWK),
     // Credential(Credential), // redo for ssi 0.8.0
 }
@@ -47,26 +48,20 @@ impl CredentialHolder for TestIssuer {
     }
 
     async fn sign(&self, _signer_payload: &SignerPayload) -> c2pa::Result<Vec<u8>> {
-        unimplemented!("Redo for ssi 0.8.0");
-
-        /*
         // TO DO: ERROR HANDLING
-        let asset_vc = match &self.setup {
+        let _asset_vc = match &self.setup {
             TestSetup::UserAndIssuerJwk(user_jwk, issuer_jwk) => {
                 // WARNING: did:key is great for simple test cases such as this
                 // but is strongly discouraged for production use cases. In other words,
                 // please don't copy and paste this into your own implementation!
 
-                let mut methods: DIDMethods = DIDMethods::default();
-                methods.insert(Box::new(DIDKey));
+                let user_did = DIDJWK::generate_url(&user_jwk.to_public());
+                let issuer_did = DIDJWK::generate_url(&issuer_jwk.to_public());
 
-                let user_did = methods
-                    .generate(&Source::KeyAndPattern(user_jwk, "key"))
-                    .unwrap();
+                unimplemented!("Define new Credential type");
+                // See example at https://docs.rs/ssi/latest/ssi/index.html.
 
-                let issuer_did = methods
-                    .generate(&Source::KeyAndPattern(issuer_jwk, "key"))
-                    .unwrap();
+                /*
 
                 let mut asset_vc = Credential {
                     context: Contexts::Many(vec![
@@ -112,10 +107,12 @@ impl CredentialHolder for TestIssuer {
                 );
 
                 asset_vc
-            }
-            TestSetup::Credential(vc) => vc.clone(),
+                */
+            } // TestSetup::Credential(vc) => vc.clone(),
         };
 
+        /*
+        unimplemented!("Rebuild for ssi 0.8.0");
         eprintln!(
             "Asset VC is\n{}\n\n",
             serde_json::to_string_pretty(&asset_vc).unwrap()
