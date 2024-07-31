@@ -16,11 +16,17 @@
 use std::{fs::OpenOptions, io::Cursor};
 
 use c2pa::{Manifest, ManifestStore};
-use ssi::{dids::DIDJWK, JWK};
+use ssi::{
+    claims::vc::{syntax::NonEmptyVec, v2::Credential},
+    dids::DIDJWK,
+    JWK,
+};
+use static_iref::uri;
 
 use crate::{
     builder::{CredentialHolder, IdentityAssertionBuilder, ManifestBuilder},
     tests::fixtures::{temp_c2pa_signer, temp_dir_path},
+    w3c_vc::{CreatorIdentityAssertion, IdentityAssertionVc},
     // w3c_vc::cawg_identity_context::{cawg_context_loader, CAWG_IDENTITY_CONTEXT_URI},
     IdentityAssertion,
     SignerPayload,
@@ -49,16 +55,29 @@ impl CredentialHolder for TestIssuer {
 
     async fn sign(&self, _signer_payload: &SignerPayload) -> c2pa::Result<Vec<u8>> {
         // TO DO: ERROR HANDLING
-        let _asset_vc = match &self.setup {
+        let asset_vc = match &self.setup {
             TestSetup::UserAndIssuerJwk(user_jwk, issuer_jwk) => {
-                // WARNING: did:key is great for simple test cases such as this
+                // WARNING: did:jwk is great for simple test cases such as this
                 // but is strongly discouraged for production use cases. In other words,
                 // please don't copy and paste this into your own implementation!
 
                 let user_did = DIDJWK::generate_url(&user_jwk.to_public());
                 let issuer_did = DIDJWK::generate_url(&issuer_jwk.to_public());
 
-                unimplemented!("Define new Credential type");
+                let cia = CreatorIdentityAssertion {
+                    verified_identities: vec![],
+                };
+
+                let subjects = NonEmptyVec::new(cia);
+
+                let mut asset_vc = IdentityAssertionVc::new(
+                    None,
+                    uri!("https://example.org/#Issuer").to_owned().into(),
+                    subjects,
+                );
+
+                dbg!(&asset_vc);
+
                 // See example at https://docs.rs/ssi/latest/ssi/index.html.
 
                 /*
@@ -105,19 +124,19 @@ impl CredentialHolder for TestIssuer {
                         .await
                         .unwrap(),
                 );
+                */
 
                 asset_vc
-                */
             } // TestSetup::Credential(vc) => vc.clone(),
         };
 
-        /*
-        unimplemented!("Rebuild for ssi 0.8.0");
         eprintln!(
             "Asset VC is\n{}\n\n",
             serde_json::to_string_pretty(&asset_vc).unwrap()
         );
 
+        unimplemented!("Rebuild for ssi 0.8.0");
+        /*
         let asset_vc = serde_json::to_string(&asset_vc)?;
         Ok(asset_vc.as_bytes().to_owned())
         */
