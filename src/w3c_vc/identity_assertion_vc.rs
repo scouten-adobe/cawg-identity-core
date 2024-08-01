@@ -28,7 +28,7 @@ pub type IdentityAssertionVc = SpecializedJsonCredential<
 
 /// Creator identity assertion context IRI.
 pub const CREATOR_IDENTITY_ASSERTION_CONTEXT_IRI: &Iri =
-    static_iref::iri!("https://creator-assertions.github.io/tbd/tbd");
+    static_iref::iri!("https://creator-assertions.github.io/tbd/tbd/");
 
 /// Creator identity assertion type name.
 pub const CREATOR_IDENTITY_ASSERTION_TYPE: &str = "CreatorIdentityAssertionCredential";
@@ -38,13 +38,14 @@ pub const CREATOR_IDENTITY_ASSERTION_TYPE: &str = "CreatorIdentityAssertionCrede
 /// **identity assertion** appears.
 ///
 /// [W3C verifiable credential]: https://www.w3.org/TR/vc-data-model-2.0/
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize, linked_data::Serialize, linked_data::Deserialize)]
+#[ld(prefix("cawg" = "https://creator-assertions.github.io/tbd/tbd/"))]
 pub struct CreatorIdentityAssertion {
     /// The `verifiedIdentities` property MUST be present and MUST be an array.
     /// Every item in the array MUST contain information about the _named actor_
     /// as verified by the _identity assertion generator_ or a service contacted
     /// by the _identity assertion generator._
-    #[serde(rename = "https://cawg.io/tbd/#verifiedIdentities")]
+    #[ld("cawg:verifiedIdentities")]
     pub verified_identities: Vec<VerifiedIdentity>,
 }
 
@@ -59,12 +60,13 @@ impl RequiredType for CreatorIdentityAssertion {
 /// Every item in the `verifiedIdentities` array MUST contain information about
 /// the _named actor_ as verified by the _identity assertion generator_ or a
 /// service contacted by the _identity assertion generator._
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize, linked_data::Serialize, linked_data::Deserialize)]
+#[ld(prefix("cawg" = "https://creator-assertions.github.io/tbd/tbd/"))]
 pub struct VerifiedIdentity {
     /// The `verifiedIdentities[?].type` property MUST be present and MUST be a
     /// non-empty string that defines the type of verification that was
     /// performed by the identity provider.
-    #[serde(rename = "https://cawg.io/tbd/#verifiedIdentities/type")]
+    #[ld("cawg:type")]
     pub type_: String,
 
     /// The `verifiedIdentities[?].name` property MAY be present. If present, it
@@ -74,6 +76,6 @@ pub struct VerifiedIdentity {
     /// If the `type` of this verified identity is `cawg.document_verification`,
     /// the `verifiedIdentities[?].name` property MUST be present and MUST
     /// exactly match the name found on the identity documents.
-    #[serde(rename = "https://cawg.io/tbd/#verifiedIdentities/name")]
+    #[ld("cawg:name")]
     pub name: Option<String>,
 }
