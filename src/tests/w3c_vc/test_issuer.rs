@@ -131,7 +131,7 @@ impl CredentialHolder for TestIssuer {
         };
 
         eprintln!(
-            "Asset VC is\n{}\n\n",
+            "\n\n\nAsset VC is\n{}\n\n",
             serde_json::to_string_pretty(&asset_vc).unwrap()
         );
 

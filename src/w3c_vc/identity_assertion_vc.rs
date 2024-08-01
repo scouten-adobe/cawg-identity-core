@@ -13,16 +13,25 @@
 
 use iref::Iri;
 use serde::{Deserialize, Serialize};
-use ssi::claims::vc::{syntax::RequiredContext, v2::SpecializedJsonCredential};
+use ssi::claims::vc::{
+    syntax::{RequiredContext, RequiredType},
+    v2::SpecializedJsonCredential,
+};
 
 /// TO DO: Doc -- looks like SpecializedJsonCredential for our specific use
 /// case.
-pub type IdentityAssertionVc =
-    SpecializedJsonCredential<CreatorIdentityAssertion, CreatorIdentityAssertion>;
+pub type IdentityAssertionVc = SpecializedJsonCredential<
+    CreatorIdentityAssertion,
+    CreatorIdentityAssertion,
+    CreatorIdentityAssertion,
+>;
 
-/// Creator identity asseriton context IRI.
+/// Creator identity assertion context IRI.
 pub const CREATOR_IDENTITY_ASSERTION_CONTEXT_IRI: &Iri =
     static_iref::iri!("https://creator-assertions.github.io/tbd/tbd");
+
+/// Creator identity assertion type name.
+pub const CREATOR_IDENTITY_ASSERTION_TYPE: &str = "CreatorIdentityAssertionCredential";
 
 /// A **creator identity assertion** is a [W3C verifiable credential] that binds
 /// the identity of the _named actor_ to the _C2PA asset_ in which the
@@ -41,6 +50,10 @@ pub struct CreatorIdentityAssertion {
 
 impl RequiredContext for CreatorIdentityAssertion {
     const CONTEXT_IRI: &'static Iri = CREATOR_IDENTITY_ASSERTION_CONTEXT_IRI;
+}
+
+impl RequiredType for CreatorIdentityAssertion {
+    const REQUIRED_TYPE: &'static str = CREATOR_IDENTITY_ASSERTION_TYPE;
 }
 
 /// Every item in the `verifiedIdentities` array MUST contain information about
