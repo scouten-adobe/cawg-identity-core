@@ -17,7 +17,10 @@ use std::{fs::OpenOptions, io::Cursor};
 
 use c2pa::{Manifest, ManifestStore};
 use ssi::{
-    claims::vc::{syntax::NonEmptyVec, v2::Credential},
+    claims::vc::{
+        syntax::{IdOr, NonEmptyVec},
+        v2::Credential,
+    },
     dids::DIDJWK,
     JWK,
 };
@@ -73,7 +76,7 @@ impl CredentialHolder for TestIssuer {
 
                 let mut asset_vc = IdentityAssertionVc::new(
                     None,
-                    uri!("https://example.org/#Issuer").to_owned().into(),
+                    IdOr::Id(issuer_did.clone().into_uri()),
                     subjects,
                 );
 
