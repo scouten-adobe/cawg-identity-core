@@ -63,12 +63,18 @@ impl RequiredType for CreatorIdentityAssertion {
 #[derive(Debug, Deserialize, Serialize, linked_data::Serialize, linked_data::Deserialize)]
 #[ld(prefix("cawg" = "https://creator-assertions.github.io/tbd/tbd/"))]
 pub struct VerifiedIdentity {
+    /// ## Verified identity type
+    ///
     /// The `verifiedIdentities[?].type` property MUST be present and MUST be a
     /// non-empty string that defines the type of verification that was
     /// performed by the identity provider.
+    ///
+    /// TO DO: Find a non-empty string type.
     #[ld("cawg:type")]
     pub type_: String,
 
+    /// ## Display name
+    ///
     /// The `verifiedIdentities[?].name` property MAY be present. If present, it
     /// MUST NOT be empty and must be a string defining the _named actor’s_ name
     /// as understood by the identity provider.
@@ -76,6 +82,41 @@ pub struct VerifiedIdentity {
     /// If the `type` of this verified identity is `cawg.document_verification`,
     /// the `verifiedIdentities[?].name` property MUST be present and MUST
     /// exactly match the name found on the identity documents.
+    ///
+    /// TO DO: Find a non-empty string type.
+    #[serde(skip_serializing_if = "Option::is_none")]
     #[ld("cawg:name")]
     pub name: Option<String>,
+
+    /// ## User name
+    ///
+    /// The `verifiedIdentities[?].username` property MAY be present. If
+    /// present, it MUST be a non-empty text string representing the _named
+    /// actor’s_ user name as assigned by the identity provider.
+    ///
+    /// If the type of this verified identity is `cawg.social_media`, the
+    /// `verifiedIdentities[?].username` property MUST be present and MUST be
+    /// the unique alphanumeric string that can be used to identity the _named
+    /// actor_ within this service.
+    ///
+    /// TO DO: Find a non-empty string type.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[ld("cawg:username")]
+    pub username: Option<String>,
+
+    /// ## Address
+    ///
+    /// The `verifiedIdentities[?].address` property MAY be present. If present,
+    /// it MUST be a non-empty text string representing the _named actor’s_
+    /// cryptographic address as assigned by the identity provider.
+    ///
+    /// If the type of this verified identity is `cawg.crypto_wallet`, the
+    /// `verifiedIdentities[?].address` property MUST be present and MUST be the
+    /// unique alphanumeric string that can be used to identity the _named
+    /// actor_ within this service.
+    ///
+    /// TO DO: Find a non-empty string type.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[ld("cawg:address")]
+    pub address: Option<String>,
 }
