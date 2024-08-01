@@ -11,12 +11,13 @@
 // specific language governing permissions and limitations under
 // each license.
 
-use iref::Iri;
+use iref::{Iri, UriBuf};
 use serde::{Deserialize, Serialize};
 use ssi::claims::vc::{
     syntax::{RequiredContext, RequiredType},
     v2::SpecializedJsonCredential,
 };
+use xsd_types::DateTimeStamp;
 
 /// TO DO: Doc -- looks like SpecializedJsonCredential for our specific use
 /// case.
@@ -45,6 +46,7 @@ pub struct CreatorIdentityAssertion {
     /// Every item in the array MUST contain information about the _named actor_
     /// as verified by the _identity assertion generator_ or a service contacted
     /// by the _identity assertion generator._
+    #[serde(rename = "verifiedIdentities")]
     #[ld("cawg:verifiedIdentities")]
     pub verified_identities: Vec<VerifiedIdentity>,
 }
@@ -70,6 +72,7 @@ pub struct VerifiedIdentity {
     /// performed by the identity provider.
     ///
     /// TO DO: Find a non-empty string type.
+    #[serde(rename = "type")]
     #[ld("cawg:type")]
     pub type_: String,
 
@@ -119,4 +122,66 @@ pub struct VerifiedIdentity {
     #[serde(skip_serializing_if = "Option::is_none")]
     #[ld("cawg:address")]
     pub address: Option<String>,
+
+    /// ## URI
+    ///
+    /// The `verifiedIdentities[?].uri` property MAY be present. If present, it
+    /// must be a valid URI which is the primary point of contact for the _named
+    /// actor_ as assigned by the _identity provider._
+    ///
+    /// If the type of this verified identity is `cawg.social_media`, it is
+    /// RECOMMENDED that the `verifiedIdentities[?].uri` be the primary web URI
+    /// for the _named actor’s_ social media account.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[ld("cawg:uri")]
+    pub uri: Option<UriBuf>,
+
+    /// ## Identity verification date
+    ///
+    /// The `verifiedIdentities[?].verifiedAt` MUST be present and MUST be a
+    /// valid date-time as specified by RFC 3339. It represents the date and
+    /// time when the relationship between the _named actor_ and the _identity
+    /// provider_ was verified by the _identity assertion generator._
+    #[serde(rename = "verifiedAt")]
+    #[ld("cawg:verifiedAt")]
+    pub verified_at: DateTimeStamp,
+
+    /// ## Identity provider details
+    ///
+    /// The `verifiedIdentities[?].provider` property MUST be an object and MUST
+    /// be present. It contains details about the _identity provider_ and the
+    /// identity verification process.
+    #[ld("cawg:provider")]
+    pub provider: IdentityProvider,
+}
+
+/// ## Identity provider details
+///
+/// The `verifiedIdentities[?].provider` property MUST be an object and MUST be
+/// present. It contains details about the _identity provider_ and the identity
+/// verification process. This specification mentions at least three properties
+/// that MAY be used to represent the _named actor’s_ verification details:
+/// `id`, `name`, and `proof`.
+#[derive(Debug, Deserialize, Serialize, linked_data::Serialize, linked_data::Deserialize)]
+#[ld(prefix("cawg" = "https://creator-assertions.github.io/tbd/tbd/"))]
+pub struct IdentityProvider {
+    /// ## Identity provider ID
+    ///
+    /// The `verifiedIdentities[?].provider.id` MUST be present and MUST be a
+    /// valid URI that, when dereferenced, MUST result in a proof of
+    /// authenticity of the _identity provider._ This proof of authenticity of
+    /// the identity provider MUST NOT be confused with the proof of
+    /// verification of the _named actor._
+    #[ld(id)]
+    pub id: UriBuf,
+
+    /// ## Identity provider name
+    ///
+    /// The `verifiedIdentities[?].provider.name` MUST be present and MUST be a
+    /// non-empty string. ///The `verifiedIdentities[?].provider.name` property
+    /// is the user-visible name of the _identity provider._
+    ///
+    /// TO DO: Find a non-empty string type.
+    #[ld("cawg:address")]
+    pub name: String,
 }

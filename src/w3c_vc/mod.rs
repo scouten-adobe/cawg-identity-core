@@ -22,7 +22,9 @@
 pub(crate) mod cawg_identity_context;
 
 mod identity_assertion_vc;
-pub use identity_assertion_vc::{CreatorIdentityAssertion, IdentityAssertionVc, VerifiedIdentity};
+pub use identity_assertion_vc::{
+    CreatorIdentityAssertion, IdentityAssertionVc, IdentityProvider, VerifiedIdentity,
+};
 
 mod creator_identity_assertion_issuer;
 pub use creator_identity_assertion_issuer::CredentialIdentityAssertionIssuer;

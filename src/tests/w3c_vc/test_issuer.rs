@@ -12,10 +12,12 @@
 // each license.
 
 #![allow(unused)] // TEMPORARY while rebuilding
+#![allow(dead_code)] // TEMPORARY while rebuilding
 
-use std::{fs::OpenOptions, io::Cursor};
+use std::{fs::OpenOptions, io::Cursor, str::FromStr};
 
 use c2pa::{Manifest, ManifestStore};
+use iref::UriBuf;
 use ssi::{
     claims::vc::{
         syntax::{IdOr, NonEmptyVec},
@@ -30,15 +32,12 @@ use xsd_types::value::DateTimeStamp;
 use crate::{
     builder::{CredentialHolder, IdentityAssertionBuilder, ManifestBuilder},
     tests::fixtures::{temp_c2pa_signer, temp_dir_path},
-    w3c_vc::{CreatorIdentityAssertion, IdentityAssertionVc},
-    // w3c_vc::cawg_identity_context::{cawg_context_loader, CAWG_IDENTITY_CONTEXT_URI},
-    IdentityAssertion,
-    SignerPayload,
+    w3c_vc::{CreatorIdentityAssertion, IdentityAssertionVc, IdentityProvider, VerifiedIdentity},
+    IdentityAssertion, SignerPayload,
 };
 
 /// TO DO: Move what we can from this to more generic code in pub mod w3c_vc.
 pub(super) struct TestIssuer {
-    #[allow(dead_code)] // TEMPORARY during ssi 0.8.0 rebuild
     setup: TestSetup,
 }
 
@@ -68,8 +67,66 @@ impl CredentialHolder for TestIssuer {
                 let user_did = DIDJWK::generate_url(&user_jwk.to_public());
                 let issuer_did = DIDJWK::generate_url(&issuer_jwk.to_public());
 
+                // Use the identities as shown in https://creator-assertions.github.io/identity/1.x+vc-draft/#vc-credentialsubject-verifiedIdentities.
+
+                let verified_identities = vec![
+                    VerifiedIdentity {
+                        type_: "cawg.document_verification".to_owned(),
+                        name: Some("First-Name Last-Name".to_owned()),
+                        username: None,
+                        address: None,
+                        uri: None,
+                        provider: IdentityProvider {
+                            id: UriBuf::from_str("https://example-id-verifier.com").unwrap(),
+                            name: "Example ID Verifier".to_owned(),
+                            // "proof": "https://example-id-verifier.com/proofs/1"
+                        },
+                        verified_at: DateTimeStamp::from_str("2024-07-26T22:30:15Z").unwrap(),
+                    },
+                    VerifiedIdentity {
+                        type_: "cawg.affiliation".to_owned(),
+                        name: None,
+                        username: None,
+                        address: None,
+                        uri: None,
+                        provider: IdentityProvider {
+                            id: UriBuf::from_str("https://example-affiliated-organization.com")
+                                .unwrap(),
+                            name: "Example Affiliated Organization".to_owned(),
+                            // "proof": "https://example-affiliated-organization.com/proofs/ck4592p5lk8u05mdg8bg5ac7ishlqfh1"
+                        },
+                        verified_at: DateTimeStamp::from_str("2024-07-26T22:29:57Z").unwrap(),
+                    },
+                    VerifiedIdentity {
+                        type_: "cawg.social_media".to_owned(),
+                        name: Some("Silly Cats 929".to_owned()),
+                        username: Some("username".to_owned()),
+                        address: None,
+                        uri: Some(UriBuf::from_str("https://example-social-network.com/username").unwrap()),
+                        provider: IdentityProvider {
+                            id: UriBuf::from_str("https://example-social-network.com")
+                                .unwrap(),
+                            name: "Example Social Network".to_owned(),
+                        },
+                        verified_at: DateTimeStamp::from_str("2024-05-27T08:40:39.569856Z").unwrap(),
+                    },
+                    VerifiedIdentity {
+                        type_: "cawg.crypto_wallet".to_owned(),
+                        name: None,
+                        username: None,
+                        address: Some("fa64ef445f994138bdeb9baac6ce1e16".to_owned()),
+                        uri: Some(UriBuf::from_str("https://example-crypto-wallet.com/fa64ef445f994138bdeb9baac6ce1e16").unwrap()),
+                        provider: IdentityProvider {
+                            id: UriBuf::from_str("https://example-crypto-wallet.com")
+                                .unwrap(),
+                            name: "Example Crypto Wallet".to_owned(),
+                        },
+                        verified_at: DateTimeStamp::from_str("2024-05-27T08:40:39.569856Z").unwrap(),
+                    },
+                ];
+
                 let cia = CreatorIdentityAssertion {
-                    verified_identities: vec![],
+                    verified_identities,
                 };
 
                 let subjects = NonEmptyVec::new(cia);
@@ -86,37 +143,7 @@ impl CredentialHolder for TestIssuer {
 
                 // See example at https://docs.rs/ssi/latest/ssi/index.html.
 
-                /*
-
-                let mut asset_vc = Credential {
-                    context: Contexts::Many(vec![
-                        Context::URI(URI::String(
-                            "https://www.w3.org/2018/credentials/v1".to_string(),
-                        )),
-                        Context::URI(URI::String(CAWG_IDENTITY_CONTEXT_URI.to_string())),
-                    ]),
-                    id: None,
-                    type_: OneOrMany::Many(vec![
-                        "VerifiableCredential".to_string(),
-                        "CreatorIdentityAssertion".to_string(),
-                    ]),
-                    credential_subject: OneOrMany::One(CredentialSubject {
-                        id: Some(URI::String(user_did)),
-                        property_set: None,
-                    }),
-                    issuer: Some(Issuer::URI(URI::String(issuer_did))),
-                    issuance_date: Some(VCDateTime::from_str("2024-07-18T21:20:08Z").unwrap()),
-                    proof: None,
-                    expiration_date: None,
-                    credential_status: None,
-                    property_set: None,
-                    terms_of_use: None,
-                    evidence: None,
-                    credential_schema: None,
-                    refresh_service: None,
-                };
-
-                // Last step: Add proof binding this to issuer.
+                /* TO DO: Rework proof once I grok the new ssi APIs.
 
                 let mut context_loader = cawg_context_loader();
                 asset_vc.add_proof(
