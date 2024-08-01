@@ -19,9 +19,12 @@ use std::{fs::OpenOptions, io::Cursor, str::FromStr};
 use c2pa::{Manifest, ManifestStore};
 use iref::UriBuf;
 use ssi::{
-    claims::vc::{
-        syntax::{IdOr, NonEmptyVec},
-        v2::Credential,
+    claims::{
+        vc::{
+            syntax::{IdOr, NonEmptyVec},
+            v2::Credential,
+        },
+        vc_jose_cose::JoseVc,
     },
     dids::DIDJWK,
     JWK,
@@ -58,7 +61,7 @@ impl CredentialHolder for TestIssuer {
 
     async fn sign(&self, _signer_payload: &SignerPayload) -> c2pa::Result<Vec<u8>> {
         // TO DO: ERROR HANDLING
-        let asset_vc = match &self.setup {
+        let signed_vc = match &self.setup {
             TestSetup::UserAndIssuerJwk(user_jwk, issuer_jwk) => {
                 // WARNING: did:jwk is great for simple test cases such as this
                 // but is strongly discouraged for production use cases. In other words,
@@ -141,6 +144,13 @@ impl CredentialHolder for TestIssuer {
 
                 dbg!(&asset_vc);
 
+                // TO DO: Switch to COSE once available.
+                let jose_vc = JoseVc(asset_vc);
+                let jose = jose_vc.sign_into_enveloped(&issuer_jwk).await.unwrap();
+
+                dbg!(&jose);
+                panic!("Now what?");
+
                 // See example at https://docs.rs/ssi/latest/ssi/index.html.
 
                 /* TO DO: Rework proof once I grok the new ssi APIs.
@@ -159,17 +169,18 @@ impl CredentialHolder for TestIssuer {
                 );
                 */
 
-                asset_vc
+                // asset_vc
             } // TestSetup::Credential(vc) => vc.clone(),
         };
 
+        /*
         eprintln!(
             "\n\n\nAsset VC is\n{}\n\n",
-            serde_json::to_string_pretty(&asset_vc).unwrap()
+            serde_json::to_string_pretty(&signed_vc).unwrap()
         );
 
         unimplemented!("Rebuild for ssi 0.8.0");
-        /*
+        /x*
         let asset_vc = serde_json::to_string(&asset_vc)?;
         Ok(asset_vc.as_bytes().to_owned())
         */
