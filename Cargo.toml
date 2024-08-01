@@ -19,6 +19,7 @@ ssi-dids = "0.2.0"
 ssi-json-ld = "0.3.0"
 static-iref = "3.0"
 thiserror = "1.0.61"
+xsd-types = "0.9.5"
 
 [dev-dependencies]
 actix = "0.13.3"

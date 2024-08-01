@@ -22,6 +22,7 @@ use ssi::{
     JWK,
 };
 use static_iref::uri;
+use xsd_types::value::DateTimeStamp;
 
 use crate::{
     builder::{CredentialHolder, IdentityAssertionBuilder, ManifestBuilder},
@@ -75,6 +76,8 @@ impl CredentialHolder for TestIssuer {
                     uri!("https://example.org/#Issuer").to_owned().into(),
                     subjects,
                 );
+
+                asset_vc.valid_from = Some(DateTimeStamp::now());
 
                 dbg!(&asset_vc);
 
