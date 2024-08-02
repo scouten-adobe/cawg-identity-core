@@ -7,9 +7,11 @@ edition = "2021"
 async-trait = "0.1.78"
 c2pa = { version = "0.33.0", features = ["openssl_ffi_mutex"] }
 ciborium = "0.2.2"
+coset = "0.3.8"
 did-method-key = "0.2.2"
 hex-literal = "0.4.1"
 iref = "3.2"
+json-ld-syntax = "0.21.1"
 jumbf = "0.4.0"
 linked-data = { version = "0.1.2", features = ["derive"] }
 serde = { version = "1.0.197", features = ["derive"] }

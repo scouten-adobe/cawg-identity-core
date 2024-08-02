@@ -25,6 +25,7 @@ use ssi::{
             v2::Credential,
         },
         vc_jose_cose::JoseVc,
+        JWSPayload,
     },
     dids::DIDJWK,
     JWK,
@@ -35,7 +36,10 @@ use xsd_types::value::DateTimeStamp;
 use crate::{
     builder::{CredentialHolder, IdentityAssertionBuilder, ManifestBuilder},
     tests::fixtures::{temp_c2pa_signer, temp_dir_path},
-    w3c_vc::{CreatorIdentityAssertion, IdentityAssertionVc, IdentityProvider, VerifiedIdentity},
+    w3c_vc::{
+        temp_cose::CoseVc, CreatorIdentityAssertion, IdentityAssertionVc, IdentityProvider,
+        VerifiedIdentity,
+    },
     IdentityAssertion, SignerPayload,
 };
 
@@ -150,11 +154,16 @@ impl CredentialHolder for TestIssuer {
                     serde_json::to_string_pretty(&asset_vc).unwrap()
                 );
 
-                // TO DO: Switch to COSE once available.
-                let jose_vc = JoseVc(asset_vc);
-                let jose = jose_vc.sign_into_enveloped(&issuer_jwk).await.unwrap();
+                let cose_vc = CoseVc(asset_vc);
+                let cose = cose_vc.sign_into_enveloped(&issuer_jwk).await.unwrap();
 
-                dbg!(&jose);
+                dbg!(&cose);
+
+                // TO DO: Switch to COSE once available.
+                // let jose_vc = JoseVc(asset_vc);
+                // let jose = jose_vc.sign_into_enveloped(&issuer_jwk).await.unwrap();
+
+                // dbg!(&jose);
                 panic!("Now what?");
 
                 // See example at https://docs.rs/ssi/latest/ssi/index.html.
