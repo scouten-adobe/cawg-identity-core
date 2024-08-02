@@ -155,7 +155,7 @@ impl CredentialHolder for TestIssuer {
                 );
 
                 let cose_vc = CoseVc(asset_vc);
-                let cose = cose_vc.sign_into_enveloped(&issuer_jwk).await.unwrap();
+                let cose = cose_vc.sign_into_cose(&issuer_jwk).await.unwrap();
 
                 dbg!(&cose);
 

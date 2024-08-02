@@ -2,17 +2,21 @@
 
 use std::borrow::Cow;
 
+use coset::{iana, CborSerializable, CoseSign1Builder, HeaderBuilder};
 use iref::Uri;
 use json_ld_syntax::Context;
 use serde::Serialize;
-use ssi::claims::{
-    jws::JWSSigner,
-    vc::{
-        enveloped::EnvelopedVerifiableCredential,
-        v2::{Credential, CredentialTypes, JsonCredential},
-        MaybeIdentified,
+use ssi::{
+    claims::{
+        jws::JWSSigner,
+        vc::{
+            enveloped::EnvelopedVerifiableCredential,
+            v2::{Credential, CredentialTypes, JsonCredential},
+            MaybeIdentified,
+        },
+        ClaimsValidity, DateTimeProvider, JWSPayload, SignatureError, ValidateClaims,
     },
-    ClaimsValidity, DateTimeProvider, JWSPayload, SignatureError, ValidateClaims,
+    JWK,
 };
 use xsd_types::DateTimeStamp;
 
@@ -21,23 +25,56 @@ use xsd_types::DateTimeStamp;
 pub struct CoseVc<T = JsonCredential>(pub T);
 
 impl<T: Serialize> CoseVc<T> {
-    /// Sign a JOSE VC into an enveloped verifiable credential.
-    pub async fn sign_into_enveloped(
-        &self,
-        signer: &impl JWSSigner,
-    ) -> Result<EnvelopedVerifiableCredential, SignatureError> {
-        let jws = JWSPayload::sign(self, signer).await?;
-        Ok(EnvelopedVerifiableCredential {
-            context: Context::iri_ref(
-                ssi::claims::vc::v2::CREDENTIALS_V2_CONTEXT_IRI
-                    .to_owned()
-                    .into(),
-            ),
-            id: format!("data:application/vc-ld+cose,{jws}")
-                .parse()
+    /// Sign a JOSE VC into a COSE enveloped verifiable credential.
+    pub async fn sign_into_cose(&self, signer: &JWK) -> Result<Vec<u8>, SignatureError> {
+        let info = signer.fetch_info().await?;
+        let payload_bytes = self.payload_bytes();
+
+        let protected = HeaderBuilder::new()
+            .algorithm(iana::Algorithm::ES256)
+            .key_id(b"11".to_vec())
+            .build();
+
+        let sign1 = CoseSign1Builder::new()
+            .protected(protected)
+            .payload(payload_bytes.to_vec())
+            .create_signature(b"", |pt| sign_bytes(signer, pt))
+            .build();
+
+        unimplemented!("Now, do we have all the right headers in place?");
+        // And are we actually signing?
+
+        /*
+        let header = Header {
+            algorithm: info.algorithm,
+            key_id: info.key_id,
+            content_type: payload.cty().map(ToOwned::to_owned),
+            type_: payload.typ().map(ToOwned::to_owned),
+            ..Default::default()
+        };
+
+        let signing_bytes = header.encode_signing_bytes(&payload_bytes);
+        let signature = self.sign_bytes(&signing_bytes).await?;
+
+        Ok(
+            CompactJWSString::encode_from_signing_bytes_and_signature(signing_bytes, &signature)
                 .unwrap(),
-        })
+        )
+        */
+        unimplemented!();
     }
+}
+
+fn sign_bytes(signer: &JWK, payload: &[u8]) -> Vec<u8> {
+    // Copied this function out of impl JWSSigner for JWK
+    // to get rid of the async-ness, which isn't compatible
+    // with the coset interface.
+
+    // TO DO: ERROR HANDLING without panic!().
+
+    let algorithm = signer.get_algorithm().unwrap();
+
+    ssi::claims::jws::sign_bytes(algorithm, payload, signer).unwrap()
 }
 
 // NEXT STEPS: Hoist JWSSigner::sign up to here.
@@ -55,11 +92,10 @@ impl<T: Serialize> CoseVc<T> {
 // Gets the raw signature bytes over the header and payload.
 // That's from impl JWSSigner for JWK::sign (line 142).
 //
-// And finally the call to CompactJWSString::encode_from_signing_bytes_and_signature
-// base-64 encodes the raw signature bytes and appends it to the encoded payload and
+// And finally the call to
+// CompactJWSString::encode_from_signing_bytes_and_signature base-64 encodes the
+// raw signature bytes and appends it to the encoded payload and
 // header to complete the JWT.
-
-
 
 /* NOT YET ...
 impl<T: DeserializeOwned> CoseVc<T> {
