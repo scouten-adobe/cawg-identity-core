@@ -59,7 +59,7 @@ impl CredentialHolder for TestIssuer {
         10240 // 🤷🏻‍♂️
     }
 
-    async fn sign(&self, _signer_payload: &SignerPayload) -> c2pa::Result<Vec<u8>> {
+    async fn sign(&self, signer_payload: &SignerPayload) -> c2pa::Result<Vec<u8>> {
         // TO DO: ERROR HANDLING
         let signed_vc = match &self.setup {
             TestSetup::UserAndIssuerJwk(user_jwk, issuer_jwk) => {
@@ -130,6 +130,7 @@ impl CredentialHolder for TestIssuer {
 
                 let cia = CreatorIdentityAssertion {
                     verified_identities,
+                    c2pa_asset: signer_payload.clone(),
                 };
 
                 let subjects = NonEmptyVec::new(cia);
@@ -143,6 +144,11 @@ impl CredentialHolder for TestIssuer {
                 asset_vc.valid_from = Some(DateTimeStamp::now());
 
                 dbg!(&asset_vc);
+
+                eprintln!(
+                    "\n\n\nAsset VC is\n{}\n\n",
+                    serde_json::to_string_pretty(&asset_vc).unwrap()
+                );
 
                 // TO DO: Switch to COSE once available.
                 let jose_vc = JoseVc(asset_vc);
