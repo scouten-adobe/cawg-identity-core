@@ -65,7 +65,7 @@ impl CredentialHolder for TestIssuer {
 
     async fn sign(&self, signer_payload: &SignerPayload) -> c2pa::Result<Vec<u8>> {
         // TO DO: ERROR HANDLING
-        let signed_vc = match &self.setup {
+        match &self.setup {
             TestSetup::UserAndIssuerJwk(user_jwk, issuer_jwk) => {
                 // WARNING: did:jwk is great for simple test cases such as this
                 // but is strongly discouraged for production use cases. In other words,
@@ -157,48 +157,9 @@ impl CredentialHolder for TestIssuer {
                 let cose_vc = CoseVc(asset_vc);
                 let cose = cose_vc.sign_into_cose(&issuer_jwk).await.unwrap();
 
-                dbg!(&cose);
-
-                // TO DO: Switch to COSE once available.
-                // let jose_vc = JoseVc(asset_vc);
-                // let jose = jose_vc.sign_into_enveloped(&issuer_jwk).await.unwrap();
-
-                // dbg!(&jose);
-                panic!("Now what?");
-
-                // See example at https://docs.rs/ssi/latest/ssi/index.html.
-
-                /* TO DO: Rework proof once I grok the new ssi APIs.
-
-                let mut context_loader = cawg_context_loader();
-                asset_vc.add_proof(
-                    asset_vc
-                        .generate_proof(
-                            &issuer_jwk,
-                            &LinkedDataProofOptions::default(),
-                            &DIDKey,
-                            &mut context_loader,
-                        )
-                        .await
-                        .unwrap(),
-                );
-                */
-
-                // asset_vc
-            } // TestSetup::Credential(vc) => vc.clone(),
-        };
-
-        /*
-        eprintln!(
-            "\n\n\nAsset VC is\n{}\n\n",
-            serde_json::to_string_pretty(&signed_vc).unwrap()
-        );
-
-        unimplemented!("Rebuild for ssi 0.8.0");
-        /x*
-        let asset_vc = serde_json::to_string(&asset_vc)?;
-        Ok(asset_vc.as_bytes().to_owned())
-        */
+                Ok(cose)
+            }
+        }
     }
 }
 

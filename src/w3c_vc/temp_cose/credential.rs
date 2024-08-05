@@ -16,24 +16,36 @@ use ssi::{
         },
         ClaimsValidity, DateTimeProvider, JWSPayload, SignatureError, ValidateClaims,
     },
+    crypto::Algorithm,
     JWK,
 };
 use xsd_types::DateTimeStamp;
 
-/// Payload of a JWS-secured Verifiable Credential.
+/// Payload of a COSE-secured Verifiable Credential.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct CoseVc<T = JsonCredential>(pub T);
 
 impl<T: Serialize> CoseVc<T> {
-    /// Sign a JOSE VC into a COSE enveloped verifiable credential.
+    /// Sign a COSE VC into a COSE enveloped verifiable credential.
     pub async fn sign_into_cose(&self, signer: &JWK) -> Result<Vec<u8>, SignatureError> {
         let info = signer.fetch_info().await?;
         let payload_bytes = self.payload_bytes();
 
-        let protected = HeaderBuilder::new()
-            .algorithm(iana::Algorithm::ES256)
-            .key_id(b"11".to_vec())
+        let coset_alg = match signer.get_algorithm().unwrap() {
+            ssi::jwk::Algorithm::EdDSA => coset::iana::Algorithm::EdDSA,
+            ssi_alg => {
+                unimplemented!("Add support for SSI alg {ssi_alg:?}")
+            }
+        };
+
+        let mut protected = HeaderBuilder::new()
+            .algorithm(coset_alg)
+            .content_type("application/vc".to_owned())
             .build();
+
+        if let Some(key_id) = info.key_id.as_ref() {
+            protected.key_id = key_id.as_bytes().to_vec();
+        }
 
         let sign1 = CoseSign1Builder::new()
             .protected(protected)
@@ -41,27 +53,7 @@ impl<T: Serialize> CoseVc<T> {
             .create_signature(b"", |pt| sign_bytes(signer, pt))
             .build();
 
-        unimplemented!("Now, do we have all the right headers in place?");
-        // And are we actually signing?
-
-        /*
-        let header = Header {
-            algorithm: info.algorithm,
-            key_id: info.key_id,
-            content_type: payload.cty().map(ToOwned::to_owned),
-            type_: payload.typ().map(ToOwned::to_owned),
-            ..Default::default()
-        };
-
-        let signing_bytes = header.encode_signing_bytes(&payload_bytes);
-        let signature = self.sign_bytes(&signing_bytes).await?;
-
-        Ok(
-            CompactJWSString::encode_from_signing_bytes_and_signature(signing_bytes, &signature)
-                .unwrap(),
-        )
-        */
-        unimplemented!();
+        Ok(sign1.to_vec().unwrap())
     }
 }
 
@@ -70,7 +62,7 @@ fn sign_bytes(signer: &JWK, payload: &[u8]) -> Vec<u8> {
     // to get rid of the async-ness, which isn't compatible
     // with the coset interface.
 
-    // TO DO: ERROR HANDLING without panic!().
+    // TO DO: ERROR HANDLING without panic.
 
     let algorithm = signer.get_algorithm().unwrap();
 
