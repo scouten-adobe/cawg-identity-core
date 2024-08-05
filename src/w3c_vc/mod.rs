@@ -21,15 +21,15 @@
 
 pub(crate) mod cawg_identity_context;
 
-mod identity_assertion_vc;
-pub use identity_assertion_vc::{
-    CreatorIdentityAssertion, IdentityAssertionVc, IdentityProvider, VerifiedIdentity,
-};
-
 mod cose_vc_signature_handler;
 pub use cose_vc_signature_handler::{CoseVcSignatureHandler, VcNamedActor};
 
 mod creator_identity_assertion_issuer;
 pub use creator_identity_assertion_issuer::CredentialIdentityAssertionIssuer;
+
+mod identity_assertion_vc;
+pub use identity_assertion_vc::{
+    CreatorIdentityAssertion, IdentityAssertionVc, IdentityProvider, VerifiedIdentity,
+};
 
 pub(crate) mod temp_cose;
