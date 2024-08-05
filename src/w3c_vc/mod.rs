@@ -26,10 +26,10 @@ pub use identity_assertion_vc::{
     CreatorIdentityAssertion, IdentityAssertionVc, IdentityProvider, VerifiedIdentity,
 };
 
+mod cose_vc_signature_handler;
+pub use cose_vc_signature_handler::{CoseVcSignatureHandler, VcNamedActor};
+
 mod creator_identity_assertion_issuer;
 pub use creator_identity_assertion_issuer::CredentialIdentityAssertionIssuer;
 
 pub(crate) mod temp_cose;
-
-mod vc_signature_handler;
-pub use vc_signature_handler::{VcNamedActor, VcSignatureHandler};

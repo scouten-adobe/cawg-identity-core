@@ -28,14 +28,17 @@ use crate::{
 
 /// An implementation of [`SignatureHandler`] that supports Creator Identity
 /// Assertions (a specific grammar of W3C Verifiable Credentials) as specified
-/// in [§8.1, W3C verifiable credentials].
+/// in [§8.1, W3C verifiable credentials] and secured by COSE as specified in
+/// [§3.3.1 Securing JSON-LD Verifiable Credentials with COSE] of _Securing
+/// Verifiable Credentials using JOSE and COSE._
 ///
 /// [`SignatureHandler`]: crate::SignatureHandler
 /// [§8.1, W3C verifiable credentials]: https://creator-assertions.github.io/identity/1.x-add-vc-v3/#_w3c_verifiable_credentials
-pub struct VcSignatureHandler {}
+/// [§3.3.1 Securing JSON-LD Verifiable Credentials with COSE]: https://w3c.github.io/vc-jose-cose/#securing-vcs-with-cose
+pub struct CoseVcSignatureHandler {}
 
 #[async_trait]
-impl SignatureHandler for VcSignatureHandler {
+impl SignatureHandler for CoseVcSignatureHandler {
     fn can_handle_sig_type(sig_type: &str) -> bool {
         sig_type == "cawg.w3c.vc"
     }
