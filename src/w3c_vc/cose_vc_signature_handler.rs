@@ -19,10 +19,17 @@ use std::{
 };
 
 use async_trait::async_trait;
+use coset::{
+    iana::{self, CoapContentFormat},
+    CborSerializable, CoseSign1, RegisteredLabel, RegisteredLabelWithPrivate,
+};
 use ssi::claims::vc::v1::{Context, Credential, Presentation};
 
 use crate::{
-    w3c_vc::cawg_identity_context::{cawg_context_loader, CAWG_IDENTITY_CONTEXT_URI},
+    w3c_vc::{
+        cawg_identity_context::{cawg_context_loader, CAWG_IDENTITY_CONTEXT_URI},
+        IdentityAssertionVc,
+    },
     NamedActor, SignatureHandler, SignerPayload, ValidationResult,
 };
 
@@ -48,18 +55,66 @@ impl SignatureHandler for CoseVcSignatureHandler {
         signer_payload: &SignerPayload,
         signature: &'a [u8],
     ) -> ValidationResult<Box<dyn NamedActor<'a>>> {
-        // TO DO: ERROR HANDLING
-        let vc_str = std::str::from_utf8(signature).unwrap();
+        // TEMPORARY implementation. Hopefully to be replaced by more robust code in
+        // `ssi` crate soon.
 
-        unimplemented!("Rebuild with new ssi 0.8.0 APIs");
+        // TO DO: Error handling without panic.
 
-        /* REBUILD with SSI 0.8.0
+        // At the receiving end, deserialize the bytes back to a `CoseSign1` object.
+        let sign1 = CoseSign1::from_slice(&signature).unwrap();
+        dbg!(&sign1);
 
+        // TEMPORARY: Require EdDSA algorithm.
+        if let Some(alg) = sign1.protected.header.alg {
+            match alg {
+                RegisteredLabelWithPrivate::Assigned(coset::iana::Algorithm::EdDSA) => (),
+                _ => {
+                    panic!("TO DO: Add suport for signing alg {alg:?}");
+                }
+            }
+        } else {
+            panic!("ERROR: COSE protected headers do not contain a signing algorithm");
+        }
 
-        let vc = Credential::from_json(&vc_str).unwrap();
-        vc.validate().unwrap();
+        // TO DO: Discover public key for issuer DID.
+        // TO DO: Validate signature against public key.
+        // // Check the signature, which needs to have the same `aad` provided, by
+        // // providing a closure that can do the verify operation.
+        // let result = sign1.verify_signature(aad, |sig, data| verifier.verify(sig,
+        // data)); println!("Signature verified: {:?}.", result);
+        // assert!(result.is_ok());
 
-        dbg!(&vc);
+        if let Some(cty) = sign1.protected.header.content_type {
+            match cty {
+                coset::ContentType::Text(ref cty) => {
+                    if cty != "application/vc" {
+                        panic!("ERROR: COSE content type is unsupported {cty:?}");
+                    }
+                }
+                _ => {
+                    panic!("ERROR: COSE content type is unsupported {cty:?}");
+                }
+            }
+        } else {
+            panic!("ERROR: COSE protected headers do not contain required content type header");
+        }
+
+        // Interpret the unprotected payload, which should be the raw VC.
+
+        let Some(payload_bytes) = sign1.payload else {
+            panic!("ERROR: COSE Sign1 data structure has no payload");
+        };
+
+        let asset_vc: IdentityAssertionVc = serde_json::from_slice(&payload_bytes)
+            .expect("ERROR: can't decode VC as IdentityAssertionVc");
+
+        dbg!(&asset_vc);
+
+        unimplemented!("Now what?");
+
+        /*
+
+        --- REBUILD with SSI 0.8.0
 
         let mut options = LinkedDataProofOptions::default();
         options.proof_purpose = Some(ssi_dids::VerificationRelationship::AssertionMethod);

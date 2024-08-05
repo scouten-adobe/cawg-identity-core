@@ -147,13 +147,6 @@ impl CredentialHolder for TestIssuer {
 
                 asset_vc.valid_from = Some(DateTimeStamp::now());
 
-                dbg!(&asset_vc);
-
-                eprintln!(
-                    "\n\n\nAsset VC is\n{}\n\n",
-                    serde_json::to_string_pretty(&asset_vc).unwrap()
-                );
-
                 let cose_vc = CoseVc(asset_vc);
                 let cose = cose_vc.sign_into_cose(&issuer_jwk).await.unwrap();
 
