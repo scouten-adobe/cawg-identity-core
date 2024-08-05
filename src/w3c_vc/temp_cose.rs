@@ -1,22 +1,46 @@
+// Copyright 2024 Adobe. All rights reserved.
+// This file is licensed to you under the Apache License,
+// Version 2.0 (http://www.apache.org/licenses/LICENSE-2.0)
+// or the MIT license (http://opensource.org/licenses/MIT),
+// at your option.
+
+// Unless required by applicable law or agreed to in writing,
+// this software is distributed on an "AS IS" BASIS, WITHOUT
+// WARRANTIES OR REPRESENTATIONS OF ANY KIND, either express or
+// implied. See the LICENSE-MIT and LICENSE-APACHE files for the
+// specific language governing permissions and limitations under
+// each license.
+
+//! Hopefully temporary implementation of COSE enveloped signatures
+//! for W3C verifiable credentials.
+//!
+//! Based on reading [§3.3 With COSE] of [Securing Verifiable Credentials using
+//! JOSE and COSE], candidate recommendation draft as of 05 July 2024.
+//!
+//! Quick-and-dirty adaptation from [`ssi` crate], which I hope will add its own
+//! COSE support to replace this.
+//!
+//!
+//! [§3.3 With COSE]: https://www.w3.org/TR/vc-jose-cose/#securing-with-cose
+//! [Securing Verifiable Credentials using JOSE and COSE]: https://www.w3.org/TR/vc-jose-cose/
+//! [`ssi` crate]: https://github.com/spruceid/ssi/
+
 // Adapted from https://github.com/spruceid/ssi/blob/main/crates/claims/crates/vc-jose-cose/src/jose/credential.rs
 
 use std::borrow::Cow;
 
-use coset::{iana, CborSerializable, CoseSign1Builder, HeaderBuilder};
+use coset::{CborSerializable, CoseSign1Builder, HeaderBuilder};
 use iref::Uri;
-use json_ld_syntax::Context;
 use serde::Serialize;
 use ssi::{
     claims::{
         jws::JWSSigner,
         vc::{
-            enveloped::EnvelopedVerifiableCredential,
             v2::{Credential, CredentialTypes, JsonCredential},
             MaybeIdentified,
         },
         ClaimsValidity, DateTimeProvider, JWSPayload, SignatureError, ValidateClaims,
     },
-    crypto::Algorithm,
     JWK,
 };
 use xsd_types::DateTimeStamp;
@@ -68,26 +92,6 @@ fn sign_bytes(signer: &JWK, payload: &[u8]) -> Vec<u8> {
 
     ssi::claims::jws::sign_bytes(algorithm, payload, signer).unwrap()
 }
-
-// NEXT STEPS: Hoist JWSSigner::sign up to here.
-// Pay special attention to this line (line 88):
-//
-//      let signing_bytes = header.encode_signing_bytes(&payload_bytes);
-//
-// That calls through to ssi_jws::Header::encode_signing_bytes (line 401),
-// which encodes _both_ the header and the payload (JSON encoded credential).
-//
-// Then line 89:
-//
-//      let signature = self.sign_bytes(&signing_bytes).await?;
-//
-// Gets the raw signature bytes over the header and payload.
-// That's from impl JWSSigner for JWK::sign (line 142).
-//
-// And finally the call to
-// CompactJWSString::encode_from_signing_bytes_and_signature base-64 encodes the
-// raw signature bytes and appends it to the encoded payload and
-// header to complete the JWT.
 
 /* NOT YET ...
 impl<T: DeserializeOwned> CoseVc<T> {
@@ -223,57 +227,3 @@ impl<E, P, T: ValidateClaims<E, P>> ValidateClaims<E, P> for CoseVc<T> {
         self.0.validate_claims(environment, proof)
     }
 }
-
-/* NOT YET ...
-#[cfg(test)]
-mod tests {
-    use serde_json::json;
-    use ssi_claims_core::VerificationParameters;
-    use ssi_jwk::JWK;
-    use ssi_jws::{CompactJWS, CompactJWSBuf};
-    use ssi_vc::v2::JsonCredential;
-
-    use crate::CoseVc;
-
-    async fn verify(input: &CompactJWS, key: &JWK) {
-        let vc = CoseVc::decode_any(input).unwrap();
-        let params = VerificationParameters::from_resolver(key);
-        let result = vc.verify(params).await.unwrap();
-        assert_eq!(result, Ok(()))
-    }
-
-    #[async_std::test]
-    async fn jose_vc_roundtrip() {
-        let vc: JsonCredential = serde_json::from_value(json!({
-            "@context": [
-                "https://www.w3.org/ns/credentials/v2",
-                "https://www.w3.org/ns/credentials/examples/v2"
-            ],
-            "id": "http://university.example/credentials/1872",
-            "type": [
-                "VerifiableCredential",
-                "ExampleAlumniCredential"
-            ],
-            "issuer": "https://university.example/issuers/565049",
-            "validFrom": "2010-01-01T19:23:24Z",
-            "credentialSchema": {
-                "id": "https://example.org/examples/degree.json",
-                "type": "JsonSchema"
-            },
-            "credentialSubject": {
-                "id": "did:example:123",
-                "degree": {
-                "type": "BachelorDegree",
-                "name": "Bachelor of Science and Arts"
-                }
-            }
-        }))
-        .unwrap();
-
-        let key = JWK::generate_p256();
-        let enveloped = CoseVc(vc).sign_into_enveloped(&key).await.unwrap();
-        let jws = CompactJWSBuf::new(enveloped.id.decoded_data().unwrap().into_owned()).unwrap();
-        verify(&jws, &key).await
-    }
-}
-*/
