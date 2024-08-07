@@ -23,7 +23,11 @@ use coset::{
     iana::{self, CoapContentFormat},
     CborSerializable, CoseSign1, RegisteredLabel, RegisteredLabelWithPrivate,
 };
-use ssi::claims::vc::v1::{Context, Credential, Presentation};
+use ssi::{
+    claims::vc::v1::{Context, Credential, Presentation},
+    dids::{resolution, DIDResolver, DID, DIDJWK, DIDURL},
+    jwk, JWK,
+};
 
 use crate::{
     w3c_vc::{
@@ -65,26 +69,20 @@ impl SignatureHandler for CoseVcSignatureHandler {
         dbg!(&sign1);
 
         // TEMPORARY: Require EdDSA algorithm.
-        if let Some(alg) = sign1.protected.header.alg {
+        let ssi_alg = if let Some(ref alg) = sign1.protected.header.alg {
             match alg {
-                RegisteredLabelWithPrivate::Assigned(coset::iana::Algorithm::EdDSA) => (),
+                RegisteredLabelWithPrivate::Assigned(coset::iana::Algorithm::EdDSA) => {
+                    jwk::Algorithm::EdDSA
+                }
                 _ => {
                     panic!("TO DO: Add suport for signing alg {alg:?}");
                 }
             }
         } else {
             panic!("ERROR: COSE protected headers do not contain a signing algorithm");
-        }
+        };
 
-        // TO DO: Discover public key for issuer DID.
-        // TO DO: Validate signature against public key.
-        // // Check the signature, which needs to have the same `aad` provided, by
-        // // providing a closure that can do the verify operation.
-        // let result = sign1.verify_signature(aad, |sig, data| verifier.verify(sig,
-        // data)); println!("Signature verified: {:?}.", result);
-        // assert!(result.is_ok());
-
-        if let Some(cty) = sign1.protected.header.content_type {
+        if let Some(ref cty) = sign1.protected.header.content_type {
             match cty {
                 coset::ContentType::Text(ref cty) => {
                     if cty != "application/vc" {
@@ -101,7 +99,7 @@ impl SignatureHandler for CoseVcSignatureHandler {
 
         // Interpret the unprotected payload, which should be the raw VC.
 
-        let Some(payload_bytes) = sign1.payload else {
+        let Some(ref payload_bytes) = sign1.payload else {
             panic!("ERROR: COSE Sign1 data structure has no payload");
         };
 
@@ -110,7 +108,35 @@ impl SignatureHandler for CoseVcSignatureHandler {
 
         dbg!(&asset_vc);
 
-        unimplemented!("Now what?");
+        // Discover public key for issuer DID and validate signature.
+        // TEMPORARY version supports JWK only.
+
+        let issuer_id = asset_vc.issuer.id();
+        let issuer_id = DIDURL::new(&issuer_id.as_bytes()).unwrap();
+        let (primary_did, _fragment) = issuer_id.without_fragment();
+        let primary_did = primary_did.did();
+
+        let jwk = primary_did.method_specific_id();
+        let jwk = multibase::Base::decode(&multibase::Base::Base64Url, jwk).unwrap();
+        let jwk: JWK = serde_json::from_slice(&jwk).unwrap();
+
+        // TEMPORARY only support ED25519.
+        let jwk::Params::OKP(ref okp) = jwk.params else {
+            panic!("Temporarily unsupported params type");
+        };
+        assert_eq!(okp.curve, "Ed25519");
+
+        let public_key = &okp.public_key;
+
+        // Check the signature, which needs to have the same `aad` provided, by
+        // providing a closure that can do the verify operation.
+        let result = sign1
+            .verify_signature(b"", |sig, data| {
+                ssi::claims::jws::verify_bytes(ssi_alg, data, &jwk, sig)
+            })
+            .unwrap();
+
+        unimplemented!("Signature verified. Now what?");
 
         /*
 
