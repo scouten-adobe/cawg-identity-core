@@ -173,6 +173,20 @@ impl IdentityAssertion {
             }
         }
 
+        // TO DO: Allow configuration of signature handler list.
+        // For now, we hard-code the VC/creator identity assertion signature handler.
+
+        let vc_handler = crate::w3c_vc::CoseVcSignatureHandler {};
+        if let Ok(named_actor) = vc_handler
+            .check_signature(signer_payload, &self.signature)
+            .await
+        {
+            return Ok(IdentityAssertionReport {
+                signer_payload,
+                named_actor,
+            });
+        }
+
         Err(ValidationError::UnknownSignatureType(
             self.signer_payload.sig_type.clone(),
         ))

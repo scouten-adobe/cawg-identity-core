@@ -17,7 +17,6 @@ yanked = "allow" # "deny" # TODO: Re-enable when possible.
 
 ignore = [
   "RUSTSEC-2021-0127", # serde_cbor
-  "RUSTSEC-2024-0320", # yaml-rust
 ]
 
 # Deny multiple versions unless explicitly skipped.
