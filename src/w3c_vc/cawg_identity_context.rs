@@ -13,9 +13,11 @@
 
 use std::collections::HashMap;
 
+use iref::Iri;
 use ssi::json_ld::ContextLoader;
 
-pub(crate) const CAWG_IDENTITY_CONTEXT_URI: &str = "https://creator-assertions.github.io/tbd/tbd";
+pub(crate) const CAWG_IDENTITY_CONTEXT_IRI: &Iri =
+    static_iref::iri!("https://creator-assertions.github.io/tbd/tbd");
 
 pub(crate) const CAWG_IDENTITY_CONTEXT_JSON: &str = r#"{
     "@context": {
@@ -27,7 +29,7 @@ pub(crate) const CAWG_IDENTITY_CONTEXT_JSON: &str = r#"{
 pub(crate) fn cawg_context_loader() -> ContextLoader {
     // TO DO: ERROR HANDLING
     let context_map: HashMap<String, String> = HashMap::from([(
-        CAWG_IDENTITY_CONTEXT_URI.to_owned(),
+        CAWG_IDENTITY_CONTEXT_IRI.to_string(),
         CAWG_IDENTITY_CONTEXT_JSON.to_owned(),
     )]);
 

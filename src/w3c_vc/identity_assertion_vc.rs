@@ -31,7 +31,7 @@ pub type IdentityAssertionVc = SpecializedJsonCredential<
 
 /// Creator identity assertion context IRI.
 pub const CREATOR_IDENTITY_ASSERTION_CONTEXT_IRI: &Iri =
-    static_iref::iri!("https://creator-assertions.github.io/tbd/tbd/");
+    static_iref::iri!("https://creator-assertions.github.io/tbd/tbd");
 
 /// Creator identity assertion type name.
 pub const CREATOR_IDENTITY_ASSERTION_TYPE: &str = "CreatorIdentityAssertionCredential";
@@ -42,7 +42,7 @@ pub const CREATOR_IDENTITY_ASSERTION_TYPE: &str = "CreatorIdentityAssertionCrede
 ///
 /// [W3C verifiable credential]: https://www.w3.org/TR/vc-data-model-2.0/
 #[derive(Debug, Deserialize, Serialize, linked_data::Serialize, linked_data::Deserialize)]
-#[ld(prefix("cawg" = "https://creator-assertions.github.io/tbd/tbd/"))]
+#[ld(prefix("cawg" = "https://creator-assertions.github.io/tbd/tbd"))]
 pub struct CreatorIdentityAssertion {
     /// ## Verified identities
     ///
@@ -78,7 +78,7 @@ impl RequiredType for CreatorIdentityAssertion {
 /// the _named actor_ as verified by the _identity assertion generator_ or a
 /// service contacted by the _identity assertion generator._
 #[derive(Debug, Deserialize, Serialize, linked_data::Serialize, linked_data::Deserialize)]
-#[ld(prefix("cawg" = "https://creator-assertions.github.io/tbd/tbd/"))]
+#[ld(prefix("cawg" = "https://creator-assertions.github.io/tbd/tbd"))]
 pub struct VerifiedIdentity {
     /// ## Verified identity type
     ///
@@ -178,7 +178,7 @@ pub struct VerifiedIdentity {
 /// that MAY be used to represent the _named actor’s_ verification details:
 /// `id`, `name`, and `proof`.
 #[derive(Debug, Deserialize, Serialize, linked_data::Serialize, linked_data::Deserialize)]
-#[ld(prefix("cawg" = "https://creator-assertions.github.io/tbd/tbd/"))]
+#[ld(prefix("cawg" = "https://creator-assertions.github.io/tbd/tbd"))]
 pub struct IdentityProvider {
     /// ## Identity provider ID
     ///

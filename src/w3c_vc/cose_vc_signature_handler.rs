@@ -31,7 +31,7 @@ use ssi::{
 
 use crate::{
     w3c_vc::{
-        cawg_identity_context::{cawg_context_loader, CAWG_IDENTITY_CONTEXT_URI},
+        cawg_identity_context::{cawg_context_loader, CAWG_IDENTITY_CONTEXT_IRI},
         IdentityAssertionVc,
     },
     NamedActor, SignatureHandler, SignerPayload, ValidationResult,
