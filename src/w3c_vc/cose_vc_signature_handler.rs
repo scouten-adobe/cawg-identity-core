@@ -116,17 +116,23 @@ impl SignatureHandler for CoseVcSignatureHandler {
         let (primary_did, _fragment) = issuer_id.without_fragment();
         let primary_did = primary_did.did();
 
-        let jwk = primary_did.method_specific_id();
-        let jwk = multibase::Base::decode(&multibase::Base::Base64Url, jwk).unwrap();
-        let jwk: JWK = serde_json::from_slice(&jwk).unwrap();
+        let jwk = match primary_did.method_name() {
+            "jwk" => {
+                let jwk = primary_did.method_specific_id();
+                let jwk = multibase::Base::decode(&multibase::Base::Base64Url, jwk).unwrap();
+                let jwk: JWK = serde_json::from_slice(&jwk).unwrap();
+                jwk
+            }
+            x => {
+                panic!("Unsupported DID method {x:?}");
+            }
+        };
 
         // TEMPORARY only support ED25519.
         let jwk::Params::OKP(ref okp) = jwk.params else {
             panic!("Temporarily unsupported params type");
         };
         assert_eq!(okp.curve, "Ed25519");
-
-        let public_key = &okp.public_key;
 
         // Check the signature, which needs to have the same `aad` provided, by
         // providing a closure that can do the verify operation.
