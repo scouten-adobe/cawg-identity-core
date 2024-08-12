@@ -22,10 +22,11 @@ pub mod builder;
 
 mod identity_assertion;
 pub use identity_assertion::{
+    named_actor::{NamedActor, VerifiedIdentity, VerifiedIdentityType},
     signature_handler::SignatureHandler,
     signer_payload::{HashedUri, SignerPayload},
     validation_error::{ValidationError, ValidationResult},
-    IdentityAssertion, IdentityAssertionReport, NamedActor,
+    IdentityAssertion, IdentityAssertionReport,
 };
 
 pub(crate) mod internal;
