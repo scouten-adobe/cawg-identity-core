@@ -15,7 +15,6 @@
 
 use std::fmt::{Debug, Formatter};
 
-use async_trait::async_trait;
 use chrono::{DateTime, FixedOffset};
 use iref::UriBuf;
 use non_empty_string::NonEmptyString;
@@ -28,6 +27,9 @@ use crate::{
 
 pub(crate) mod signer_payload;
 use signer_payload::SignerPayload;
+
+pub(crate) mod signature_handler;
+use signature_handler::SignatureHandler;
 
 /// This struct represents the raw content of the identity assertion.
 ///
@@ -234,27 +236,6 @@ impl Debug for IdentityAssertion {
             .field("signature", &DebugByteSlice(&self.signature))
             .finish()
     }
-}
-
-/// A `SignatureHandler` can read one kind of signature from an identity
-/// assertion, assess the validity of the signature, and return information
-/// about the corresponding credential subject.
-#[async_trait]
-pub trait SignatureHandler {
-    /// Returns true if this handler can process a signature with
-    /// the given `sig_type` code.
-    fn can_handle_sig_type(sig_type: &str) -> bool;
-
-    /// Check the signature, returning an instance of [`NamedActor`] if
-    /// the signature is valid.
-    ///
-    /// Will only be called if `can_handle_sig_type` returns `true`
-    /// for this signature.
-    async fn check_signature<'a>(
-        &self,
-        signer_payload: &SignerPayload,
-        signature: &'a [u8],
-    ) -> ValidationResult<Box<dyn NamedActor<'a>>>;
 }
 
 /// A `NamedActor` is the actor named by a signature in an identity
