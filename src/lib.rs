@@ -22,7 +22,8 @@ pub mod builder;
 
 mod identity_assertion;
 pub use identity_assertion::{
-    signature_handler::SignatureHandler, signer_payload::SignerPayload, HashedUri,
+    signature_handler::SignatureHandler,
+    signer_payload::{HashedUri, SignerPayload},
     IdentityAssertion, IdentityAssertionReport, NamedActor, ValidationError, ValidationResult,
 };
 
