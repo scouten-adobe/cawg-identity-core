@@ -29,7 +29,7 @@ pub use creator_identity_assertion_issuer::CredentialIdentityAssertionIssuer;
 
 mod identity_assertion_vc;
 pub use identity_assertion_vc::{
-    CreatorIdentityAssertion, IdentityAssertionVc, IdentityProvider, VerifiedIdentity,
+    CreatorIdentityAssertion, IdentityAssertionVc, IdentityProvider, VcVerifiedIdentity,
 };
 
 pub(crate) mod temp_cose;

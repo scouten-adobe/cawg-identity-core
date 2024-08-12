@@ -39,7 +39,7 @@ use crate::{
     tests::fixtures::{temp_c2pa_signer, temp_dir_path},
     w3c_vc::{
         temp_cose::CoseVc, CreatorIdentityAssertion, IdentityAssertionVc, IdentityProvider,
-        VerifiedIdentity,
+        VcVerifiedIdentity,
     },
     IdentityAssertion, SignerPayload,
 };
@@ -77,8 +77,8 @@ impl CredentialHolder for TestIssuer {
 
                 // Use the identities as shown in https://creator-assertions.github.io/identity/1.x+vc-draft/#vc-credentialsubject-verifiedIdentities.
 
-                let verified_identities: NonEmptyVec<VerifiedIdentity> = NonEmptyVec::try_from_vec(vec![
-                    VerifiedIdentity {
+                let verified_identities: NonEmptyVec<VcVerifiedIdentity> = NonEmptyVec::try_from_vec(vec![
+                    VcVerifiedIdentity {
                         type_: non_empty_str("cawg.document_verification"),
                         name: Some(non_empty_str("First-Name Last-Name")),
                         username: None,
@@ -91,7 +91,7 @@ impl CredentialHolder for TestIssuer {
                         },
                         verified_at: DateTimeStamp::from_str("2024-07-26T22:30:15Z").unwrap(),
                     },
-                    VerifiedIdentity {
+                    VcVerifiedIdentity {
                         type_: non_empty_str("cawg.affiliation"),
                         name: None,
                         username: None,
@@ -105,7 +105,7 @@ impl CredentialHolder for TestIssuer {
                         },
                         verified_at: DateTimeStamp::from_str("2024-07-26T22:29:57Z").unwrap(),
                     },
-                    VerifiedIdentity {
+                    VcVerifiedIdentity {
                         type_: non_empty_str("cawg.social_media"),
                         name: Some(non_empty_str("Silly Cats 929")),
                         username: Some(non_empty_str("username")),
@@ -118,7 +118,7 @@ impl CredentialHolder for TestIssuer {
                         },
                         verified_at: DateTimeStamp::from_str("2024-05-27T08:40:39.569856Z").unwrap(),
                     },
-                    VerifiedIdentity {
+                    VcVerifiedIdentity {
                         type_: non_empty_str("cawg.crypto_wallet"),
                         name: None,
                         username: None,

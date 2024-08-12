@@ -53,7 +53,7 @@ pub struct CreatorIdentityAssertion {
     /// by the _identity assertion generator._
     #[serde(rename = "verifiedIdentities")]
     #[ld("cawg:verifiedIdentities")]
-    pub verified_identities: NonEmptyVec<VerifiedIdentity>,
+    pub verified_identities: NonEmptyVec<VcVerifiedIdentity>,
 
     /// ## Binding to C2PA asset
     ///
@@ -80,7 +80,7 @@ impl RequiredType for CreatorIdentityAssertion {
 /// service contacted by the _identity assertion generator._
 #[derive(Debug, Deserialize, Serialize, linked_data::Serialize, linked_data::Deserialize)]
 #[ld(prefix("cawg" = "https://creator-assertions.github.io/tbd/tbd"))]
-pub struct VerifiedIdentity {
+pub struct VcVerifiedIdentity {
     /// ## Verified identity type
     ///
     /// The `verifiedIdentities[?].type` property MUST be present and MUST be a
