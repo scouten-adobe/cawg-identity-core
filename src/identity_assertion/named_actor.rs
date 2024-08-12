@@ -26,7 +26,13 @@ pub trait NamedActor<'a>: Debug {
     /// Return `true` if the subject's credentials chain up to a suitable trust
     /// list for this kind of signature.
     fn is_trusted(&self) -> bool;
+
+    /// Return an iterator over the verified identities for this _named actor._
+    fn verified_identities(&self) -> VerifiedIdentities;
 }
+
+/// Iterator over [`VerifiedIdentity`] structs.
+pub type VerifiedIdentities = Box<dyn Iterator<Item = Box<dyn VerifiedIdentity>>>;
 
 /// An implementation of `VerifiedIdentity` contains information about
 /// the _named actor_ as verified by an _identity provider_ which could be

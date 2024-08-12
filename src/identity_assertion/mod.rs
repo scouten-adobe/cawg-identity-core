@@ -22,6 +22,7 @@ use crate::{
 
 pub(crate) mod named_actor;
 use named_actor::NamedActor;
+pub use named_actor::VerifiedIdentities;
 
 pub(crate) mod signer_payload;
 use signer_payload::{HashedUri, SignerPayload};

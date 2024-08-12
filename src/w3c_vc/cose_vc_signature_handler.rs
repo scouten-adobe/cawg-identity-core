@@ -30,11 +30,12 @@ use ssi::{
 };
 
 use crate::{
+    identity_assertion::VerifiedIdentities,
     w3c_vc::{
         cawg_identity_context::{cawg_context_loader, CAWG_IDENTITY_CONTEXT_IRI},
         IdentityAssertionVc,
     },
-    NamedActor, SignatureHandler, SignerPayload, ValidationResult,
+    NamedActor, SignatureHandler, SignerPayload, ValidationResult, VerifiedIdentity,
 };
 
 /// An implementation of [`SignatureHandler`] that supports Creator Identity
@@ -174,6 +175,10 @@ impl<'a> NamedActor<'a> for VcNamedActor {
         false
         // todo!("Is this on trust list?");
     }
+
+    fn verified_identities(&self) -> VerifiedIdentities {
+        Box::new(VcVerifiedIdentities {})
+    }
 }
 
 impl Debug for VcNamedActor {
@@ -187,5 +192,15 @@ impl Debug for VcNamedActor {
         f.debug_struct("VcNamedActor")
             .field("display_name", &display_name)
             .finish()
+    }
+}
+
+struct VcVerifiedIdentities {}
+
+impl Iterator for VcVerifiedIdentities {
+    type Item = Box<dyn VerifiedIdentity>;
+
+    fn next(&mut self) -> Option<Box<dyn VerifiedIdentity>> {
+        None
     }
 }

@@ -25,8 +25,8 @@ use std::fmt::{Debug, Formatter};
 use async_trait::async_trait;
 
 use crate::{
-    builder::CredentialHolder, NamedActor, SignatureHandler, SignerPayload, ValidationError,
-    ValidationResult,
+    builder::CredentialHolder, identity_assertion::VerifiedIdentities, NamedActor,
+    SignatureHandler, SignerPayload, ValidationError, ValidationResult, VerifiedIdentity,
 };
 
 pub(crate) struct NaiveCredentialHolder {}
@@ -88,10 +88,24 @@ impl<'a> NamedActor<'a> for NaiveNamedActor {
     fn is_trusted(&self) -> bool {
         false
     }
+
+    fn verified_identities(&self) -> VerifiedIdentities {
+        Box::new(NaiveVerifiedIdentities {})
+    }
 }
 
 impl Debug for NaiveNamedActor {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
         f.write_str("NaiveNamedActor (for internal testing purposes only)")
+    }
+}
+
+pub(crate) struct NaiveVerifiedIdentities {}
+
+impl Iterator for NaiveVerifiedIdentities {
+    type Item = Box<dyn VerifiedIdentity>;
+
+    fn next(&mut self) -> Option<Box<dyn VerifiedIdentity>> {
+        None
     }
 }
