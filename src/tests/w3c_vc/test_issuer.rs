@@ -18,6 +18,7 @@ use std::{fs::OpenOptions, io::Cursor, str::FromStr};
 
 use c2pa::{Manifest, ManifestStore};
 use iref::UriBuf;
+use non_empty_string::NonEmptyString;
 use ssi::{
     claims::{
         vc::{
@@ -78,20 +79,20 @@ impl CredentialHolder for TestIssuer {
 
                 let verified_identities: NonEmptyVec<VerifiedIdentity> = NonEmptyVec::try_from_vec(vec![
                     VerifiedIdentity {
-                        type_: "cawg.document_verification".to_owned(),
-                        name: Some("First-Name Last-Name".to_owned()),
+                        type_: non_empty_str("cawg.document_verification"),
+                        name: Some(non_empty_str("First-Name Last-Name")),
                         username: None,
                         address: None,
                         uri: None,
                         provider: IdentityProvider {
                             id: UriBuf::from_str("https://example-id-verifier.com").unwrap(),
-                            name: "Example ID Verifier".to_owned(),
+                            name: non_empty_str("Example ID Verifier"),
                             // "proof": "https://example-id-verifier.com/proofs/1"
                         },
                         verified_at: DateTimeStamp::from_str("2024-07-26T22:30:15Z").unwrap(),
                     },
                     VerifiedIdentity {
-                        type_: "cawg.affiliation".to_owned(),
+                        type_: non_empty_str("cawg.affiliation"),
                         name: None,
                         username: None,
                         address: None,
@@ -99,34 +100,34 @@ impl CredentialHolder for TestIssuer {
                         provider: IdentityProvider {
                             id: UriBuf::from_str("https://example-affiliated-organization.com")
                                 .unwrap(),
-                            name: "Example Affiliated Organization".to_owned(),
+                            name: non_empty_str("Example Affiliated Organization"),
                             // "proof": "https://example-affiliated-organization.com/proofs/ck4592p5lk8u05mdg8bg5ac7ishlqfh1"
                         },
                         verified_at: DateTimeStamp::from_str("2024-07-26T22:29:57Z").unwrap(),
                     },
                     VerifiedIdentity {
-                        type_: "cawg.social_media".to_owned(),
-                        name: Some("Silly Cats 929".to_owned()),
-                        username: Some("username".to_owned()),
+                        type_: non_empty_str("cawg.social_media"),
+                        name: Some(non_empty_str("Silly Cats 929")),
+                        username: Some(non_empty_str("username")),
                         address: None,
                         uri: Some(UriBuf::from_str("https://example-social-network.com/username").unwrap()),
                         provider: IdentityProvider {
                             id: UriBuf::from_str("https://example-social-network.com")
                                 .unwrap(),
-                            name: "Example Social Network".to_owned(),
+                            name: non_empty_str("Example Social Network"),
                         },
                         verified_at: DateTimeStamp::from_str("2024-05-27T08:40:39.569856Z").unwrap(),
                     },
                     VerifiedIdentity {
-                        type_: "cawg.crypto_wallet".to_owned(),
+                        type_: non_empty_str("cawg.crypto_wallet"),
                         name: None,
                         username: None,
-                        address: Some("fa64ef445f994138bdeb9baac6ce1e16".to_owned()),
+                        address: Some(non_empty_str("fa64ef445f994138bdeb9baac6ce1e16")),
                         uri: Some(UriBuf::from_str("https://example-crypto-wallet.com/fa64ef445f994138bdeb9baac6ce1e16").unwrap()),
                         provider: IdentityProvider {
                             id: UriBuf::from_str("https://example-crypto-wallet.com")
                                 .unwrap(),
-                            name: "Example Crypto Wallet".to_owned(),
+                            name: non_empty_str("Example Crypto Wallet"),
                         },
                         verified_at: DateTimeStamp::from_str("2024-05-27T08:40:39.569856Z").unwrap(),
                     },
@@ -246,4 +247,8 @@ impl TestIssuer {
 
         unimplemented!();
     }
+}
+
+fn non_empty_str(s: &str) -> NonEmptyString {
+    NonEmptyString::try_from(s).unwrap()
 }

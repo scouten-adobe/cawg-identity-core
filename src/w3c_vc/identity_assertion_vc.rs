@@ -12,6 +12,7 @@
 // each license.
 
 use iref::{Iri, UriBuf};
+use non_empty_string::NonEmptyString;
 use serde::{Deserialize, Serialize};
 use ssi::claims::vc::{
     syntax::{NonEmptyVec, RequiredContext, RequiredType},
@@ -85,11 +86,9 @@ pub struct VerifiedIdentity {
     /// The `verifiedIdentities[?].type` property MUST be present and MUST be a
     /// non-empty string that defines the type of verification that was
     /// performed by the identity provider.
-    ///
-    /// TO DO: Find a non-empty string type.
     #[serde(rename = "type")]
     #[ld("cawg:type")]
-    pub type_: String,
+    pub type_: NonEmptyString,
 
     /// ## Display name
     ///
@@ -100,11 +99,9 @@ pub struct VerifiedIdentity {
     /// If the `type` of this verified identity is `cawg.document_verification`,
     /// the `verifiedIdentities[?].name` property MUST be present and MUST
     /// exactly match the name found on the identity documents.
-    ///
-    /// TO DO: Find a non-empty string type.
     #[serde(skip_serializing_if = "Option::is_none")]
     #[ld("cawg:name")]
-    pub name: Option<String>,
+    pub name: Option<NonEmptyString>,
 
     /// ## User name
     ///
@@ -116,11 +113,9 @@ pub struct VerifiedIdentity {
     /// `verifiedIdentities[?].username` property MUST be present and MUST be
     /// the unique alphanumeric string that can be used to identity the _named
     /// actor_ within this service.
-    ///
-    /// TO DO: Find a non-empty string type.
     #[serde(skip_serializing_if = "Option::is_none")]
     #[ld("cawg:username")]
-    pub username: Option<String>,
+    pub username: Option<NonEmptyString>,
 
     /// ## Address
     ///
@@ -132,11 +127,9 @@ pub struct VerifiedIdentity {
     /// `verifiedIdentities[?].address` property MUST be present and MUST be the
     /// unique alphanumeric string that can be used to identity the _named
     /// actor_ within this service.
-    ///
-    /// TO DO: Find a non-empty string type.
     #[serde(skip_serializing_if = "Option::is_none")]
     #[ld("cawg:address")]
-    pub address: Option<String>,
+    pub address: Option<NonEmptyString>,
 
     /// ## URI
     ///
@@ -195,8 +188,6 @@ pub struct IdentityProvider {
     /// The `verifiedIdentities[?].provider.name` MUST be present and MUST be a
     /// non-empty string. ///The `verifiedIdentities[?].provider.name` property
     /// is the user-visible name of the _identity provider._
-    ///
-    /// TO DO: Find a non-empty string type.
     #[ld("cawg:name")]
-    pub name: String,
+    pub name: NonEmptyString,
 }

@@ -15,6 +15,7 @@ json-ld-syntax = "0.21.1"
 jumbf = "0.4.0"
 linked-data = { version = "0.1.2", features = ["derive"] }
 multibase = "0.9.1"
+non-empty-string = { version = "0.2.4", features = ["serde"] }
 serde = { version = "1.0.197", features = ["derive"] }
 serde_bytes = "0.11.14"
 serde_json = "1.0.114"
