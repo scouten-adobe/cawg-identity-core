@@ -25,8 +25,8 @@ use std::fmt::{Debug, Formatter};
 use async_trait::async_trait;
 
 use crate::{
-    builder::CredentialHolder, identity_assertion::ValidationError, NamedActor, SignatureHandler,
-    SignerPayload, ValidationResult,
+    builder::CredentialHolder, NamedActor, SignatureHandler, SignerPayload, ValidationError,
+    ValidationResult,
 };
 
 pub(crate) struct NaiveCredentialHolder {}

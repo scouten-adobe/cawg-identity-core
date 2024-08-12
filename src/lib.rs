@@ -24,7 +24,8 @@ mod identity_assertion;
 pub use identity_assertion::{
     signature_handler::SignatureHandler,
     signer_payload::{HashedUri, SignerPayload},
-    IdentityAssertion, IdentityAssertionReport, NamedActor, ValidationError, ValidationResult,
+    validation_error::{ValidationError, ValidationResult},
+    IdentityAssertion, IdentityAssertionReport, NamedActor,
 };
 
 pub(crate) mod internal;
