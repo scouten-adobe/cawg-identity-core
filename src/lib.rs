@@ -22,8 +22,8 @@ pub mod builder;
 
 mod identity_assertion;
 pub use identity_assertion::{
-    HashedUri, IdentityAssertion, IdentityAssertionReport, NamedActor, SignatureHandler,
-    SignerPayload, ValidationError, ValidationResult,
+    signer_payload::SignerPayload, HashedUri, IdentityAssertion, IdentityAssertionReport,
+    NamedActor, SignatureHandler, ValidationError, ValidationResult,
 };
 
 pub(crate) mod internal;

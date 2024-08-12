@@ -11,12 +11,9 @@
 // specific language governing permissions and limitations under
 // each license.
 
-#![allow(unused)] // TEMPORARY while building
+#![allow(unused)] // TEMPORARY while refactoring
 
-use std::{
-    collections::HashSet,
-    fmt::{Debug, Formatter},
-};
+use std::fmt::{Debug, Formatter};
 
 use async_trait::async_trait;
 use chrono::{DateTime, FixedOffset};
@@ -28,6 +25,9 @@ use serde_bytes::ByteBuf;
 use crate::{
     builder::IdentityAssertionBuilder, internal, internal::debug_byte_slice::DebugByteSlice,
 };
+
+pub(crate) mod signer_payload;
+use signer_payload::SignerPayload;
 
 /// This struct represents the raw content of the identity assertion.
 ///
@@ -236,83 +236,6 @@ impl Debug for IdentityAssertion {
     }
 }
 
-/// The set of data to be signed by the credential holder.
-#[derive(Clone, Debug, Deserialize, Eq, Serialize, PartialEq)]
-pub struct SignerPayload {
-    /// List of assertions referenced by this credential signature
-    pub referenced_assertions: Vec<HashedUri>,
-
-    /// A string identifying the data type of the `signature` field
-    pub sig_type: String,
-}
-
-impl SignerPayload {
-    fn check_against_manifest(&self, manifest: &c2pa::Manifest) -> ValidationResult<()> {
-        // All assertions mentioned in referenced_assertions
-        // also need to be referenced in the claim.
-
-        for ref_assertion in self.referenced_assertions.iter() {
-            if let Some(claim_assertion) = manifest
-                .assertion_references()
-                .find(|a| a.url() == ref_assertion.url)
-            {
-                if claim_assertion.hash() != ref_assertion.hash {
-                    return Err(ValidationError::AssertionMismatch(
-                        ref_assertion.url.to_owned(),
-                    ));
-                }
-                if let Some(alg) = claim_assertion.alg().as_ref() {
-                    if Some(alg) != ref_assertion.alg.as_ref() {
-                        return Err(ValidationError::AssertionMismatch(
-                            ref_assertion.url.to_owned(),
-                        ));
-                    }
-                } else {
-                    return Err(ValidationError::AssertionMismatch(
-                        ref_assertion.url.to_owned(),
-                    ));
-                }
-            } else {
-                return Err(ValidationError::AssertionNotInClaim(
-                    ref_assertion.url.to_owned(),
-                ));
-            }
-        }
-
-        // Ensure that a hard binding assertion is present.
-
-        let ref_assertion_labels: Vec<String> = self
-            .referenced_assertions
-            .iter()
-            .map(|ra| ra.url.to_owned())
-            .collect();
-
-        if !ref_assertion_labels.iter().any(|ra| {
-            if let Some((_jumbf_prefix, label)) = ra.rsplit_once('/') {
-                label.starts_with("c2pa.hash.")
-            } else {
-                false
-            }
-        }) {
-            return Err(ValidationError::NoHardBindingAssertion);
-        }
-
-        // Make sure no assertion references are duplicated.
-
-        let mut labels = HashSet::<String>::new();
-
-        for label in &ref_assertion_labels {
-            let label = label.clone();
-            if labels.contains(&label) {
-                return Err(ValidationError::MultipleAssertionReferenced(label));
-            }
-            labels.insert(label);
-        }
-
-        Ok(())
-    }
-}
-
 /// A `SignatureHandler` can read one kind of signature from an identity
 /// assertion, assess the validity of the signature, and return information
 /// about the corresponding credential subject.
@@ -347,44 +270,56 @@ pub trait NamedActor<'a>: Debug {
 
 /// An implementation of `VerifiedIdentity` contains information about
 /// the _named actor_ as verified by an _identity provider_ which could be
-/// the _identity assertion generator_ or a service contacted by the _identity assertion generator._
+/// the _identity assertion generator_ or a service contacted by the _identity
+/// assertion generator._
 pub trait VerifiedIdentity {
     /// ## Verified identity type
-    /// 
-    /// This property defines the type of verification that was performed by the _identity provider._
+    ///
+    /// This property defines the type of verification that was performed by the
+    /// _identity provider._
     fn type_(&self) -> VerifiedIdentityType;
 
     /// ## Display name
-    /// 
-    /// This property MAY be present. If present, it will be a non-empty string defining the _named actor’s_ name as understood by the _identity provider._
+    ///
+    /// This property MAY be present. If present, it will be a non-empty string
+    /// defining the _named actor’s_ name as understood by the _identity
+    /// provider._
     fn name(&self) -> Option<NonEmptyString> {
         None
     }
 
     /// ## User name
     ///
-    /// This property MAY be present. If present, it will be a non-empty text string representing the _named actor’s_ user name as assigned by the _identity provider._
+    /// This property MAY be present. If present, it will be a non-empty text
+    /// string representing the _named actor’s_ user name as assigned by the
+    /// _identity provider._
     fn username(&self) -> Option<NonEmptyString> {
         None
     }
 
     /// ## Address
     ///
-    /// This property MAY be present. If present, it will be non-empty text string representing the _named actor’s_ cryptographic address as assigned by the _identity provider.
+    /// This property MAY be present. If present, it will be non-empty text
+    /// string representing the _named actor’s_ cryptographic address as
+    /// assigned by the _identity provider.
     fn address(&self) -> Option<NonEmptyString> {
         None
     }
 
     /// ## URI
     ///
-    /// This property MAY be present. If present, it will be a valid URI which is the primary point of contact for the _named actor_ as assigned by the _identity provider._
+    /// This property MAY be present. If present, it will be a valid URI which
+    /// is the primary point of contact for the _named actor_ as assigned by the
+    /// _identity provider._
     fn uri(&self) -> Option<UriBuf> {
         None
     }
 
     /// ## Identity verification date
     ///
-    /// This property represents the date and time when the relationship between the _named actor_ and the _identity provider_ was verified by the _identity assertion generator._
+    /// This property represents the date and time when the relationship between
+    /// the _named actor_ and the _identity provider_ was verified by the
+    /// _identity assertion generator._
     fn verified_at(&self) -> DateTime<FixedOffset>;
 
     // /// ## Identity provider details
@@ -401,19 +336,29 @@ pub trait VerifiedIdentity {
 #[derive(Clone, Debug, Eq, PartialEq)]
 #[non_exhaustive]
 pub enum VerifiedIdentityType {
-    /// The _identity provider_ has verified one or more government-issued identity documents presented by the _named actor._
+    /// The _identity provider_ has verified one or more government-issued
+    /// identity documents presented by the _named actor._
     DocumentVerification,
 
-    /// The _identity provider_ is attesting to the _named actor’s_ membership in an organization. This could be a professional organization or an employment relationship.
+    /// The _identity provider_ is attesting to the _named actor’s_ membership
+    /// in an organization. This could be a professional organization or an
+    /// employment relationship.
     Affiliation,
 
-    /// The _named actor_ has demonstrated control over an account (typically a social media account) hosted by the _identity provider._
+    /// The _named actor_ has demonstrated control over an account (typically a
+    /// social media account) hosted by the _identity provider._
     SocialMedia,
 
-    /// The _named actor_ has demonstrated control over an account (typically a crypto-wallet) hosted by the _identity provider._
+    /// The _named actor_ has demonstrated control over an account (typically a
+    /// crypto-wallet) hosted by the _identity provider._
     CryptoWallet,
 
-    /// Other string values MAY be used in `verifiedIdentities[?].type` with the understanding that they may not be well understood by _identity assertion consumers._ String values for `verifiedIdentities[?].type` that begin with the prefix `cawg.` are reserved for the use of the Creator Assertions Working Group and MUST NOT be used unless defined in a this or a future version of this specification.
+    /// Other string values MAY be used in `verifiedIdentities[?].type` with the
+    /// understanding that they may not be well understood by _identity
+    /// assertion consumers._ String values for `verifiedIdentities[?].type`
+    /// that begin with the prefix `cawg.` are reserved for the use of the
+    /// Creator Assertions Working Group and MUST NOT be used unless defined in
+    /// a this or a future version of this specification.
     Other(NonEmptyString),
 }
 
