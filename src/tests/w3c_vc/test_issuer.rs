@@ -76,7 +76,7 @@ impl CredentialHolder for TestIssuer {
 
                 // Use the identities as shown in https://creator-assertions.github.io/identity/1.x+vc-draft/#vc-credentialsubject-verifiedIdentities.
 
-                let verified_identities = vec![
+                let verified_identities: NonEmptyVec<VerifiedIdentity> = NonEmptyVec::try_from_vec(vec![
                     VerifiedIdentity {
                         type_: "cawg.document_verification".to_owned(),
                         name: Some("First-Name Last-Name".to_owned()),
@@ -130,7 +130,7 @@ impl CredentialHolder for TestIssuer {
                         },
                         verified_at: DateTimeStamp::from_str("2024-05-27T08:40:39.569856Z").unwrap(),
                     },
-                ];
+                ]).unwrap();
 
                 let cia = CreatorIdentityAssertion {
                     verified_identities,

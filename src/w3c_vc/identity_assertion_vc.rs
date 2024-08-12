@@ -14,7 +14,7 @@
 use iref::{Iri, UriBuf};
 use serde::{Deserialize, Serialize};
 use ssi::claims::vc::{
-    syntax::{RequiredContext, RequiredType},
+    syntax::{NonEmptyVec, RequiredContext, RequiredType},
     v2::SpecializedJsonCredential,
 };
 use xsd_types::DateTimeStamp;
@@ -52,7 +52,7 @@ pub struct CreatorIdentityAssertion {
     /// by the _identity assertion generator._
     #[serde(rename = "verifiedIdentities")]
     #[ld("cawg:verifiedIdentities")]
-    pub verified_identities: Vec<VerifiedIdentity>,
+    pub verified_identities: NonEmptyVec<VerifiedIdentity>,
 
     /// ## Binding to C2PA asset
     ///
@@ -197,6 +197,6 @@ pub struct IdentityProvider {
     /// is the user-visible name of the _identity provider._
     ///
     /// TO DO: Find a non-empty string type.
-    #[ld("cawg:address")]
+    #[ld("cawg:name")]
     pub name: String,
 }
