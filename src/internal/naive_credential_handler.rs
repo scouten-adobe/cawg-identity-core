@@ -90,7 +90,7 @@ impl<'a> NamedActor<'a> for NaiveNamedActor {
     }
 
     fn verified_identities(&self) -> VerifiedIdentities {
-        Box::new(NaiveVerifiedIdentities {})
+        Box::new(NaiveVerifiedIdentities(self))
     }
 }
 
@@ -100,12 +100,12 @@ impl Debug for NaiveNamedActor {
     }
 }
 
-pub(crate) struct NaiveVerifiedIdentities {}
+pub(crate) struct NaiveVerifiedIdentities<'a>(&'a NaiveNamedActor);
 
-impl Iterator for NaiveVerifiedIdentities {
-    type Item = Box<dyn VerifiedIdentity>;
+impl<'a> Iterator for NaiveVerifiedIdentities<'a> {
+    type Item = Box<&'a dyn VerifiedIdentity>;
 
-    fn next(&mut self) -> Option<Box<dyn VerifiedIdentity>> {
+    fn next(&mut self) -> Option<Box<&'a dyn VerifiedIdentity>> {
         None
     }
 }

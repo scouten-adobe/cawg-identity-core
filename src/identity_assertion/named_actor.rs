@@ -32,13 +32,13 @@ pub trait NamedActor<'a>: Debug {
 }
 
 /// Iterator over [`VerifiedIdentity`] structs.
-pub type VerifiedIdentities = Box<dyn Iterator<Item = Box<dyn VerifiedIdentity>>>;
+pub type VerifiedIdentities<'a> = Box<dyn Iterator<Item = Box<&'a dyn VerifiedIdentity>> + 'a>;
 
 /// An implementation of `VerifiedIdentity` contains information about
 /// the _named actor_ as verified by an _identity provider_ which could be
 /// the _identity assertion generator_ or a service contacted by the _identity
 /// assertion generator._
-pub trait VerifiedIdentity {
+pub trait VerifiedIdentity: Debug {
     /// ## Verified identity type
     ///
     /// This property defines the type of verification that was performed by the

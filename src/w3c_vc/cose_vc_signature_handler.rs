@@ -16,6 +16,7 @@
 use std::{
     collections::{hash_map, HashMap},
     fmt::{Debug, Formatter},
+    slice::Iter,
 };
 
 use async_trait::async_trait;
@@ -24,7 +25,10 @@ use coset::{
     CborSerializable, CoseSign1, RegisteredLabel, RegisteredLabelWithPrivate,
 };
 use ssi::{
-    claims::vc::v1::{Context, Credential, Presentation},
+    claims::vc::{
+        syntax::NonEmptyVec,
+        v1::{Context, Credential, Presentation},
+    },
     dids::{resolution, DIDResolver, DID, DIDJWK, DIDURL},
     jwk, JWK,
 };
@@ -33,7 +37,7 @@ use crate::{
     identity_assertion::VerifiedIdentities,
     w3c_vc::{
         cawg_identity_context::{cawg_context_loader, CAWG_IDENTITY_CONTEXT_IRI},
-        IdentityAssertionVc,
+        IdentityAssertionVc, VcVerifiedIdentity,
     },
     NamedActor, SignatureHandler, SignerPayload, ValidationResult, VerifiedIdentity,
 };
@@ -151,11 +155,7 @@ impl SignatureHandler for CoseVcSignatureHandler {
         // TO DO: Check if ssi crate enforces valid_from < now.
         // Also check if ssi enforces expiration date.
 
-        unimplemented!("Signature verified. Now what?");
-
-        /*
-        Ok(Box::new(VcNamedActor(verified)))
-        */
+        Ok(Box::new(VcNamedActor(asset_vc)))
     }
 }
 
@@ -163,7 +163,7 @@ impl SignatureHandler for CoseVcSignatureHandler {
 /// Identity Assertion.
 ///
 /// [`NamedActor`]: crate::NamedActor
-pub struct VcNamedActor();
+pub struct VcNamedActor(IdentityAssertionVc);
 
 impl<'a> NamedActor<'a> for VcNamedActor {
     fn display_name(&self) -> Option<String> {
@@ -177,7 +177,10 @@ impl<'a> NamedActor<'a> for VcNamedActor {
     }
 
     fn verified_identities(&self) -> VerifiedIdentities {
-        Box::new(VcVerifiedIdentities {})
+        // TO DO: Can we do a safe unwrap here because first()
+        // should be guaranteed to exist?
+        let subject = self.0.credential_subjects.first().unwrap();
+        Box::new(VcVerifiedIdentities::new(&subject.verified_identities))
     }
 }
 
@@ -191,16 +194,27 @@ impl Debug for VcNamedActor {
 
         f.debug_struct("VcNamedActor")
             .field("display_name", &display_name)
+            .field("(credential)", &self.0)
             .finish()
     }
 }
 
-struct VcVerifiedIdentities {}
+struct VcVerifiedIdentities<'a>(Iter<'a, VcVerifiedIdentity>);
 
-impl Iterator for VcVerifiedIdentities {
-    type Item = Box<dyn VerifiedIdentity>;
+impl<'a> VcVerifiedIdentities<'a> {
+    fn new(verified_identities: &'a NonEmptyVec<VcVerifiedIdentity>) -> Self {
+        Self(verified_identities.iter())
+    }
+}
 
-    fn next(&mut self) -> Option<Box<dyn VerifiedIdentity>> {
-        None
+impl<'a> Iterator for VcVerifiedIdentities<'a> {
+    type Item = Box<&'a dyn VerifiedIdentity>;
+
+    fn next(&mut self) -> Option<Box<&'a dyn VerifiedIdentity>> {
+        if let Some(vc_vi) = self.0.next() {
+            Some(Box::new(vc_vi))
+        } else {
+            None
+        }
     }
 }

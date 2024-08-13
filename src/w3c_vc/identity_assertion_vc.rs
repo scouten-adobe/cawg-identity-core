@@ -11,6 +11,7 @@
 // specific language governing permissions and limitations under
 // each license.
 
+use chrono::{DateTime, FixedOffset};
 use iref::{Iri, UriBuf};
 use non_empty_string::NonEmptyString;
 use serde::{Deserialize, Serialize};
@@ -20,7 +21,7 @@ use ssi::claims::vc::{
 };
 use xsd_types::DateTimeStamp;
 
-use crate::SignerPayload;
+use crate::{SignerPayload, VerifiedIdentity, VerifiedIdentityType};
 
 /// TO DO: Doc -- looks like SpecializedJsonCredential for our specific use
 /// case.
@@ -161,6 +162,38 @@ pub struct VcVerifiedIdentity {
     /// identity verification process.
     #[ld("cawg:provider")]
     pub provider: IdentityProvider,
+}
+
+impl VerifiedIdentity for VcVerifiedIdentity {
+    fn type_(&self) -> VerifiedIdentityType {
+        match self.type_.as_str() {
+            "cawg.document_verification" => VerifiedIdentityType::DocumentVerification,
+            "cawg.affiliation" => VerifiedIdentityType::Affiliation,
+            "cawg.social_media" => VerifiedIdentityType::SocialMedia,
+            "cawg.crypto_wallet" => VerifiedIdentityType::CryptoWallet,
+            _ => VerifiedIdentityType::Other(self.type_.clone()),
+        }
+    }
+
+    fn name(&self) -> Option<NonEmptyString> {
+        self.name.clone()
+    }
+
+    fn username(&self) -> Option<NonEmptyString> {
+        self.username.clone()
+    }
+
+    fn address(&self) -> Option<NonEmptyString> {
+        self.address.clone()
+    }
+
+    fn uri(&self) -> Option<UriBuf> {
+        self.uri.clone()
+    }
+
+    fn verified_at(&self) -> DateTime<FixedOffset> {
+        self.verified_at.to_chrono_date_time()
+    }
 }
 
 /// ## Identity provider details

@@ -245,7 +245,9 @@ impl TestIssuer {
 
         dbg!(&report.named_actor);
 
-        unimplemented!();
+        for vi in report.named_actor.verified_identities() {
+            dbg!(vi.type_());
+        }
     }
 }
 
