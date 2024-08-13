@@ -55,6 +55,8 @@ impl<T: Serialize> CoseVc<T> {
         let info = signer.fetch_info().await?;
         let payload_bytes = self.payload_bytes();
 
+        // TO DO (#27): Remove panic.
+        #[allow(clippy::unwrap_used)]
         let coset_alg = match signer.get_algorithm().unwrap() {
             ssi::jwk::Algorithm::EdDSA => coset::iana::Algorithm::EdDSA,
             ssi_alg => {
@@ -77,6 +79,8 @@ impl<T: Serialize> CoseVc<T> {
             .create_signature(b"", |pt| sign_bytes(signer, pt))
             .build();
 
+        // TO DO (#27): Remove panic.
+        #[allow(clippy::unwrap_used)]
         Ok(sign1.to_vec().unwrap())
     }
 }
@@ -86,10 +90,12 @@ fn sign_bytes(signer: &JWK, payload: &[u8]) -> Vec<u8> {
     // to get rid of the async-ness, which isn't compatible
     // with the coset interface.
 
-    // TO DO: ERROR HANDLING without panic.
-
+    // TO DO (#27): Remove panic.
+    #[allow(clippy::unwrap_used)]
     let algorithm = signer.get_algorithm().unwrap();
 
+    // TO DO (#27): Remove panic.
+    #[allow(clippy::unwrap_used)]
     ssi::claims::jws::sign_bytes(algorithm, payload, signer).unwrap()
 }
 
@@ -123,6 +129,8 @@ impl<T: Serialize> JWSPayload for CoseVc<T> {
     }
 
     fn payload_bytes(&self) -> Cow<[u8]> {
+        // TO DO (#27): Remove panic.
+        #[allow(clippy::unwrap_used)]
         Cow::Owned(serde_json::to_vec(&self.0).unwrap())
     }
 }

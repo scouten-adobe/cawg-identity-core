@@ -27,12 +27,13 @@ pub(crate) const CAWG_IDENTITY_CONTEXT_JSON: &str = r#"{
 }"#;
 
 pub(crate) fn cawg_context_loader() -> ContextLoader {
-    // TO DO: ERROR HANDLING
     let context_map: HashMap<String, String> = HashMap::from([(
         CAWG_IDENTITY_CONTEXT_IRI.to_string(),
         CAWG_IDENTITY_CONTEXT_JSON.to_owned(),
     )]);
 
+    // TO DO (#27): Remove unwrap.
+    #[allow(clippy::unwrap_used)]
     ssi_json_ld::ContextLoader::empty()
         .with_static_loader()
         .with_context_map_from(context_map)

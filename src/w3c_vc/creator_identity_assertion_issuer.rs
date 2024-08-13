@@ -41,14 +41,8 @@ use crate::{
 ///
 /// [`CredentialHolder`]: crate::builder::CredentialHolder
 /// [§8.1, W3C verifiable credentials]: https://creator-assertions.github.io/identity/1.x-add-vc-v3/#_w3c_verifiable_credentials
+#[derive(Default)]
 pub struct CredentialIdentityAssertionIssuer {}
-
-impl CredentialIdentityAssertionIssuer {
-    /// TO DO: Docs
-    pub fn new() -> Self {
-        Self {}
-    }
-}
 
 #[async_trait::async_trait]
 impl CredentialHolder for CredentialIdentityAssertionIssuer {

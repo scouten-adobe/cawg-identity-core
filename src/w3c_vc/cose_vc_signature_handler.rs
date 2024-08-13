@@ -67,13 +67,16 @@ impl SignatureHandler for CoseVcSignatureHandler {
         // TEMPORARY implementation. Hopefully to be replaced by more robust code in
         // `ssi` crate soon.
 
-        // TO DO: Error handling without panic.
-
         // At the receiving end, deserialize the bytes back to a `CoseSign1` object.
-        let sign1 = CoseSign1::from_slice(&signature).unwrap();
-        dbg!(&sign1);
+
+        // TO DO (#27): Remove unwrap.
+        #[allow(clippy::unwrap_used)]
+        let sign1 = CoseSign1::from_slice(signature).unwrap();
 
         // TEMPORARY: Require EdDSA algorithm.
+
+        // TO DO (#27): Remove panic.
+        #[allow(clippy::panic)]
         let ssi_alg = if let Some(ref alg) = sign1.protected.header.alg {
             match alg {
                 RegisteredLabelWithPrivate::Assigned(coset::iana::Algorithm::EdDSA) => {
@@ -87,6 +90,8 @@ impl SignatureHandler for CoseVcSignatureHandler {
             panic!("ERROR: COSE protected headers do not contain a signing algorithm");
         };
 
+        // TO DO (#27): Remove panic.
+        #[allow(clippy::panic)]
         if let Some(ref cty) = sign1.protected.header.content_type {
             match cty {
                 coset::ContentType::Text(ref cty) => {
@@ -104,23 +109,31 @@ impl SignatureHandler for CoseVcSignatureHandler {
 
         // Interpret the unprotected payload, which should be the raw VC.
 
-        let Some(ref payload_bytes) = sign1.payload else {
+        // TO DO (#27): Remove panic.
+        #[allow(clippy::panic)]
+        let Some(ref payload_bytes) = sign1.payload
+        else {
             panic!("ERROR: COSE Sign1 data structure has no payload");
         };
 
-        let asset_vc: IdentityAssertionVc = serde_json::from_slice(&payload_bytes)
+        // TO DO (#27): Remove panic.
+        #[allow(clippy::expect_used)]
+        let asset_vc: IdentityAssertionVc = serde_json::from_slice(payload_bytes)
             .expect("ERROR: can't decode VC as IdentityAssertionVc");
-
-        dbg!(&asset_vc);
 
         // Discover public key for issuer DID and validate signature.
         // TEMPORARY version supports JWK only.
 
         let issuer_id = asset_vc.issuer.id();
-        let issuer_id = DIDURL::new(&issuer_id.as_bytes()).unwrap();
+        // TO DO (#27): Remove panic.
+        #[allow(clippy::unwrap_used)]
+        let issuer_id = DIDURL::new(issuer_id.as_bytes()).unwrap();
         let (primary_did, _fragment) = issuer_id.without_fragment();
         let primary_did = primary_did.did();
 
+        // TO DO (#27): Remove panic.
+        #[allow(clippy::unwrap_used)]
+        #[allow(clippy::panic)]
         let jwk = match primary_did.method_name() {
             "jwk" => {
                 let jwk = primary_did.method_specific_id();
@@ -134,13 +147,18 @@ impl SignatureHandler for CoseVcSignatureHandler {
         };
 
         // TEMPORARY only support ED25519.
-        let jwk::Params::OKP(ref okp) = jwk.params else {
+        // TO DO (#27): Remove panic.
+        #[allow(clippy::panic)]
+        let jwk::Params::OKP(ref okp) = jwk.params
+        else {
             panic!("Temporarily unsupported params type");
         };
         assert_eq!(okp.curve, "Ed25519");
 
         // Check the signature, which needs to have the same `aad` provided, by
         // providing a closure that can do the verify operation.
+        // TO DO (#27): Remove panic.
+        #[allow(clippy::unwrap_used)]
         let result = sign1
             .verify_signature(b"", |sig, data| {
                 ssi::claims::jws::verify_bytes(ssi_alg, data, &jwk, sig)
@@ -151,6 +169,8 @@ impl SignatureHandler for CoseVcSignatureHandler {
         //
         // [§8.1.2.4. Validity]: https://creator-assertions.github.io/identity/1.x+vc-draft/#vc-property-validFrom
 
+        // TO DO (#27): Remove panic.
+        #[allow(clippy::unwrap_used)]
         assert!(asset_vc.valid_from.is_some());
         // TO DO: Check if ssi crate enforces valid_from < now.
         // Also check if ssi enforces expiration date.
@@ -179,6 +199,8 @@ impl<'a> NamedActor<'a> for VcNamedActor {
     fn verified_identities(&self) -> VerifiedIdentities {
         // TO DO: Can we do a safe unwrap here because first()
         // should be guaranteed to exist?
+        // TO DO (#27): Remove panic.
+        #[allow(clippy::unwrap_used)]
         let subject = self.0.credential_subjects.first().unwrap();
         Box::new(VcVerifiedIdentities::new(&subject.verified_identities))
     }
@@ -211,10 +233,8 @@ impl<'a> Iterator for VcVerifiedIdentities<'a> {
     type Item = Box<&'a dyn VerifiedIdentity>;
 
     fn next(&mut self) -> Option<Box<&'a dyn VerifiedIdentity>> {
-        if let Some(vc_vi) = self.0.next() {
-            Some(Box::new(vc_vi))
-        } else {
-            None
-        }
+        self.0
+            .next()
+            .map(|vc_vi| Box::<&'a (dyn VerifiedIdentity + 'a)>::new(vc_vi))
     }
 }
