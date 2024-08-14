@@ -9,7 +9,6 @@ c2pa = { version = "0.33.0", features = ["openssl_ffi_mutex"] }
 chrono = "0.4.38"
 ciborium = "0.2.2"
 coset = "0.3.8"
-did-method-key = "0.2.2"
 hex-literal = "0.4.1"
 iref = "3.2.2"
 json-ld-syntax = "0.21.1"
