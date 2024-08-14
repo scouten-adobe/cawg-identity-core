@@ -11,34 +11,18 @@
 // specific language governing permissions and limitations under
 // each license.
 
-#![allow(unused)] // TEMPORARY while building
-
 use std::{
-    collections::{hash_map, HashMap},
     fmt::{Debug, Formatter},
     slice::Iter,
 };
 
 use async_trait::async_trait;
-use coset::{
-    iana::{self, CoapContentFormat},
-    CborSerializable, CoseSign1, RegisteredLabel, RegisteredLabelWithPrivate,
-};
-use ssi::{
-    claims::vc::{
-        syntax::NonEmptyVec,
-        v1::{Context, Credential, Presentation},
-    },
-    dids::{resolution, DIDResolver, DID, DIDJWK, DIDURL},
-    jwk, JWK,
-};
+use coset::{CborSerializable, CoseSign1, RegisteredLabelWithPrivate};
+use ssi::{claims::vc::syntax::NonEmptyVec, dids::DIDURL, jwk, JWK};
 
 use crate::{
     identity_assertion::VerifiedIdentities,
-    w3c_vc::{
-        cawg_identity_context::{cawg_context_loader, CAWG_IDENTITY_CONTEXT_IRI},
-        IdentityAssertionVc, VcVerifiedIdentity,
-    },
+    w3c_vc::{IdentityAssertionVc, VcVerifiedIdentity},
     NamedActor, SignatureHandler, SignerPayload, ValidationResult, VerifiedIdentity,
 };
 
@@ -61,7 +45,7 @@ impl SignatureHandler for CoseVcSignatureHandler {
 
     async fn check_signature<'a>(
         &self,
-        signer_payload: &SignerPayload,
+        _signer_payload: &SignerPayload,
         signature: &'a [u8],
     ) -> ValidationResult<Box<dyn NamedActor<'a>>> {
         // TEMPORARY implementation. Hopefully to be replaced by more robust code in
@@ -159,7 +143,7 @@ impl SignatureHandler for CoseVcSignatureHandler {
         // providing a closure that can do the verify operation.
         // TO DO (#27): Remove panic.
         #[allow(clippy::unwrap_used)]
-        let result = sign1
+        sign1
             .verify_signature(b"", |sig, data| {
                 ssi::claims::jws::verify_bytes(ssi_alg, data, &jwk, sig)
             })
@@ -170,10 +154,11 @@ impl SignatureHandler for CoseVcSignatureHandler {
         // [§8.1.2.4. Validity]: https://creator-assertions.github.io/identity/1.x+vc-draft/#vc-property-validFrom
 
         // TO DO (#27): Remove panic.
-        #[allow(clippy::unwrap_used)]
         assert!(asset_vc.valid_from.is_some());
         // TO DO: Check if ssi crate enforces valid_from < now.
         // Also check if ssi enforces expiration date.
+
+        // TO DO: Verify that signer_payload is same as c2paAsset.
 
         Ok(Box::new(VcNamedActor(asset_vc)))
     }

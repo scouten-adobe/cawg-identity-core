@@ -19,8 +19,6 @@
 //! [`SignatureHandler`]: crate::SignatureHandler
 //! [§8.1, W3C verifiable credentials]: https://creator-assertions.github.io/identity/1.x-add-vc-v3+schema/#_w3c_verifiable_credentials
 
-pub(crate) mod cawg_identity_context;
-
 mod cose_vc_signature_handler;
 pub use cose_vc_signature_handler::{CoseVcSignatureHandler, VcNamedActor};
 
