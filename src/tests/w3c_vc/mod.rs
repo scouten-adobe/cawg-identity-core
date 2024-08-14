@@ -12,4 +12,4 @@
 // each license.
 
 mod self_issuance;
-pub(self) mod test_issuer;
+mod test_issuer;
