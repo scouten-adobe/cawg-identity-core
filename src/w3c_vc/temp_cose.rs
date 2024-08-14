@@ -27,6 +27,8 @@
 
 // Adapted from https://github.com/spruceid/ssi/blob/main/crates/claims/crates/vc-jose-cose/src/jose/credential.rs
 
+#![allow(unused)] // TEMPORARY while building
+
 use std::borrow::Cow;
 
 use coset::{CborSerializable, CoseSign1Builder, HeaderBuilder};
