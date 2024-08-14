@@ -22,11 +22,16 @@ pub mod builder;
 
 mod identity_assertion;
 pub use identity_assertion::{
-    HashedUri, IdentityAssertion, IdentityAssertionReport, NamedActor, SignatureHandler,
-    SignerPayload, ValidationError, ValidationResult,
+    named_actor::{NamedActor, VerifiedIdentity, VerifiedIdentityType},
+    signature_handler::SignatureHandler,
+    signer_payload::{HashedUri, SignerPayload},
+    validation_error::{ValidationError, ValidationResult},
+    IdentityAssertion, IdentityAssertionReport,
 };
 
 pub(crate) mod internal;
 
 #[cfg(test)]
 pub(crate) mod tests;
+
+pub mod w3c_vc;

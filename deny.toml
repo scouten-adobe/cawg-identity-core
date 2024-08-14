@@ -17,7 +17,16 @@ yanked = "allow" # "deny" # TODO: Re-enable when possible.
 
 ignore = [
   "RUSTSEC-2021-0127", # serde_cbor
-  "RUSTSEC-2024-0320", # yaml-rust
+
+  # The following dependencies come in through ssi crate.
+  # See https://github.com/spruceid/ssi/issues/599 and
+  # https://github.com/scouten-adobe/cawg-identity-core/issues/29.
+  "RUSTSEC-2021-0139", # ansi_term (unmaintained)
+  "RUSTSEC-2021-0145", # atty (unaligned read, possibly unmaintained)
+  "RUSTSEC-2021-0141", # dotenv (meant for dev/testing only)
+  "RUSTSEC-2023-0055", # lexical 6.1.1 (soundness issues)
+  "RUSTSEC-2022-0040", # owning_ref 0.4.1 (soundness issues, unmaintained)
+  "RUSTSEC-2023-0071", # rsa 0.6.1 (Marvin key recovery attack)
 ]
 
 # Deny multiple versions unless explicitly skipped.
@@ -37,6 +46,7 @@ allow = [
   "MIT",
   "MPL-2.0",
   "Unicode-DFS-2016",
+  "W3C-20150513", # needs review
   "Zlib",
 ]
 confidence-threshold = 0.9
@@ -52,6 +62,3 @@ license-files = [
 unknown-registry = "deny"
 unknown-git = "deny"
 allow-registry = ["https://github.com/rust-lang/crates.io-index"]
-allow-git = [
-  "https://github.com/contentauth/c2pa-rs.git"
-]

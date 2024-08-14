@@ -11,18 +11,27 @@
 // specific language governing permissions and limitations under
 // each license.
 
-use std::{
-    collections::HashSet,
-    fmt::{Debug, Formatter},
-};
+use std::fmt::{Debug, Formatter};
 
-use async_trait::async_trait;
 use serde::{Deserialize, Serialize};
 use serde_bytes::ByteBuf;
 
 use crate::{
     builder::IdentityAssertionBuilder, internal, internal::debug_byte_slice::DebugByteSlice,
 };
+
+pub(crate) mod named_actor;
+use named_actor::NamedActor;
+pub use named_actor::VerifiedIdentities;
+
+pub(crate) mod signer_payload;
+use signer_payload::{HashedUri, SignerPayload};
+
+pub(crate) mod signature_handler;
+use signature_handler::SignatureHandler;
+
+pub(crate) mod validation_error;
+use validation_error::{ValidationError, ValidationResult};
 
 /// This struct represents the raw content of the identity assertion.
 ///
@@ -173,6 +182,20 @@ impl IdentityAssertion {
             }
         }
 
+        // TO DO: Allow configuration of signature handler list.
+        // For now, we hard-code the VC/creator identity assertion signature handler.
+
+        let vc_handler = crate::w3c_vc::CoseVcSignatureHandler {};
+        if let Ok(named_actor) = vc_handler
+            .check_signature(signer_payload, &self.signature)
+            .await
+        {
+            return Ok(IdentityAssertionReport {
+                signer_payload,
+                named_actor,
+            });
+        }
+
         Err(ValidationError::UnknownSignatureType(
             self.signer_payload.sig_type.clone(),
         ))
@@ -216,192 +239,6 @@ impl Debug for IdentityAssertion {
             .finish()
     }
 }
-
-/// The set of data to be signed by the credential holder.
-#[derive(Clone, Debug, Deserialize, Eq, Serialize, PartialEq)]
-pub struct SignerPayload {
-    /// List of assertions referenced by this credential signature
-    pub referenced_assertions: Vec<HashedUri>,
-
-    /// A string identifying the data type of the `signature` field
-    pub sig_type: String,
-}
-
-impl SignerPayload {
-    fn check_against_manifest(&self, manifest: &c2pa::Manifest) -> ValidationResult<()> {
-        // All assertions mentioned in referenced_assertions
-        // also need to be referenced in the claim.
-
-        for ref_assertion in self.referenced_assertions.iter() {
-            if let Some(claim_assertion) = manifest
-                .assertion_references()
-                .find(|a| a.url() == ref_assertion.url)
-            {
-                if claim_assertion.hash() != ref_assertion.hash {
-                    return Err(ValidationError::AssertionMismatch(
-                        ref_assertion.url.to_owned(),
-                    ));
-                }
-                if let Some(alg) = claim_assertion.alg().as_ref() {
-                    if Some(alg) != ref_assertion.alg.as_ref() {
-                        return Err(ValidationError::AssertionMismatch(
-                            ref_assertion.url.to_owned(),
-                        ));
-                    }
-                } else {
-                    return Err(ValidationError::AssertionMismatch(
-                        ref_assertion.url.to_owned(),
-                    ));
-                }
-            } else {
-                return Err(ValidationError::AssertionNotInClaim(
-                    ref_assertion.url.to_owned(),
-                ));
-            }
-        }
-
-        // Ensure that a hard binding assertion is present.
-
-        let ref_assertion_labels: Vec<String> = self
-            .referenced_assertions
-            .iter()
-            .map(|ra| ra.url.to_owned())
-            .collect();
-
-        if !ref_assertion_labels.iter().any(|ra| {
-            if let Some((_jumbf_prefix, label)) = ra.rsplit_once('/') {
-                label.starts_with("c2pa.hash.")
-            } else {
-                false
-            }
-        }) {
-            return Err(ValidationError::NoHardBindingAssertion);
-        }
-
-        // Make sure no assertion references are duplicated.
-
-        let mut labels = HashSet::<String>::new();
-
-        for label in &ref_assertion_labels {
-            let label = label.clone();
-            if labels.contains(&label) {
-                return Err(ValidationError::MultipleAssertionReferenced(label));
-            }
-            labels.insert(label);
-        }
-
-        Ok(())
-    }
-}
-
-/// A `SignatureHandler` can read one kind of signature from an identity
-/// assertion, assess the validity of the signature, and return information
-/// about the corresponding credential subject.
-#[async_trait]
-pub trait SignatureHandler {
-    /// Returns true if this handler can process a signature with
-    /// the given `sig_type` code.
-    fn can_handle_sig_type(sig_type: &str) -> bool;
-
-    /// Check the signature, returning an instance of [`NamedActor`] if
-    /// the signature is valid.
-    ///
-    /// Will only be called if `can_handle_sig_type` returns `true`
-    /// for this signature.
-    async fn check_signature<'a>(
-        &self,
-        signer_payload: &SignerPayload,
-        signature: &'a [u8],
-    ) -> ValidationResult<Box<dyn NamedActor<'a>>>;
-}
-
-/// A `NamedActor` is the actor named by a signature in an identity
-/// assertion.
-pub trait NamedActor<'a>: Debug {
-    /// Return the name of the subject suitable for user experience display.
-    fn display_name(&self) -> Option<String>;
-
-    /// Return `true` if the subject's credentials chain up to a suitable trust
-    /// list for this kind of signature.
-    fn is_trusted(&self) -> bool;
-}
-
-/// A `HashedUri` provides a reference to content available within the same
-/// manifest store.
-///
-/// This is described in §8.3, “[URI References],” of the C2PA Technical
-/// Specification.
-///
-/// [URI References]: https://c2pa.org/specifications/specifications/2.0/specs/C2PA_Specification.html#_uri_references
-#[derive(Clone, Deserialize, Eq, PartialEq, Serialize)]
-pub struct HashedUri {
-    /// JUMBF URI reference
-    pub url: String,
-
-    /// A string identifying the cryptographic hash algorithm used to compute
-    /// the hash
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub alg: Option<String>,
-
-    /// Byte string containing the hash value
-    #[serde(with = "serde_bytes")]
-    pub hash: Vec<u8>,
-}
-
-impl Debug for HashedUri {
-    fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
-        f.debug_struct("HashedUri")
-            .field("url", &self.url)
-            .field("alg", &self.alg)
-            .field("hash", &DebugByteSlice(&self.hash))
-            .finish()
-    }
-}
-
-/// Describes the ways in which a CAWG identity
-/// assertion can fail validation as described in
-/// [§7. Validating the identity assertion].
-///
-/// [§7. Validating the identity assertion]: https://creator-assertions.github.io/identity/1.0-draft/#_validating_the_identity_assertion
-/// [`IdentityAssertion`]: crate::IdentityAssertion
-#[derive(Clone, Debug, Eq, thiserror::Error, PartialEq)]
-pub enum ValidationError {
-    /// The named assertion could not be found in the claim.
-    #[error("No assertion with the label {0:#?} in the claim")]
-    AssertionNotInClaim(String),
-
-    /// The named assertion exists in the claim, but the hash does not match.
-    #[error("The assertion with the label {0:#?} is not the same as in the claim")]
-    AssertionMismatch(String),
-
-    /// The named assertion was referenced more than once in the identity
-    /// assertion.
-    #[error("The assertion with the label {0:#?} is referenced multiple times")]
-    MultipleAssertionReferenced(String),
-
-    /// No hard-binding assertion was referenced in the identity assertion.
-    #[error("No hard binding assertion is referenced")]
-    NoHardBindingAssertion,
-
-    /// The `sig_type` field is not recognized.
-    #[error("Unable to parse a signature of type {0:#?}")]
-    UnknownSignatureType(String),
-
-    /// The signature is not valid.
-    #[error("Signature is invalid")]
-    InvalidSignature,
-
-    /// The `pad1` or `pad2` fields contain values other than 0x00 bytes.
-    #[error("Invalid padding")]
-    InvalidPadding,
-
-    /// Unexpected error while parsing or validating the identity assertion.
-    #[error("Unexpected error")]
-    UnexpectedError,
-}
-
-/// Result type for validation operations.
-pub type ValidationResult<T> = std::result::Result<T, ValidationError>;
 
 /// This struct is returned when the data in an identity assertion is deemed
 /// valid.
