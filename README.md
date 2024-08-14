@@ -16,7 +16,7 @@ In particular, there is no support (yet) for multiple identity assertions in a s
 
 ## Requirements
 
-The toolkit requires **Rust version 1.74.0** or newer. When a newer version of Rust becomes required, a new minor (1.x.0) version of this crate will be released.
+The toolkit requires **Rust version 1.77.0** or newer. When a newer version of Rust becomes required, a new minor (1.x.0) version of this crate will be released.
 
 ### Supported platforms
 
