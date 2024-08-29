@@ -65,6 +65,8 @@ async fn simple_case() {
     let manifest_store = ManifestStore::from_file(&dest).unwrap();
     assert!(manifest_store.validation_status().is_none());
 
+    // Coordinate with Gavin to make sure we can use the Reader.
+
     let manifest = manifest_store.get_active().unwrap();
     let identity: IdentityAssertion = manifest.find_assertion("cawg.identity").unwrap();
 
