@@ -12,4 +12,5 @@
 // each license.
 
 mod hashed_uri;
+mod named_actor;
 mod signer_payload;
