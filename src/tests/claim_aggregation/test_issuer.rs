@@ -57,7 +57,7 @@ enum TestSetup {
 #[async_trait::async_trait]
 impl CredentialHolder for TestIssuer {
     fn sig_type(&self) -> &'static str {
-        "cawg.w3c.vc"
+        "cawg.identity_claims_aggregation"
     }
 
     fn reserve_size(&self) -> usize {
@@ -241,7 +241,10 @@ impl TestIssuer {
         assert_eq!(ra1.url, "self#jumbf=c2pa.assertions/c2pa.hash.data");
         assert_eq!(ra1.alg, Some("sha256".to_owned()));
 
-        assert_eq!(report.signer_payload.sig_type, "cawg.w3c.vc");
+        assert_eq!(
+            report.signer_payload.sig_type,
+            "cawg.identity_claims_aggregation"
+        );
 
         dbg!(&report.named_actor);
 

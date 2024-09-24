@@ -40,7 +40,7 @@ pub struct CoseVcSignatureHandler {}
 #[async_trait]
 impl SignatureHandler for CoseVcSignatureHandler {
     fn can_handle_sig_type(sig_type: &str) -> bool {
-        sig_type == "cawg.w3c.vc"
+        sig_type == "cawg.identity_claims_aggregation"
     }
 
     async fn check_signature<'a>(
