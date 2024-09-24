@@ -22,9 +22,9 @@
 mod cose_vc_signature_handler;
 pub use cose_vc_signature_handler::{CoseVcSignatureHandler, VcNamedActor};
 
-mod identity_assertion_vc;
-pub use identity_assertion_vc::{
-    CreatorIdentityAssertion, IdentityAssertionVc, IdentityProvider, VcVerifiedIdentity,
+mod identity_claims_aggregation_vc;
+pub use identity_claims_aggregation_vc::{
+    IdentityAssertionVc, IdentityClaimsAggregationVc, IdentityProvider, VcVerifiedIdentity,
 };
 
 pub(crate) mod temp_cose;

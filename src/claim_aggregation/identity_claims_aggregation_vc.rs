@@ -26,9 +26,9 @@ use crate::{SignerPayload, VerifiedIdentity, VerifiedIdentityType};
 /// TO DO: Doc -- looks like SpecializedJsonCredential for our specific use
 /// case.
 pub type IdentityAssertionVc = SpecializedJsonCredential<
-    CreatorIdentityAssertion,
-    CreatorIdentityAssertion,
-    CreatorIdentityAssertion,
+    IdentityClaimsAggregationVc,
+    IdentityClaimsAggregationVc,
+    IdentityClaimsAggregationVc,
 >;
 
 /// Identity claims aggregation context IRI.
@@ -38,14 +38,14 @@ pub const IDENTITY_CLAIMS_AGGREGATION_CONTEXT_IRI: &Iri =
 /// Identity claims aggregation credential type name.
 pub const IDENTITY_CLAIMS_AGGREGATION_CREDENTIAL_TYPE: &str = "IdentityClaimsAggregationCredential";
 
-/// A **creator identity assertion** is a [W3C verifiable credential] that binds
-/// the identity of the _named actor_ to the _C2PA asset_ in which the
-/// **identity assertion** appears.
+/// An **identity claims aggregation** is a [W3C verifiable credential] that
+/// binds one or more identity claim attestations regarding the _named actor_ to
+/// the _C2PA asset_ in which the **identity assertion** appears.
 ///
 /// [W3C verifiable credential]: https://www.w3.org/TR/vc-data-model-2.0/
 #[derive(Debug, Deserialize, Serialize, linked_data::Serialize, linked_data::Deserialize)]
 #[ld(prefix("cawg" = "https://creator-assertions.github.io/tbd/tbd"))]
-pub struct CreatorIdentityAssertion {
+pub struct IdentityClaimsAggregationVc {
     /// ## Verified identities
     ///
     /// The `verifiedIdentities` property MUST be present and MUST be an array.
@@ -68,11 +68,11 @@ pub struct CreatorIdentityAssertion {
     pub c2pa_asset: SignerPayload,
 }
 
-impl RequiredContext for CreatorIdentityAssertion {
+impl RequiredContext for IdentityClaimsAggregationVc {
     const CONTEXT_IRI: &'static Iri = IDENTITY_CLAIMS_AGGREGATION_CONTEXT_IRI;
 }
 
-impl RequiredType for CreatorIdentityAssertion {
+impl RequiredType for IdentityClaimsAggregationVc {
     const REQUIRED_TYPE: &'static str = IDENTITY_CLAIMS_AGGREGATION_CREDENTIAL_TYPE;
 }
 

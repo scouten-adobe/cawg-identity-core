@@ -37,7 +37,7 @@ use xsd_types::value::DateTimeStamp;
 use crate::{
     builder::{CredentialHolder, IdentityAssertionBuilder, ManifestBuilder},
     claim_aggregation::{
-        temp_cose::CoseVc, CreatorIdentityAssertion, IdentityAssertionVc, IdentityProvider,
+        temp_cose::CoseVc, IdentityAssertionVc, IdentityClaimsAggregationVc, IdentityProvider,
         VcVerifiedIdentity,
     },
     tests::fixtures::{temp_c2pa_signer, temp_dir_path},
@@ -133,7 +133,7 @@ impl CredentialHolder for TestIssuer {
                     },
                 ]).unwrap();
 
-                let cia = CreatorIdentityAssertion {
+                let cia = IdentityClaimsAggregationVc {
                     verified_identities,
                     c2pa_asset: signer_payload.clone(),
                 };
