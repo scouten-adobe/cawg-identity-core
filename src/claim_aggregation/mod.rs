@@ -12,8 +12,8 @@
 // each license.
 
 //! Contains implementations of [`CredentialHolder`] and [`SignatureHandler`]
-//! for the W3C verifiable credential type described as specified in [§8.1, W3C
-//! verifiable credential].
+//! for the identity claim aggregation credential type described as specified in
+//! [§8.1, Identity claims aggregation].
 //!
 //! [`CredentialHolder`]: crate::builder::CredentialHolder
 //! [`SignatureHandler`]: crate::SignatureHandler
