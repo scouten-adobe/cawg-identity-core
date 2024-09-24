@@ -12,19 +12,19 @@
 // each license.
 
 //! Contains implementations of [`CredentialHolder`] and [`SignatureHandler`]
-//! for the W3C verifiable credential type described as specified in [§8.1, W3C
-//! verifiable credential].
+//! for the identity claim aggregation credential type described as specified in
+//! [§8.1, Identity claims aggregation].
 //!
 //! [`CredentialHolder`]: crate::builder::CredentialHolder
 //! [`SignatureHandler`]: crate::SignatureHandler
-//! [§8.1, W3C verifiable credentials]: https://creator-assertions.github.io/identity/1.x-add-vc-v3+schema/#_w3c_verifiable_credentials
+//! [§8.1, Identity claims aggregation]: https://creator-assertions.github.io/identity/1.1-draft/#_identity_claims_aggregation
 
 mod cose_vc_signature_handler;
 pub use cose_vc_signature_handler::{CoseVcSignatureHandler, VcNamedActor};
 
-mod identity_assertion_vc;
-pub use identity_assertion_vc::{
-    CreatorIdentityAssertion, IdentityAssertionVc, IdentityProvider, VcVerifiedIdentity,
+mod identity_claims_aggregation_vc;
+pub use identity_claims_aggregation_vc::{
+    IdentityAssertionVc, IdentityClaimsAggregationVc, IdentityProvider, VcVerifiedIdentity,
 };
 
 pub(crate) mod temp_cose;

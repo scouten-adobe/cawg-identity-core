@@ -26,26 +26,26 @@ use crate::{SignerPayload, VerifiedIdentity, VerifiedIdentityType};
 /// TO DO: Doc -- looks like SpecializedJsonCredential for our specific use
 /// case.
 pub type IdentityAssertionVc = SpecializedJsonCredential<
-    CreatorIdentityAssertion,
-    CreatorIdentityAssertion,
-    CreatorIdentityAssertion,
+    IdentityClaimsAggregationVc,
+    IdentityClaimsAggregationVc,
+    IdentityClaimsAggregationVc,
 >;
 
-/// Creator identity assertion context IRI.
-pub const CREATOR_IDENTITY_ASSERTION_CONTEXT_IRI: &Iri =
+/// Identity claims aggregation context IRI.
+pub const IDENTITY_CLAIMS_AGGREGATION_CONTEXT_IRI: &Iri =
     static_iref::iri!("https://creator-assertions.github.io/tbd/tbd");
 
-/// Creator identity assertion type name.
-pub const CREATOR_IDENTITY_ASSERTION_TYPE: &str = "CreatorIdentityAssertionCredential";
+/// Identity claims aggregation credential type name.
+pub const IDENTITY_CLAIMS_AGGREGATION_CREDENTIAL_TYPE: &str = "IdentityClaimsAggregationCredential";
 
-/// A **creator identity assertion** is a [W3C verifiable credential] that binds
-/// the identity of the _named actor_ to the _C2PA asset_ in which the
-/// **identity assertion** appears.
+/// An **identity claims aggregation** is a [W3C verifiable credential] that
+/// binds one or more identity claim attestations regarding the _named actor_ to
+/// the _C2PA asset_ in which the **identity assertion** appears.
 ///
 /// [W3C verifiable credential]: https://www.w3.org/TR/vc-data-model-2.0/
 #[derive(Debug, Deserialize, Serialize, linked_data::Serialize, linked_data::Deserialize)]
 #[ld(prefix("cawg" = "https://creator-assertions.github.io/tbd/tbd"))]
-pub struct CreatorIdentityAssertion {
+pub struct IdentityClaimsAggregationVc {
     /// ## Verified identities
     ///
     /// The `verifiedIdentities` property MUST be present and MUST be an array.
@@ -62,18 +62,18 @@ pub struct CreatorIdentityAssertion {
     /// MUST be the JSON serialization of the `signer_payload` data structure
     /// presented for signature with the following adaptations:
     /// * All CBOR bytestring values in `signer_payload` data structure (for example, `hash` entries in the `hashlink` data structure) MUST be converted to the corresponding base 64 encoding as specified in [Section 4, “Base 64 Encoding,”](https://datatracker.ietf.org/doc/html/rfc4648#section-4) of RFC 4648. The base 64 encoding MUST NOT use the URL-safe variation of base 64. The encoding MUST NOT include line feeds or additional annotations not directly required by the core base 64 specification.
-    /// * The JSON encoding MUST use the field names exactly as specified in [Section 5.1, “Overview”](https://creator-assertions.github.io/identity/1.x+vc-draft/#_overview).
+    /// * The JSON encoding MUST use the field names exactly as specified in [Section 5.1, “Overview”](https://creator-assertions.github.io/identity/1.1-draft/#_overview).
     #[serde(rename = "c2paAsset")]
     #[ld("cawg:c2paAsset")]
     pub c2pa_asset: SignerPayload,
 }
 
-impl RequiredContext for CreatorIdentityAssertion {
-    const CONTEXT_IRI: &'static Iri = CREATOR_IDENTITY_ASSERTION_CONTEXT_IRI;
+impl RequiredContext for IdentityClaimsAggregationVc {
+    const CONTEXT_IRI: &'static Iri = IDENTITY_CLAIMS_AGGREGATION_CONTEXT_IRI;
 }
 
-impl RequiredType for CreatorIdentityAssertion {
-    const REQUIRED_TYPE: &'static str = CREATOR_IDENTITY_ASSERTION_TYPE;
+impl RequiredType for IdentityClaimsAggregationVc {
+    const REQUIRED_TYPE: &'static str = IDENTITY_CLAIMS_AGGREGATION_CREDENTIAL_TYPE;
 }
 
 /// Every item in the `verifiedIdentities` array MUST contain information about

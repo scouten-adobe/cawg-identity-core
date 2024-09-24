@@ -36,11 +36,11 @@ use xsd_types::value::DateTimeStamp;
 
 use crate::{
     builder::{CredentialHolder, IdentityAssertionBuilder, ManifestBuilder},
-    tests::fixtures::{temp_c2pa_signer, temp_dir_path},
-    w3c_vc::{
-        temp_cose::CoseVc, CreatorIdentityAssertion, IdentityAssertionVc, IdentityProvider,
+    claim_aggregation::{
+        temp_cose::CoseVc, IdentityAssertionVc, IdentityClaimsAggregationVc, IdentityProvider,
         VcVerifiedIdentity,
     },
+    tests::fixtures::{temp_c2pa_signer, temp_dir_path},
     IdentityAssertion, SignerPayload,
 };
 
@@ -57,7 +57,7 @@ enum TestSetup {
 #[async_trait::async_trait]
 impl CredentialHolder for TestIssuer {
     fn sig_type(&self) -> &'static str {
-        "cawg.w3c.vc"
+        "cawg.identity_claims_aggregation"
     }
 
     fn reserve_size(&self) -> usize {
@@ -75,7 +75,7 @@ impl CredentialHolder for TestIssuer {
                 let user_did = DIDJWK::generate_url(&user_jwk.to_public());
                 let issuer_did = DIDJWK::generate_url(&issuer_jwk.to_public());
 
-                // Use the identities as shown in https://creator-assertions.github.io/identity/1.x+vc-draft/#vc-credentialsubject-verifiedIdentities.
+                // Use the identities as shown in https://creator-assertions.github.io/identity/1.1-draft/#vc-credentialsubject-verifiedIdentities.
 
                 let verified_identities: NonEmptyVec<VcVerifiedIdentity> = NonEmptyVec::try_from_vec(vec![
                     VcVerifiedIdentity {
@@ -133,7 +133,7 @@ impl CredentialHolder for TestIssuer {
                     },
                 ]).unwrap();
 
-                let cia = CreatorIdentityAssertion {
+                let cia = IdentityClaimsAggregationVc {
                     verified_identities,
                     c2pa_asset: signer_payload.clone(),
                 };
@@ -201,7 +201,7 @@ impl TestIssuer {
 
         // TO DO: Add a metadata assertion as an example.
 
-        // Here we act as an identity assertion creator.
+        // Here we act as an identity claims aggregator.
 
         let iab = IdentityAssertionBuilder::for_credential_holder(self);
 
@@ -241,7 +241,10 @@ impl TestIssuer {
         assert_eq!(ra1.url, "self#jumbf=c2pa.assertions/c2pa.hash.data");
         assert_eq!(ra1.alg, Some("sha256".to_owned()));
 
-        assert_eq!(report.signer_payload.sig_type, "cawg.w3c.vc");
+        assert_eq!(
+            report.signer_payload.sig_type,
+            "cawg.identity_claims_aggregation"
+        );
 
         dbg!(&report.named_actor);
 

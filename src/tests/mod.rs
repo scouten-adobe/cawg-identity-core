@@ -19,7 +19,7 @@
 #![allow(clippy::unwrap_used)]
 
 mod builder;
+mod claim_aggregation;
 pub(crate) mod fixtures;
 mod identity_assertion;
 mod internal;
-mod w3c_vc;

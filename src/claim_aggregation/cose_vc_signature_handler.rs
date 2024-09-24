@@ -21,26 +21,26 @@ use coset::{CborSerializable, CoseSign1, RegisteredLabelWithPrivate};
 use ssi::{claims::vc::syntax::NonEmptyVec, dids::DIDURL, jwk, JWK};
 
 use crate::{
+    claim_aggregation::{IdentityAssertionVc, VcVerifiedIdentity},
     identity_assertion::VerifiedIdentities,
-    w3c_vc::{IdentityAssertionVc, VcVerifiedIdentity},
     NamedActor, SignatureHandler, SignerPayload, ValidationResult, VerifiedIdentity,
 };
 
-/// An implementation of [`SignatureHandler`] that supports Creator Identity
-/// Assertions (a specific grammar of W3C Verifiable Credentials) as specified
-/// in [§8.1, W3C verifiable credentials] and secured by COSE as specified in
-/// [§3.3.1 Securing JSON-LD Verifiable Credentials with COSE] of _Securing
-/// Verifiable Credentials using JOSE and COSE._
+/// An implementation of [`SignatureHandler`] that supports Identity Claims
+/// Aggregation Credentials (a specific grammar of W3C Verifiable Credentials)
+/// as specified in [§8.1, Identity claims aggregation] and secured by COSE as
+/// specified in [§3.3.1 Securing JSON-LD Verifiable Credentials with COSE] of
+/// _Securing Verifiable Credentials using JOSE and COSE._
 ///
 /// [`SignatureHandler`]: crate::SignatureHandler
-/// [§8.1, W3C verifiable credentials]: https://creator-assertions.github.io/identity/1.x-add-vc-v3/#_w3c_verifiable_credentials
+/// [§8.1, Identity claims aggregation]: https://creator-assertions.github.io/identity/1.1-draft/#_identity_claims_aggregation
 /// [§3.3.1 Securing JSON-LD Verifiable Credentials with COSE]: https://w3c.github.io/vc-jose-cose/#securing-vcs-with-cose
 pub struct CoseVcSignatureHandler {}
 
 #[async_trait]
 impl SignatureHandler for CoseVcSignatureHandler {
     fn can_handle_sig_type(sig_type: &str) -> bool {
-        sig_type == "cawg.w3c.vc"
+        sig_type == "cawg.identity_claims_aggregation"
     }
 
     async fn check_signature<'a>(
@@ -149,9 +149,9 @@ impl SignatureHandler for CoseVcSignatureHandler {
             })
             .unwrap();
 
-        // Enforce [§8.1.2.4. Validity].
+        // Enforce [§8.1.1.4. Validity].
         //
-        // [§8.1.2.4. Validity]: https://creator-assertions.github.io/identity/1.x+vc-draft/#vc-property-validFrom
+        // [§8.1.1.4. Validity]: https://creator-assertions.github.io/identity/1.1-draft/#vc-property-validFrom
 
         // TO DO (#27): Remove panic.
         assert!(asset_vc.valid_from.is_some());
@@ -164,8 +164,8 @@ impl SignatureHandler for CoseVcSignatureHandler {
     }
 }
 
-/// An implementation of [`NamedActor`] that describes the subject of a Creator
-/// Identity Assertion.
+/// An implementation of [`NamedActor`] that describes the subject of an
+/// Identity Claims Aggregation credential.
 ///
 /// [`NamedActor`]: crate::NamedActor
 pub struct VcNamedActor(IdentityAssertionVc);

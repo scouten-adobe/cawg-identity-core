@@ -19,6 +19,7 @@
 #![doc = include_str!("../README.md")]
 
 pub mod builder;
+pub mod claim_aggregation;
 
 mod identity_assertion;
 pub use identity_assertion::{
@@ -33,5 +34,3 @@ pub(crate) mod internal;
 
 #[cfg(test)]
 pub(crate) mod tests;
-
-pub mod w3c_vc;

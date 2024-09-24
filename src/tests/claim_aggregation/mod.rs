@@ -11,5 +11,5 @@
 // specific language governing permissions and limitations under
 // each license.
 
-mod self_issuance;
 mod test_issuer;
+mod validation_error_cases;

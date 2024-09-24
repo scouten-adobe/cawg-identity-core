@@ -20,7 +20,6 @@
 //! Quick-and-dirty adaptation from [`ssi` crate], which I hope will add its own
 //! COSE support to replace this.
 //!
-//!
 //! [§3.3 With COSE]: https://www.w3.org/TR/vc-jose-cose/#securing-with-cose
 //! [Securing Verifiable Credentials using JOSE and COSE]: https://www.w3.org/TR/vc-jose-cose/
 //! [`ssi` crate]: https://github.com/spruceid/ssi/
