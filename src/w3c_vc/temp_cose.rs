@@ -36,12 +36,12 @@ use iref::Uri;
 use serde::Serialize;
 use ssi::{
     claims::{
-        jws::JWSSigner,
+        jws::JwsSigner,
         vc::{
             v2::{Credential, CredentialTypes, JsonCredential},
             MaybeIdentified,
         },
-        ClaimsValidity, DateTimeProvider, JWSPayload, SignatureError, ValidateClaims,
+        ClaimsValidity, DateTimeProvider, JwsPayload, SignatureError, ValidateClaims,
     },
     JWK,
 };
@@ -121,7 +121,7 @@ impl CoseVc {
     */
 }
 
-impl<T: Serialize> JWSPayload for CoseVc<T> {
+impl<T: Serialize> JwsPayload for CoseVc<T> {
     fn typ(&self) -> Option<&str> {
         Some("vc-ld+cose")
     }
