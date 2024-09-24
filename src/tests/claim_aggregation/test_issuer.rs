@@ -26,7 +26,7 @@ use ssi::{
             v2::Credential,
         },
         vc_jose_cose::JoseVc,
-        JWSPayload,
+        JwsPayload,
     },
     dids::DIDJWK,
     JWK,
