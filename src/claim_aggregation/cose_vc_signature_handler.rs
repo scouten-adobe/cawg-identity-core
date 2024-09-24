@@ -21,8 +21,8 @@ use coset::{CborSerializable, CoseSign1, RegisteredLabelWithPrivate};
 use ssi::{claims::vc::syntax::NonEmptyVec, dids::DIDURL, jwk, JWK};
 
 use crate::{
+    claim_aggregation::{IdentityAssertionVc, VcVerifiedIdentity},
     identity_assertion::VerifiedIdentities,
-    w3c_vc::{IdentityAssertionVc, VcVerifiedIdentity},
     NamedActor, SignatureHandler, SignerPayload, ValidationResult, VerifiedIdentity,
 };
 

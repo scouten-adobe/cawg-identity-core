@@ -34,4 +34,4 @@ pub(crate) mod internal;
 #[cfg(test)]
 pub(crate) mod tests;
 
-pub mod w3c_vc;
+pub mod claim_aggregation;

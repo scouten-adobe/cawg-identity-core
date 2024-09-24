@@ -36,11 +36,11 @@ use xsd_types::value::DateTimeStamp;
 
 use crate::{
     builder::{CredentialHolder, IdentityAssertionBuilder, ManifestBuilder},
-    tests::fixtures::{temp_c2pa_signer, temp_dir_path},
-    w3c_vc::{
+    claim_aggregation::{
         temp_cose::CoseVc, CreatorIdentityAssertion, IdentityAssertionVc, IdentityProvider,
         VcVerifiedIdentity,
     },
+    tests::fixtures::{temp_c2pa_signer, temp_dir_path},
     IdentityAssertion, SignerPayload,
 };
 
