@@ -164,8 +164,8 @@ impl SignatureHandler for CoseVcSignatureHandler {
     }
 }
 
-/// An implementation of [`NamedActor`] that describes the subject of a Creator
-/// Identity Assertion.
+/// An implementation of [`NamedActor`] that describes the subject of an
+/// Identity Claims Aggregation credential.
 ///
 /// [`NamedActor`]: crate::NamedActor
 pub struct VcNamedActor(IdentityAssertionVc);

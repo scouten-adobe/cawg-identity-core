@@ -201,7 +201,7 @@ impl TestIssuer {
 
         // TO DO: Add a metadata assertion as an example.
 
-        // Here we act as an identity assertion creator.
+        // Here we act as an identity claims aggregator.
 
         let iab = IdentityAssertionBuilder::for_credential_holder(self);
 
