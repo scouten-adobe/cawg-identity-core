@@ -75,7 +75,7 @@ impl CredentialHolder for TestIssuer {
                 let user_did = DIDJWK::generate_url(&user_jwk.to_public());
                 let issuer_did = DIDJWK::generate_url(&issuer_jwk.to_public());
 
-                // Use the identities as shown in https://creator-assertions.github.io/identity/1.x+vc-draft/#vc-credentialsubject-verifiedIdentities.
+                // Use the identities as shown in https://creator-assertions.github.io/identity/1.1-draft/#vc-credentialsubject-verifiedIdentities.
 
                 let verified_identities: NonEmptyVec<VcVerifiedIdentity> = NonEmptyVec::try_from_vec(vec![
                     VcVerifiedIdentity {

@@ -62,7 +62,7 @@ pub struct CreatorIdentityAssertion {
     /// MUST be the JSON serialization of the `signer_payload` data structure
     /// presented for signature with the following adaptations:
     /// * All CBOR bytestring values in `signer_payload` data structure (for example, `hash` entries in the `hashlink` data structure) MUST be converted to the corresponding base 64 encoding as specified in [Section 4, “Base 64 Encoding,”](https://datatracker.ietf.org/doc/html/rfc4648#section-4) of RFC 4648. The base 64 encoding MUST NOT use the URL-safe variation of base 64. The encoding MUST NOT include line feeds or additional annotations not directly required by the core base 64 specification.
-    /// * The JSON encoding MUST use the field names exactly as specified in [Section 5.1, “Overview”](https://creator-assertions.github.io/identity/1.x+vc-draft/#_overview).
+    /// * The JSON encoding MUST use the field names exactly as specified in [Section 5.1, “Overview”](https://creator-assertions.github.io/identity/1.1-draft/#_overview).
     #[serde(rename = "c2paAsset")]
     #[ld("cawg:c2paAsset")]
     pub c2pa_asset: SignerPayload,
