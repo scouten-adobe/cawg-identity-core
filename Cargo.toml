@@ -27,7 +27,7 @@ thiserror = "1.0.61"
 xsd-types = "0.9.5"
 
 [dev-dependencies]
-actix = "0.13.3"
 c2pa = { version = "0.33.0", features = ["file_io", "openssl_sign", "openssl_ffi_mutex"] }
 serde = { version = "1.0.197", features = ["derive"] }
 tempfile = "3.10.1"
+tokio = { version = "1.40", features = ["macros"] }
