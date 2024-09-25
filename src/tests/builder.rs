@@ -22,7 +22,7 @@ use crate::{
     IdentityAssertion,
 };
 
-#[actix::test]
+#[tokio::test]
 async fn simple_case() {
     // TO DO: Clean up code and extract into builder interface.
     // For now, just looking for a simple proof-of-concept.
