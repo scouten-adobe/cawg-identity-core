@@ -17,8 +17,12 @@ use std::{
 };
 
 use async_trait::async_trait;
-use coset::{CborSerializable, CoseSign1, RegisteredLabelWithPrivate};
-use ssi::{claims::vc::syntax::NonEmptyVec, dids::DIDURL, jwk, JWK};
+use coset::{CoseSign1, RegisteredLabelWithPrivate, TaggedCborSerializable};
+use ssi::{
+    claims::vc::syntax::NonEmptyVec,
+    dids::{AnyDidMethod, DIDResolver, DIDURL},
+    jwk, JWK,
+};
 
 use crate::{
     claim_aggregation::{IdentityAssertionVc, VcVerifiedIdentity},
@@ -55,7 +59,7 @@ impl SignatureHandler for CoseVcSignatureHandler {
 
         // TO DO (#27): Remove unwrap.
         #[allow(clippy::unwrap_used)]
-        let sign1 = CoseSign1::from_slice(signature).unwrap();
+        let sign1 = CoseSign1::from_tagged_slice(signature).unwrap();
 
         // TEMPORARY: Require EdDSA algorithm.
 
@@ -106,7 +110,7 @@ impl SignatureHandler for CoseVcSignatureHandler {
             .expect("ERROR: can't decode VC as IdentityAssertionVc");
 
         // Discover public key for issuer DID and validate signature.
-        // TEMPORARY version supports JWK only.
+        // TEMPORARY version supports did:jwk and did:web only.
 
         let issuer_id = asset_vc.issuer.id();
         // TO DO (#27): Remove panic.
@@ -123,6 +127,39 @@ impl SignatureHandler for CoseVcSignatureHandler {
                 let jwk = primary_did.method_specific_id();
                 let jwk = multibase::Base::decode(&multibase::Base::Base64Url, jwk).unwrap();
                 let jwk: JWK = serde_json::from_slice(&jwk).unwrap();
+                jwk
+            }
+            "web" => {
+                let resolver = AnyDidMethod::default();
+
+                // Dereference the verification method.
+                let did_doc = resolver.dereference(issuer_id).await.unwrap().content;
+
+                let ssi_dids::resolution::Content::Resource(r) = did_doc else {
+                    panic!("not resource");
+                };
+                let ssi_dids::document::resource::Resource::Document(d) = r else {
+                    panic!("not document");
+                };
+                let vm1 = d
+                    .verification_relationships
+                    .assertion_method
+                    .first()
+                    .unwrap();
+                let ssi_dids::document::verification_method::ValueOrReference::Value(vm1) = vm1
+                else {
+                    panic!("not value");
+                };
+                let jwk_prop = vm1.properties.get("publicKeyJwk").unwrap();
+                dbg!(&jwk_prop);
+
+                // OMG SO HACKY!
+                let jwk_json = serde_json::to_string_pretty(jwk_prop).unwrap();
+                dbg!(&jwk_json);
+
+                let jwk: JWK = serde_json::from_str(&jwk_json).unwrap();
+                dbg!(&jwk);
+
                 jwk
             }
             x => {
