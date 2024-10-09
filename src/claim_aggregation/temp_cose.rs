@@ -33,15 +33,13 @@ use std::borrow::Cow;
 use coset::{CoseSign1Builder, HeaderBuilder, TaggedCborSerializable};
 use iref::Uri;
 use serde::Serialize;
-use ssi_claims::{
-    jws::JwsSigner,
-    vc::{
-        v2::{Credential, CredentialTypes, JsonCredential},
-        MaybeIdentified,
-    },
-    ClaimsValidity, DateTimeProvider, JwsPayload, SignatureError, ValidateClaims,
-};
+use ssi_claims_core::{ClaimsValidity, DateTimeProvider, SignatureError, ValidateClaims};
 use ssi_jwk::JWK;
+use ssi_jws::{JwsPayload, JwsSigner};
+use ssi_vc::{
+    v2::{Credential, CredentialTypes, JsonCredential},
+    MaybeIdentified,
+};
 use xsd_types::DateTimeStamp;
 
 /// Payload of a COSE-secured Verifiable Credential.
@@ -95,7 +93,7 @@ fn sign_bytes(signer: &JWK, payload: &[u8]) -> Vec<u8> {
 
     // TO DO (#27): Remove panic.
     #[allow(clippy::unwrap_used)]
-    ssi_claims::jws::sign_bytes(algorithm, payload, signer).unwrap()
+    ssi_jws::sign_bytes(algorithm, payload, signer).unwrap()
 }
 
 /* NOT YET ...

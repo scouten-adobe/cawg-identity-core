@@ -18,9 +18,9 @@ use std::{
 
 use async_trait::async_trait;
 use coset::{CoseSign1, RegisteredLabelWithPrivate, TaggedCborSerializable};
-use ssi_claims::vc::syntax::NonEmptyVec;
 use ssi_dids::{AnyDidMethod, DIDResolver, DIDURL};
 use ssi_jwk::JWK;
+use ssi_vc::syntax::NonEmptyVec;
 
 use crate::{
     claim_aggregation::{IdentityAssertionVc, VcVerifiedIdentity},
@@ -180,7 +180,7 @@ impl SignatureHandler for CoseVcSignatureHandler {
         #[allow(clippy::unwrap_used)]
         sign1
             .verify_signature(b"", |sig, data| {
-                ssi_claims::jws::verify_bytes(ssi_alg, data, &jwk, sig)
+                ssi_jws::verify_bytes(ssi_alg, data, &jwk, sig)
             })
             .unwrap();
 
