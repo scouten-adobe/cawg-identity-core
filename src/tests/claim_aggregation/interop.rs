@@ -17,10 +17,10 @@
 use std::{collections::HashMap, fs::OpenOptions, io::Cursor, str::FromStr};
 
 use c2pa::{Manifest, ManifestStore, Signer};
+use did_jwk::DIDJWK;
 use iref::UriBuf;
 use non_empty_string::NonEmptyString;
 use serde::Serialize;
-use ssi_dids::DIDJWK;
 use ssi_jwk::JWK;
 use ssi_jws::JwsPayload;
 use ssi_vc::{

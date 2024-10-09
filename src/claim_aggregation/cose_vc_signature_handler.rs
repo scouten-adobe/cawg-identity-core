@@ -18,7 +18,8 @@ use std::{
 
 use async_trait::async_trait;
 use coset::{CoseSign1, RegisteredLabelWithPrivate, TaggedCborSerializable};
-use ssi_dids::{AnyDidMethod, DIDResolver, DIDURL};
+use did_web::DIDWeb;
+use ssi_dids_core::{DIDResolver, DIDURL};
 use ssi_jwk::JWK;
 use ssi_vc::syntax::NonEmptyVec;
 
@@ -128,15 +129,12 @@ impl SignatureHandler for CoseVcSignatureHandler {
                 jwk
             }
             "web" => {
-                let resolver = AnyDidMethod::default();
+                let did_doc = DIDWeb.dereference(issuer_id).await.unwrap().content;
 
-                // Dereference the verification method.
-                let did_doc = resolver.dereference(issuer_id).await.unwrap().content;
-
-                let ssi_dids::resolution::Content::Resource(r) = did_doc else {
+                let ssi_dids_core::resolution::Content::Resource(r) = did_doc else {
                     panic!("not resource");
                 };
-                let ssi_dids::document::resource::Resource::Document(d) = r else {
+                let ssi_dids_core::document::resource::Resource::Document(d) = r else {
                     panic!("not document");
                 };
                 let vm1 = d
@@ -144,7 +142,8 @@ impl SignatureHandler for CoseVcSignatureHandler {
                     .assertion_method
                     .first()
                     .unwrap();
-                let ssi_dids::document::verification_method::ValueOrReference::Value(vm1) = vm1
+                let ssi_dids_core::document::verification_method::ValueOrReference::Value(vm1) =
+                    vm1
                 else {
                     panic!("not value");
                 };
