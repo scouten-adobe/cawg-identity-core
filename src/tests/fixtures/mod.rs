@@ -17,7 +17,7 @@
 
 use std::{env, path::PathBuf};
 
-use c2pa::{create_signer, Signer, SigningAlg};
+use c2pa::{Signer, SigningAlg};
 use tempfile::TempDir;
 
 pub(crate) fn fixture_path(name: &str) -> PathBuf {
@@ -38,9 +38,10 @@ pub(crate) fn temp_dir_path(temp_dir: &TempDir, file_name: &str) -> PathBuf {
     path
 }
 
+#[cfg(not(target_arch = "wasm32"))]
 pub(crate) fn temp_c2pa_signer() -> Box<dyn Signer> {
     let sign_cert = include_bytes!("../../tests/fixtures/certs/ps256.pub").to_vec();
     let pem_key = include_bytes!("../../tests/fixtures/certs/ps256.pem").to_vec();
 
-    create_signer::from_keys(&sign_cert, &pem_key, SigningAlg::Ps256, None).unwrap()
+    c2pa::create_signer::from_keys(&sign_cert, &pem_key, SigningAlg::Ps256, None).unwrap()
 }
