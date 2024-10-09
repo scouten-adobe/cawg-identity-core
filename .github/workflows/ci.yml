@@ -5,8 +5,6 @@ on:
   pull_request:
   push:
     branches: main
-  schedule:
-    - cron: "0 18 * * 1,4,6" # 1800 UTC every Monday, Thursday, Saturday
 
 jobs:
   tests:
@@ -21,8 +19,8 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
-      
+        uses: actions/checkout@v4
+
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@master
         with:
@@ -57,8 +55,8 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
-      
+        uses: actions/checkout@v4
+
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@master
         with:
@@ -89,8 +87,8 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
-      
+        uses: actions/checkout@v4
+
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
 
@@ -111,8 +109,8 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
-      
+        uses: actions/checkout@v4
+
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@nightly
         with:
@@ -124,62 +122,30 @@ jobs:
       - name: Run tests
         run: cargo +nightly test -Z direct-minimal-versions --all-targets --all-features
 
-  # publish-preflight:
-  #   name: Preflight crate publish
-  #   runs-on: ${{ matrix.os }}
-
-  #   strategy:
-  #     fail-fast: false
-  #     matrix:
-  #       os: [ubuntu-latest]
-  #       rust_version: [stable]
-
-  #   steps:
-  #     - name: Checkout repository
-  #       uses: actions/checkout@v3
-      
-  #     - name: Install Rust toolchain
-  #       uses: dtolnay/rust-toolchain@master
-  #       with:
-  #         toolchain: ${{ matrix.rust_version }}
-  #         components: llvm-tools-preview
-
-  #     - name: Cache Rust dependencies
-  #       uses: Swatinem/rust-cache@v2
-
-  #     - name: Dry-run of crate publish
-  #       run: cargo publish --no-verify -p cawg-identity-core --dry-run
-
   clippy_check:
     name: Clippy
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
-      
+        uses: actions/checkout@v4
+
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
-
-      - name: Install clippy
-        run: rustup component add clippy
+        with:
+          components: clippy
 
       - name: Cache Rust dependencies
         uses: Swatinem/rust-cache@v2
 
-      - name: Cargo clippy
-        uses: actions-rs/clippy-check@v1
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          args: --all-features --all-targets -- -D warnings
-        env:
-          RUST_BACKTRACE: "1"
+      - name: Run Clippy
+        run: cargo clippy --all-features --all-targets -- -Dwarnings
 
   cargo_fmt:
     name: Enforce Rust code format
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Install stable toolchain
         uses: dtolnay/rust-toolchain@nightly
@@ -194,8 +160,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
-      
+        uses: actions/checkout@v4
+
       - name: Install nightly Rust toolchain
         # Nightly is used here because the docs.rs build
         # uses nightly and we use doc_cfg features that are
@@ -228,10 +194,10 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Audit crate dependencies
-        uses: EmbarkStudios/cargo-deny-action@v1
+        uses: EmbarkStudios/cargo-deny-action@v2
         with:
           command: check ${{ matrix.checks }}
 
@@ -240,8 +206,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
-      
+        uses: actions/checkout@v4
+
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@nightly
 
@@ -250,54 +216,3 @@ jobs:
         with:
           version: latest
           args: --all-targets --all-features
-
-  # DISABLED until first version of crate is published:
-  # version_bump:
-  #   name: Ensure (MINOR) tag is used when making an API breaking change
-  #   # Change all of these steps to (MAJOR) after 1.0 release
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - name: Checkout repository
-  #       uses: actions/checkout@v3
-  #       with:
-  #         fetch-depth: 0
-      
-  #     - name: Install Rust toolchain
-  #       uses: dtolnay/rust-toolchain@stable
-
-  #     - name: Get latest existing tag
-  #       uses: WyriHaximus/github-action-get-previous-tag@v1
-  #       id: get-latest-tag
-
-  #     - name: Set new version
-  #       uses: paulhatch/semantic-version@v5.2.1
-  #       id: set-version
-  #       with:
-  #         tag_prefix: "v"
-  #         version_format: "${major}.${minor}.${patch}"
-  #         major_pattern: "(MAJOR)"
-  #         minor_pattern: "(MINOR)"
-
-  #     - name: Generate changelog since last tag
-  #       run: |
-  #         {
-  #           echo 'changelog<<EOF'
-  #           git log --format="* %s" ${{ steps.get-latest-tag.outputs.tag }}..HEAD | { grep -v "(IGNORE)" || :; }
-  #           echo EOF
-  #         } >> "$GITHUB_OUTPUT"
-
-  #     - name: "Bump crate version (NOTE: Not pushed back to repo!)"
-  #       continue-on-error: true # If no change to crate version, ignore git commit error
-  #       run: |
-  #         sed -i "s/^version = \"[^\"]*\"$/version = \"$VERSION\"/;" Cargo.toml
-  #         git config user.email "nobody@example.com"
-  #         git config --global user.name "PR validation bot"
-  #         git add .
-  #         git commit -m "DO NOT PUSH BACK TO PR: Bump crate version"
-  #       env:
-  #         VERSION: ${{ steps.set-version.outputs.version }}
-
-  #     - name: If this step fails, change title of the PR to include (MINOR) tag
-  #       uses: obi1kenobi/cargo-semver-checks-action@v2
-  #       with:
-  #         package: cawg-identity-core

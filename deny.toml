@@ -21,11 +21,10 @@ ignore = [
   # The following dependencies come in through ssi crate.
   # See https://github.com/spruceid/ssi/issues/599 and
   # https://github.com/scouten-adobe/cawg-identity-core/issues/29.
-  "RUSTSEC-2021-0139", # ansi_term (unmaintained)
-  "RUSTSEC-2021-0145", # atty (unaligned read, possibly unmaintained)
-  "RUSTSEC-2021-0141", # dotenv (meant for dev/testing only)
   "RUSTSEC-2023-0055", # lexical 6.1.1 (soundness issues)
+  "RUSTSEC-2023-0086", # lexical-core 0.8.5 (soundness issues)
   "RUSTSEC-2022-0040", # owning_ref 0.4.1 (soundness issues, unmaintained)
+  "RUSTSEC-2024-0370", # proc-macro-error 1.0.4 (unmaintained)
   "RUSTSEC-2023-0071", # rsa 0.6.1 (Marvin key recovery attack)
 ]
 
