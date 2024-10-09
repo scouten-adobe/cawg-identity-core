@@ -19,18 +19,16 @@ use std::{fs::OpenOptions, io::Cursor, str::FromStr};
 use c2pa::{Manifest, ManifestStore};
 use iref::UriBuf;
 use non_empty_string::NonEmptyString;
-use ssi::{
-    claims::{
-        vc::{
-            syntax::{IdOr, NonEmptyVec},
-            v2::Credential,
-        },
-        vc_jose_cose::JoseVc,
-        JwsPayload,
+use ssi_claims::{
+    vc::{
+        syntax::{IdOr, NonEmptyVec},
+        v2::Credential,
     },
-    dids::DIDJWK,
-    JWK,
+    vc_jose_cose::JoseVc,
+    JwsPayload,
 };
+use ssi_dids::DIDJWK;
+use ssi_jwk::JWK;
 use static_iref::uri;
 use xsd_types::value::DateTimeStamp;
 

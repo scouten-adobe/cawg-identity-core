@@ -33,17 +33,15 @@ use std::borrow::Cow;
 use coset::{CoseSign1Builder, HeaderBuilder, TaggedCborSerializable};
 use iref::Uri;
 use serde::Serialize;
-use ssi::{
-    claims::{
-        jws::JwsSigner,
-        vc::{
-            v2::{Credential, CredentialTypes, JsonCredential},
-            MaybeIdentified,
-        },
-        ClaimsValidity, DateTimeProvider, JwsPayload, SignatureError, ValidateClaims,
+use ssi_claims::{
+    jws::JwsSigner,
+    vc::{
+        v2::{Credential, CredentialTypes, JsonCredential},
+        MaybeIdentified,
     },
-    JWK,
+    ClaimsValidity, DateTimeProvider, JwsPayload, SignatureError, ValidateClaims,
 };
+use ssi_jwk::JWK;
 use xsd_types::DateTimeStamp;
 
 /// Payload of a COSE-secured Verifiable Credential.
@@ -59,7 +57,7 @@ impl<T: Serialize> CoseVc<T> {
         // TO DO (#27): Remove panic.
         #[allow(clippy::unwrap_used)]
         let coset_alg = match signer.get_algorithm().unwrap() {
-            ssi::jwk::Algorithm::EdDSA => coset::iana::Algorithm::EdDSA,
+            ssi_jwk::Algorithm::EdDSA => coset::iana::Algorithm::EdDSA,
             ssi_alg => {
                 unimplemented!("Add support for SSI alg {ssi_alg:?}")
             }
@@ -97,7 +95,7 @@ fn sign_bytes(signer: &JWK, payload: &[u8]) -> Vec<u8> {
 
     // TO DO (#27): Remove panic.
     #[allow(clippy::unwrap_used)]
-    ssi::claims::jws::sign_bytes(algorithm, payload, signer).unwrap()
+    ssi_claims::jws::sign_bytes(algorithm, payload, signer).unwrap()
 }
 
 /* NOT YET ...
