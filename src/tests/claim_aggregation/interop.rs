@@ -27,7 +27,6 @@ use ssi_vc::{
     syntax::{IdOr, NonEmptyVec},
     v2::Credential,
 };
-use ssi_vc_jose_cose::JoseVc;
 use static_iref::uri;
 use xsd_types::value::DateTimeStamp;
 
