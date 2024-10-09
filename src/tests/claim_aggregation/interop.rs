@@ -11,39 +11,9 @@
 // specific language governing permissions and limitations under
 // each license.
 
-#![allow(unused)] // TEMPORARY while rebuilding
-#![allow(dead_code)] // TEMPORARY while rebuilding
+use c2pa::ManifestStore;
 
-use std::{collections::HashMap, fs::OpenOptions, io::Cursor, str::FromStr};
-
-use c2pa::{Manifest, ManifestStore, Signer};
-use iref::UriBuf;
-use non_empty_string::NonEmptyString;
-use serde::Serialize;
-use ssi::{
-    claims::{
-        vc::{
-            syntax::{IdOr, NonEmptyVec},
-            v2::Credential,
-        },
-        vc_jose_cose::JoseVc,
-        JwsPayload,
-    },
-    dids::DIDJWK,
-    JWK,
-};
-use static_iref::uri;
-use xsd_types::value::DateTimeStamp;
-
-use crate::{
-    builder::{CredentialHolder, IdentityAssertionBuilder, ManifestBuilder},
-    claim_aggregation::{
-        temp_cose::CoseVc, IdentityAssertionVc, IdentityClaimsAggregationVc, IdentityProvider,
-        VcVerifiedIdentity,
-    },
-    tests::fixtures::{temp_c2pa_signer, temp_dir_path},
-    IdentityAssertion, SignerPayload,
-};
+use crate::IdentityAssertion;
 
 #[tokio::test]
 async fn adobe_connected_identities() {
@@ -79,8 +49,4 @@ async fn adobe_connected_identities() {
     for vi in report.named_actor.verified_identities() {
         dbg!(vi.type_());
     }
-}
-
-fn non_empty_str(s: &str) -> NonEmptyString {
-    NonEmptyString::try_from(s).unwrap()
 }

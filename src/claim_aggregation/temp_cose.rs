@@ -26,23 +26,17 @@
 
 // Adapted from https://github.com/spruceid/ssi/blob/main/crates/claims/crates/vc-jose-cose/src/jose/credential.rs
 
-#![allow(unused)] // TEMPORARY while building
-
 use std::borrow::Cow;
 
 use coset::{CoseSign1Builder, HeaderBuilder, TaggedCborSerializable};
 use iref::Uri;
 use serde::Serialize;
-use ssi::{
-    claims::{
-        jws::JwsSigner,
-        vc::{
-            v2::{Credential, CredentialTypes, JsonCredential},
-            MaybeIdentified,
-        },
-        ClaimsValidity, DateTimeProvider, JwsPayload, SignatureError, ValidateClaims,
-    },
-    JWK,
+use ssi_claims_core::{ClaimsValidity, DateTimeProvider, SignatureError, ValidateClaims};
+use ssi_jwk::JWK;
+use ssi_jws::{JwsPayload, JwsSigner};
+use ssi_vc::{
+    v2::{Credential, CredentialTypes, JsonCredential},
+    MaybeIdentified,
 };
 use xsd_types::DateTimeStamp;
 
@@ -52,6 +46,7 @@ pub struct CoseVc<T = JsonCredential>(pub T);
 
 impl<T: Serialize> CoseVc<T> {
     /// Sign a COSE VC into a COSE enveloped verifiable credential.
+    #[allow(dead_code)]
     pub async fn sign_into_cose(&self, signer: &JWK) -> Result<Vec<u8>, SignatureError> {
         let info = signer.fetch_info().await?;
         let payload_bytes = self.payload_bytes();
@@ -59,7 +54,7 @@ impl<T: Serialize> CoseVc<T> {
         // TO DO (#27): Remove panic.
         #[allow(clippy::unwrap_used)]
         let coset_alg = match signer.get_algorithm().unwrap() {
-            ssi::jwk::Algorithm::EdDSA => coset::iana::Algorithm::EdDSA,
+            ssi_jwk::Algorithm::EdDSA => coset::iana::Algorithm::EdDSA,
             ssi_alg => {
                 unimplemented!("Add support for SSI alg {ssi_alg:?}")
             }
@@ -86,6 +81,7 @@ impl<T: Serialize> CoseVc<T> {
     }
 }
 
+#[allow(dead_code)]
 fn sign_bytes(signer: &JWK, payload: &[u8]) -> Vec<u8> {
     // Copied this function out of impl JWSSigner for JWK
     // to get rid of the async-ness, which isn't compatible
@@ -97,7 +93,7 @@ fn sign_bytes(signer: &JWK, payload: &[u8]) -> Vec<u8> {
 
     // TO DO (#27): Remove panic.
     #[allow(clippy::unwrap_used)]
-    ssi::claims::jws::sign_bytes(algorithm, payload, signer).unwrap()
+    ssi_jws::sign_bytes(algorithm, payload, signer).unwrap()
 }
 
 /* NOT YET ...

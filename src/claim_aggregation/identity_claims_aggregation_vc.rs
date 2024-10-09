@@ -15,7 +15,7 @@ use chrono::{DateTime, FixedOffset};
 use iref::{Iri, UriBuf};
 use non_empty_string::NonEmptyString;
 use serde::{Deserialize, Serialize};
-use ssi::claims::vc::{
+use ssi_vc::{
     syntax::{NonEmptyVec, RequiredContext, RequiredType},
     v2::SpecializedJsonCredential,
 };

@@ -18,11 +18,10 @@ use std::{
 
 use async_trait::async_trait;
 use coset::{CoseSign1, RegisteredLabelWithPrivate, TaggedCborSerializable};
-use ssi::{
-    claims::vc::syntax::NonEmptyVec,
-    dids::{AnyDidMethod, DIDResolver, DIDURL},
-    jwk, JWK,
-};
+use did_web::DIDWeb;
+use ssi_dids_core::{DIDResolver, DIDURL};
+use ssi_jwk::JWK;
+use ssi_vc::syntax::NonEmptyVec;
 
 use crate::{
     claim_aggregation::{IdentityAssertionVc, VcVerifiedIdentity},
@@ -68,7 +67,7 @@ impl SignatureHandler for CoseVcSignatureHandler {
         let ssi_alg = if let Some(ref alg) = sign1.protected.header.alg {
             match alg {
                 RegisteredLabelWithPrivate::Assigned(coset::iana::Algorithm::EdDSA) => {
-                    jwk::Algorithm::EdDSA
+                    ssi_jwk::Algorithm::EdDSA
                 }
                 _ => {
                     panic!("TO DO: Add suport for signing alg {alg:?}");
@@ -130,15 +129,12 @@ impl SignatureHandler for CoseVcSignatureHandler {
                 jwk
             }
             "web" => {
-                let resolver = AnyDidMethod::default();
+                let did_doc = DIDWeb.dereference(issuer_id).await.unwrap().content;
 
-                // Dereference the verification method.
-                let did_doc = resolver.dereference(issuer_id).await.unwrap().content;
-
-                let ssi_dids::resolution::Content::Resource(r) = did_doc else {
+                let ssi_dids_core::resolution::Content::Resource(r) = did_doc else {
                     panic!("not resource");
                 };
-                let ssi_dids::document::resource::Resource::Document(d) = r else {
+                let ssi_dids_core::document::resource::Resource::Document(d) = r else {
                     panic!("not document");
                 };
                 let vm1 = d
@@ -146,7 +142,8 @@ impl SignatureHandler for CoseVcSignatureHandler {
                     .assertion_method
                     .first()
                     .unwrap();
-                let ssi_dids::document::verification_method::ValueOrReference::Value(vm1) = vm1
+                let ssi_dids_core::document::verification_method::ValueOrReference::Value(vm1) =
+                    vm1
                 else {
                     panic!("not value");
                 };
@@ -170,7 +167,7 @@ impl SignatureHandler for CoseVcSignatureHandler {
         // TEMPORARY only support ED25519.
         // TO DO (#27): Remove panic.
         #[allow(clippy::panic)]
-        let jwk::Params::OKP(ref okp) = jwk.params
+        let ssi_jwk::Params::OKP(ref okp) = jwk.params
         else {
             panic!("Temporarily unsupported params type");
         };
@@ -182,7 +179,7 @@ impl SignatureHandler for CoseVcSignatureHandler {
         #[allow(clippy::unwrap_used)]
         sign1
             .verify_signature(b"", |sig, data| {
-                ssi::claims::jws::verify_bytes(ssi_alg, data, &jwk, sig)
+                ssi_jws::verify_bytes(ssi_alg, data, &jwk, sig)
             })
             .unwrap();
 
