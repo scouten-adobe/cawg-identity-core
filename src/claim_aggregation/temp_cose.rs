@@ -26,8 +26,6 @@
 
 // Adapted from https://github.com/spruceid/ssi/blob/main/crates/claims/crates/vc-jose-cose/src/jose/credential.rs
 
-#![allow(unused)] // TEMPORARY while building
-
 use std::borrow::Cow;
 
 use coset::{CoseSign1Builder, HeaderBuilder, TaggedCborSerializable};
@@ -48,6 +46,7 @@ pub struct CoseVc<T = JsonCredential>(pub T);
 
 impl<T: Serialize> CoseVc<T> {
     /// Sign a COSE VC into a COSE enveloped verifiable credential.
+    #[allow(dead_code)]
     pub async fn sign_into_cose(&self, signer: &JWK) -> Result<Vec<u8>, SignatureError> {
         let info = signer.fetch_info().await?;
         let payload_bytes = self.payload_bytes();
@@ -82,6 +81,7 @@ impl<T: Serialize> CoseVc<T> {
     }
 }
 
+#[allow(dead_code)]
 fn sign_bytes(signer: &JWK, payload: &[u8]) -> Vec<u8> {
     // Copied this function out of impl JWSSigner for JWK
     // to get rid of the async-ness, which isn't compatible

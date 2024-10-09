@@ -11,7 +11,6 @@
 // specific language governing permissions and limitations under
 // each license.
 
-#![allow(unused)] // TEMPORARY while rebuilding
 #![allow(dead_code)] // TEMPORARY while rebuilding
 
 use std::{fs::OpenOptions, io::Cursor, str::FromStr};
@@ -21,12 +20,7 @@ use did_jwk::DIDJWK;
 use iref::UriBuf;
 use non_empty_string::NonEmptyString;
 use ssi_jwk::JWK;
-use ssi_jws::JwsPayload;
-use ssi_vc::{
-    syntax::{IdOr, NonEmptyVec},
-    v2::Credential,
-};
-use static_iref::uri;
+use ssi_vc::syntax::{IdOr, NonEmptyVec};
 use xsd_types::value::DateTimeStamp;
 
 use crate::{
@@ -67,7 +61,7 @@ impl CredentialHolder for TestIssuer {
                 // but is strongly discouraged for production use cases. In other words,
                 // please don't copy and paste this into your own implementation!
 
-                let user_did = DIDJWK::generate_url(&user_jwk.to_public());
+                let _user_did = DIDJWK::generate_url(&user_jwk.to_public());
                 let issuer_did = DIDJWK::generate_url(&issuer_jwk.to_public());
 
                 // Use the identities as shown in https://creator-assertions.github.io/identity/1.1-draft/#vc-credentialsubject-verifiedIdentities.
