@@ -79,8 +79,6 @@ async fn adobe_connected_identities() {
     for vi in report.named_actor.verified_identities() {
         dbg!(vi.type_());
     }
-
-    panic!("Huh?");
 }
 
 fn non_empty_str(s: &str) -> NonEmptyString {
