@@ -30,7 +30,7 @@
 
 use std::borrow::Cow;
 
-use coset::{CborSerializable, CoseSign1Builder, HeaderBuilder};
+use coset::{CoseSign1Builder, HeaderBuilder, TaggedCborSerializable};
 use iref::Uri;
 use serde::Serialize;
 use ssi::{
@@ -82,7 +82,7 @@ impl<T: Serialize> CoseVc<T> {
 
         // TO DO (#27): Remove panic.
         #[allow(clippy::unwrap_used)]
-        Ok(sign1.to_vec().unwrap())
+        Ok(sign1.to_tagged_vec().unwrap())
     }
 }
 
