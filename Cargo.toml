@@ -46,3 +46,4 @@ c2pa = { version = "0.33.0", features = ["file_io", "openssl_sign", "openssl_ffi
 
 [target.'cfg(target_arch = "wasm32")'.dev-dependencies]
 c2pa = { version = "0.33.0", features = [] }
+wasm-bindgen-test = "0.3.31"

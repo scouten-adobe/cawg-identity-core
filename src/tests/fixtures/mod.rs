@@ -17,6 +17,7 @@
 
 use std::{env, path::PathBuf};
 
+#[cfg(not(target_arch = "wasm32"))]
 use c2pa::{Signer, SigningAlg};
 use tempfile::TempDir;
 

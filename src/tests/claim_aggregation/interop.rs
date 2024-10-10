@@ -20,10 +20,9 @@ use crate::IdentityAssertion;
 #[cfg_attr(not(target_arch = "wasm32"), tokio::test)]
 #[cfg_attr(target_arch = "wasm32", wasm_bindgen_test)]
 async fn adobe_connected_identities() {
-    let manifest_store = ManifestStore::from_file(
-        "src/tests/fixtures/claim_aggregation/adobe_connected_identities.jpg",
-    )
-    .unwrap();
+    let test_image = include_bytes!("../fixtures/claim_aggregation/adobe_connected_identities.jpg");
+
+    let manifest_store = ManifestStore::from_bytes("jpg", test_image, true).unwrap();
     assert!(manifest_store.validation_status().is_none());
 
     let manifest = manifest_store.get_active().unwrap();
