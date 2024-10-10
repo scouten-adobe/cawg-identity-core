@@ -26,5 +26,3 @@ mod identity_claims_aggregation_vc;
 pub use identity_claims_aggregation_vc::{
     IdentityAssertionVc, IdentityClaimsAggregationVc, IdentityProvider, VcVerifiedIdentity,
 };
-
-pub(crate) mod temp_cose;
