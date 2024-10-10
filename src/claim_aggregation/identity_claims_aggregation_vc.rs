@@ -14,9 +14,10 @@
 use chrono::{DateTime, FixedOffset};
 use iref::{Iri, UriBuf};
 use non_empty_string::NonEmptyString;
+use nonempty_collections::NEVec;
 use serde::{Deserialize, Serialize};
 use ssi_vc::{
-    syntax::{NonEmptyVec, RequiredContext, RequiredType},
+    syntax::{RequiredContext, RequiredType},
     v2::SpecializedJsonCredential,
 };
 use xsd_types::DateTimeStamp;
@@ -54,7 +55,7 @@ pub struct IdentityClaimsAggregationVc {
     /// by the _identity assertion generator._
     #[serde(rename = "verifiedIdentities")]
     #[ld("cawg:verifiedIdentities")]
-    pub verified_identities: NonEmptyVec<VcVerifiedIdentity>,
+    pub verified_identities: NEVec<VcVerifiedIdentity>,
 
     /// ## Binding to C2PA asset
     ///
@@ -79,7 +80,9 @@ impl RequiredType for IdentityClaimsAggregationVc {
 /// Every item in the `verifiedIdentities` array MUST contain information about
 /// the _named actor_ as verified by the _identity assertion generator_ or a
 /// service contacted by the _identity assertion generator._
-#[derive(Debug, Deserialize, Serialize, linked_data::Serialize, linked_data::Deserialize)]
+#[derive(
+    Clone, Debug, Deserialize, Serialize, linked_data::Serialize, linked_data::Deserialize,
+)]
 #[ld(prefix("cawg" = "https://creator-assertions.github.io/tbd/tbd"))]
 pub struct VcVerifiedIdentity {
     /// ## Verified identity type
@@ -203,7 +206,9 @@ impl VerifiedIdentity for VcVerifiedIdentity {
 /// verification process. This specification mentions at least three properties
 /// that MAY be used to represent the _named actor’s_ verification details:
 /// `id`, `name`, and `proof`.
-#[derive(Debug, Deserialize, Serialize, linked_data::Serialize, linked_data::Deserialize)]
+#[derive(
+    Clone, Debug, Deserialize, Serialize, linked_data::Serialize, linked_data::Deserialize,
+)]
 #[ld(prefix("cawg" = "https://creator-assertions.github.io/tbd/tbd"))]
 pub struct IdentityProvider {
     /// ## Identity provider ID
