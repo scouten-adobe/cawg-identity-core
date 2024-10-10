@@ -14,19 +14,21 @@
 use std::{fs::OpenOptions, io::Cursor, str::FromStr};
 
 use c2pa::{Manifest, ManifestStore};
+use coset::{CoseSign1Builder, HeaderBuilder, TaggedCborSerializable};
 use did_jwk::DIDJWK;
 use iref::UriBuf;
 use non_empty_string::NonEmptyString;
 use nonempty_collections::{nev, NEVec};
 use ssi_jwk::JWK;
+use ssi_jws::JwsSigner;
 use ssi_vc::syntax::{IdOr, NonEmptyVec};
+use thiserror::Error;
 use xsd_types::value::DateTimeStamp;
 
 use crate::{
     builder::{CredentialHolder, IdentityAssertionBuilder, ManifestBuilder},
     claim_aggregation::{
-        temp_cose::CoseVc, IdentityAssertionVc, IdentityClaimsAggregationVc, IdentityProvider,
-        VcVerifiedIdentity,
+        IdentityAssertionVc, IdentityClaimsAggregationVc, IdentityProvider, VcVerifiedIdentity,
     },
     tests::fixtures::{temp_c2pa_signer, temp_dir_path},
     IdentityAssertion, SignerPayload,
@@ -75,7 +77,6 @@ impl CredentialHolder for TestIssuer {
                         provider: IdentityProvider {
                             id: UriBuf::from_str("https://example-id-verifier.com").unwrap(),
                             name: non_empty_str("Example ID Verifier"),
-                            // "proof": "https://example-id-verifier.com/proofs/1"
                         },
                         verified_at: DateTimeStamp::from_str("2024-07-26T22:30:15Z").unwrap(),
                     },
@@ -89,7 +90,6 @@ impl CredentialHolder for TestIssuer {
                             id: UriBuf::from_str("https://example-affiliated-organization.com")
                                 .unwrap(),
                             name: non_empty_str("Example Affiliated Organization"),
-                            // "proof": "https://example-affiliated-organization.com/proofs/ck4592p5lk8u05mdg8bg5ac7ishlqfh1"
                         },
                         verified_at: DateTimeStamp::from_str("2024-07-26T22:29:57Z").unwrap(),
                     },
@@ -136,10 +136,7 @@ impl CredentialHolder for TestIssuer {
 
                 asset_vc.valid_from = Some(DateTimeStamp::now());
 
-                let cose_vc = CoseVc(asset_vc);
-                let cose = cose_vc.sign_into_cose(issuer_jwk).await.unwrap();
-
-                Ok(cose)
+                Ok(sign_into_cose(&asset_vc, issuer_jwk).await.unwrap())
             }
         }
     }
@@ -244,4 +241,64 @@ impl TestIssuer {
 
 fn non_empty_str(s: &str) -> NonEmptyString {
     NonEmptyString::try_from(s).unwrap()
+}
+
+// TEMPORARY home for this while we figure out new signing interface
+
+pub(crate) async fn sign_into_cose(
+    vc: &IdentityAssertionVc,
+    signer: &JWK,
+) -> Result<Vec<u8>, TbdError> {
+    let info = signer.fetch_info().await.unwrap();
+    let payload_bytes = serde_json::to_vec(vc).unwrap();
+
+    let coset_alg = match signer.get_algorithm().unwrap() {
+        ssi_jwk::Algorithm::EdDSA => coset::iana::Algorithm::EdDSA,
+        ssi_alg => {
+            unimplemented!("Add support for SSI alg {ssi_alg:?}")
+        }
+    };
+
+    let mut protected = HeaderBuilder::new()
+        .algorithm(coset_alg)
+        .content_type("application/vc".to_owned())
+        .build();
+
+    if let Some(key_id) = info.key_id.as_ref() {
+        protected.key_id = key_id.as_bytes().to_vec();
+    }
+
+    let sign1 = CoseSign1Builder::new()
+        .protected(protected)
+        .payload(payload_bytes.to_vec())
+        .create_signature(b"", |pt| sign_bytes(signer, pt))
+        .build();
+
+    // TO DO (#27): Remove panic.
+    #[allow(clippy::unwrap_used)]
+    Ok(sign1.to_tagged_vec().unwrap())
+}
+
+// TEMPORARY error struct while we sort out new signing interface
+// This is here mostly to remind us that upstream code will need to handle
+// errors.
+#[derive(Debug, Error)]
+pub(crate) enum TbdError {
+    #[allow(dead_code)]
+    #[error("Something went wrong")]
+    SomethingWentWrong,
+}
+
+fn sign_bytes(signer: &JWK, payload: &[u8]) -> Vec<u8> {
+    // Copied this function out of impl JWSSigner for JWK
+    // to get rid of the async-ness, which isn't compatible
+    // with the coset interface.
+
+    // TO DO (#27): Remove panic.
+    #[allow(clippy::unwrap_used)]
+    let algorithm = signer.get_algorithm().unwrap();
+
+    // TO DO (#27): Remove panic.
+    #[allow(clippy::unwrap_used)]
+    ssi_jws::sign_bytes(algorithm, payload, signer).unwrap()
 }
