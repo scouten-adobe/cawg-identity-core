@@ -11,17 +11,14 @@
 // specific language governing permissions and limitations under
 // each license.
 
-use std::{
-    fmt::{Debug, Formatter},
-    slice::Iter,
-};
+use std::fmt::{Debug, Formatter};
 
 use async_trait::async_trait;
 use coset::{CoseSign1, RegisteredLabelWithPrivate, TaggedCborSerializable};
 use did_web::DIDWeb;
+use nonempty_collections::{vector::Iter, NEVec, NonEmptyIterator};
 use ssi_dids_core::{DIDResolver, DIDURL};
 use ssi_jwk::JWK;
-use ssi_vc::syntax::NonEmptyVec;
 
 use crate::{
     claim_aggregation::{IdentityAssertionVc, VcVerifiedIdentity},
@@ -243,7 +240,7 @@ impl Debug for VcNamedActor {
 struct VcVerifiedIdentities<'a>(Iter<'a, VcVerifiedIdentity>);
 
 impl<'a> VcVerifiedIdentities<'a> {
-    fn new(verified_identities: &'a NonEmptyVec<VcVerifiedIdentity>) -> Self {
+    fn new(verified_identities: &'a NEVec<VcVerifiedIdentity>) -> Self {
         Self(verified_identities.iter())
     }
 }

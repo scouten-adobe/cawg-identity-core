@@ -11,14 +11,13 @@
 // specific language governing permissions and limitations under
 // each license.
 
-#![allow(dead_code)] // TEMPORARY while rebuilding
-
 use std::{fs::OpenOptions, io::Cursor, str::FromStr};
 
 use c2pa::{Manifest, ManifestStore};
 use did_jwk::DIDJWK;
 use iref::UriBuf;
 use non_empty_string::NonEmptyString;
+use nonempty_collections::{nev, NEVec};
 use ssi_jwk::JWK;
 use ssi_vc::syntax::{IdOr, NonEmptyVec};
 use xsd_types::value::DateTimeStamp;
@@ -66,7 +65,7 @@ impl CredentialHolder for TestIssuer {
 
                 // Use the identities as shown in https://creator-assertions.github.io/identity/1.1-draft/#vc-credentialsubject-verifiedIdentities.
 
-                let verified_identities: NonEmptyVec<VcVerifiedIdentity> = NonEmptyVec::try_from_vec(vec![
+                let verified_identities: NEVec<VcVerifiedIdentity> = nev![
                     VcVerifiedIdentity {
                         type_: non_empty_str("cawg.document_verification"),
                         name: Some(non_empty_str("First-Name Last-Name")),
@@ -119,8 +118,8 @@ impl CredentialHolder for TestIssuer {
                             name: non_empty_str("Example Crypto Wallet"),
                         },
                         verified_at: DateTimeStamp::from_str("2024-05-27T08:40:39.569856Z").unwrap(),
-                    },
-                ]).unwrap();
+                    }
+                ];
 
                 let cia = IdentityClaimsAggregationVc {
                     verified_identities,
