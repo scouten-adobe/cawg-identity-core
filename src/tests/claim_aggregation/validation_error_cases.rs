@@ -11,15 +11,20 @@
 // specific language governing permissions and limitations under
 // each license.
 
+#[cfg(target_arch = "wasm32")]
+use wasm_bindgen_test::*;
+
 use super::test_issuer::TestIssuer;
 
-#[tokio::test]
+#[cfg_attr(not(target_arch = "wasm32"), tokio::test)]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test)]
 async fn default_case() {
     let ti = TestIssuer::new();
     ti.test_basic_case().await;
 }
 
-#[tokio::test]
+#[cfg_attr(not(target_arch = "wasm32"), tokio::test)]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test)]
 #[should_panic] // TEMPORARY until error results are implemented
 async fn error_no_issuer() {
     let ti = TestIssuer::from_asset_vc(
@@ -35,7 +40,8 @@ async fn error_no_issuer() {
     ti.test_basic_case().await;
 }
 
-#[tokio::test]
+#[cfg_attr(not(target_arch = "wasm32"), tokio::test)]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test)]
 #[should_panic] // TEMPORARY until error results are implemented
 async fn error_no_issuance_date() {
     let ti = TestIssuer::from_asset_vc(
@@ -52,7 +58,8 @@ async fn error_no_issuance_date() {
     ti.test_basic_case().await;
 }
 
-#[tokio::test]
+#[cfg_attr(not(target_arch = "wasm32"), tokio::test)]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test)]
 #[should_panic] // TEMPORARY until error results are implemented
 async fn error_no_proof() {
     let ti = TestIssuer::from_asset_vc(
@@ -71,7 +78,8 @@ async fn error_no_proof() {
 }
 
 /* TEMPORARY: Holding off on this one until SSI crate handles VC V2. :-(
-#[tokio::test]
+#[cfg_attr(not(target_arch = "wasm32"), tokio::test)]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test)]
 #[should_panic] // TEMPORARY until error results are implemented
 async fn error_v1_vc() {
     let ti = TestIssuer::from_asset_vc(
@@ -97,7 +105,8 @@ async fn error_v1_vc() {
 }
 */
 
-#[tokio::test]
+#[cfg_attr(not(target_arch = "wasm32"), tokio::test)]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test)]
 #[should_panic] // TEMPORARY until error results are implemented
 async fn error_missing_cawg_context() {
     let ti = TestIssuer::from_asset_vc(
@@ -122,7 +131,8 @@ async fn error_missing_cawg_context() {
     ti.test_basic_case().await;
 }
 
-#[tokio::test]
+#[cfg_attr(not(target_arch = "wasm32"), tokio::test)]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test)]
 #[should_panic] // TEMPORARY until error results are implemented
 async fn error_missing_cawg_type() {
     let ti = TestIssuer::from_asset_vc(
