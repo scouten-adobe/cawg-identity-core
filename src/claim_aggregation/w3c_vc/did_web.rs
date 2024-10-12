@@ -25,7 +25,7 @@ use http::header;
 use ssi_dids_core::{
     document::representation::MediaType,
     resolution::{self, DIDMethodResolver, Error, Output},
-    DIDMethod,
+    DIDMethod, Document,
 };
 
 const USER_AGENT: &str = concat!(env!("CARGO_PKG_NAME"), "/", env!("CARGO_PKG_VERSION"));
@@ -35,7 +35,7 @@ use std::cell::RefCell;
 
 #[cfg(test)]
 thread_local! {
-  pub(crate) static PROXY: RefCell<Option<String>> = const { RefCell::new(None) };
+    pub(crate) static PROXY: RefCell<Option<String>> = const { RefCell::new(None) };
 }
 
 #[derive(Debug, thiserror::Error)]
@@ -53,7 +53,7 @@ pub enum InternalError {
     Response(reqwest::Error),
 }
 
-pub(crate) async fn resolve(method_specific_id: &str) -> Result<Output<Vec<u8>>, Error> {
+pub(crate) async fn resolve(method_specific_id: &str) -> Result<Output, Error> {
     // let did = DIDBuf::new(format!("did:web:{method_specific_id}")).unwrap();
 
     let url = to_url(method_specific_id)?;
@@ -92,11 +92,21 @@ pub(crate) async fn resolve(method_specific_id: &str) -> Result<Output<Vec<u8>>,
         .map_err(|e| Error::internal(InternalError::Response(e)))?;
 
     // TODO: set document created/updated metadata from HTTP headers?
-    Ok(Output {
+    let output: Output<Vec<u8>> = Output {
         document: document.into(),
         document_metadata: ssi_dids_core::document::Metadata::default(),
         metadata: resolution::Metadata::from_content_type(Some(MediaType::JsonLd.to_string())),
-    })
+    };
+
+    match &output.metadata.content_type {
+        None => Err(Error::NoRepresentation),
+        Some(ty) => {
+            let ty: MediaType = ty.parse()?;
+            output
+                .try_map(|bytes| Document::from_bytes(ty, &bytes))
+                .map_err(Error::InvalidData)
+        }
+    }
 }
 
 pub(crate) fn to_url(did: &str) -> Result<String, Error> {
