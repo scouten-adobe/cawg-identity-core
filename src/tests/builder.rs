@@ -17,8 +17,7 @@ use c2pa::{Manifest, ManifestStore};
 
 use crate::{
     builder::{IdentityAssertionBuilder, ManifestBuilder},
-    internal::naive_credential_handler::NaiveCredentialHolder,
-    tests::fixtures::{fixture_path, temp_c2pa_signer, temp_dir_path},
+    tests::fixtures::{fixture_path, temp_c2pa_signer, temp_dir_path, NaiveCredentialHolder},
     IdentityAssertion,
 };
 
