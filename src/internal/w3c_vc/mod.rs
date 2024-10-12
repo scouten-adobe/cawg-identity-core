@@ -11,10 +11,7 @@
 // specific language governing permissions and limitations under
 // each license.
 
-pub(crate) mod c2pa_parser;
-pub(crate) mod debug_byte_slice;
+//! Basic infrastructure for working with W3C Verifiable Credentials.
 
-#[allow(dead_code)] // used only in test cases
-pub(crate) mod naive_credential_handler;
-
-pub(crate) mod w3c_vc;
+pub(crate) mod credential;
+pub(super) mod serialization;

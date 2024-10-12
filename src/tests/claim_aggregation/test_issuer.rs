@@ -21,7 +21,6 @@ use non_empty_string::NonEmptyString;
 use nonempty_collections::{nev, NEVec};
 use ssi_jwk::JWK;
 use ssi_jws::JwsSigner;
-use ssi_vc::syntax::{IdOr, NonEmptyVec};
 use thiserror::Error;
 use xsd_types::value::DateTimeStamp;
 
@@ -126,13 +125,9 @@ impl CredentialHolder for TestIssuer {
                     c2pa_asset: signer_payload.clone(),
                 };
 
-                let subjects = NonEmptyVec::new(cia);
+                let subjects = NEVec::new(cia);
 
-                let mut asset_vc = IdentityAssertionVc::new(
-                    None,
-                    IdOr::Id(issuer_did.clone().into_uri()),
-                    subjects,
-                );
+                let mut asset_vc = IdentityAssertionVc::new(None, issuer_did.into_uri(), subjects);
 
                 asset_vc.valid_from = Some(DateTimeStamp::now());
 

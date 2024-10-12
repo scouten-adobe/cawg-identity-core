@@ -108,10 +108,9 @@ impl SignatureHandler for CoseVcSignatureHandler {
         // Discover public key for issuer DID and validate signature.
         // TEMPORARY version supports did:jwk and did:web only.
 
-        let issuer_id = asset_vc.issuer.id();
         // TO DO (#27): Remove panic.
         #[allow(clippy::unwrap_used)]
-        let issuer_id = DIDURL::new(issuer_id.as_bytes()).unwrap();
+        let issuer_id = DIDURL::new(asset_vc.issuer.as_bytes()).unwrap();
         let (primary_did, _fragment) = issuer_id.without_fragment();
         let primary_did = primary_did.did();
 
@@ -213,11 +212,7 @@ impl<'a> NamedActor<'a> for VcNamedActor {
     }
 
     fn verified_identities(&self) -> VerifiedIdentities {
-        // TO DO: Can we do a safe unwrap here because first()
-        // should be guaranteed to exist?
-        // TO DO (#27): Remove panic.
-        #[allow(clippy::unwrap_used)]
-        let subject = self.0.credential_subjects.first().unwrap();
+        let subject = self.0.credential_subjects.first();
         Box::new(VcVerifiedIdentities::new(&subject.verified_identities))
     }
 }
