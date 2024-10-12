@@ -19,7 +19,7 @@ use serde::{Deserialize, Serialize};
 use xsd_types::DateTimeStamp;
 
 use crate::{
-    internal::w3c_vc::credential::{CredentialV2, VerifiableCredentialSubtype},
+    claim_aggregation::w3c_vc::credential::{CredentialV2, VerifiableCredentialSubtype},
     SignerPayload, VerifiedIdentity, VerifiedIdentityType,
 };
 
