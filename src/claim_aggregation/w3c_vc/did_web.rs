@@ -35,7 +35,7 @@ use std::cell::RefCell;
 
 #[cfg(test)]
 thread_local! {
-  pub(crate) static PROXY: RefCell<Option<String>> = RefCell::new(None);
+  pub(crate) static PROXY: RefCell<Option<String>> = const { RefCell::new(None) };
 }
 
 #[derive(Debug, thiserror::Error)]
@@ -53,8 +53,8 @@ pub enum InternalError {
     Response(reqwest::Error),
 }
 
-pub(crate) async fn resolve_method_representation<'a>(
-    method_specific_id: &'a str,
+pub(crate) async fn resolve_method_representation(
+    method_specific_id: &str,
     options: resolution::Options,
 ) -> Result<Output<Vec<u8>>, Error> {
     // let did = DIDBuf::new(format!("did:web:{method_specific_id}")).unwrap();
