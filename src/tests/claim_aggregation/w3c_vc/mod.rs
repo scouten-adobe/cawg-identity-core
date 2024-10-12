@@ -11,7 +11,4 @@
 // specific language governing permissions and limitations under
 // each license.
 
-mod interop;
-mod test_issuer;
-mod validation_error_cases;
-mod w3c_vc;
+mod did_web;
