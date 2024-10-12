@@ -23,28 +23,28 @@
 
 use ssi_dids_core::did;
 
-use crate::claim_aggregation::w3c_vc::did_web::*;
+use crate::claim_aggregation::w3c_vc::did_web;
 
 #[tokio::test]
-async fn parse_did_web() {
+async fn to_url() {
     // https://w3c-ccg.github.io/did-method-web/#example-3-creating-the-did
     assert_eq!(
-        did_web_url(did!("did:web:w3c-ccg.github.io").method_specific_id()).unwrap(),
+        did_web::to_url(did!("did:web:w3c-ccg.github.io").method_specific_id()).unwrap(),
         "https://w3c-ccg.github.io/.well-known/did.json"
     );
     // https://w3c-ccg.github.io/did-method-web/#example-4-creating-the-did-with-optional-path
     assert_eq!(
-        did_web_url(did!("did:web:w3c-ccg.github.io:user:alice").method_specific_id()).unwrap(),
+        did_web::to_url(did!("did:web:w3c-ccg.github.io:user:alice").method_specific_id()).unwrap(),
         "https://w3c-ccg.github.io/user/alice/did.json"
     );
     // https://w3c-ccg.github.io/did-method-web/#optional-path-considerations
     assert_eq!(
-        did_web_url(did!("did:web:example.com:u:bob").method_specific_id()).unwrap(),
+        did_web::to_url(did!("did:web:example.com:u:bob").method_specific_id()).unwrap(),
         "https://example.com/u/bob/did.json"
     );
     // https://w3c-ccg.github.io/did-method-web/#example-creating-the-did-with-optional-path-and-port
     assert_eq!(
-        did_web_url(did!("did:web:example.com%3A443:u:bob").method_specific_id()).unwrap(),
+        did_web::to_url(did!("did:web:example.com%3A443:u:bob").method_specific_id()).unwrap(),
         "https://example.com:443/u/bob/did.json"
     );
 }

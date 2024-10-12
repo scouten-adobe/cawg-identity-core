@@ -53,13 +53,10 @@ pub enum InternalError {
     Response(reqwest::Error),
 }
 
-pub(crate) async fn resolve_method_representation(
-    method_specific_id: &str,
-    options: resolution::Options,
-) -> Result<Output<Vec<u8>>, Error> {
+pub(crate) async fn resolve(method_specific_id: &str) -> Result<Output<Vec<u8>>, Error> {
     // let did = DIDBuf::new(format!("did:web:{method_specific_id}")).unwrap();
 
-    let url = did_web_url(method_specific_id)?;
+    let url = to_url(method_specific_id)?;
     // TODO: https://w3c-ccg.github.io/did-method-web/#in-transit-security
 
     let mut headers = reqwest::header::HeaderMap::new();
@@ -74,11 +71,9 @@ pub(crate) async fn resolve_method_representation(
         .build()
         .map_err(|e| Error::internal(InternalError::Client(e)))?;
 
-    let accept = options.accept.unwrap_or(MediaType::Json);
-
     let resp = client
         .get(&url)
-        .header(header::ACCEPT, accept.to_string())
+        .header(header::ACCEPT, MediaType::Json.to_string())
         .send()
         .await
         .map_err(|e| Error::internal(InternalError::Request(url.to_owned(), e)))?;
@@ -104,11 +99,11 @@ pub(crate) async fn resolve_method_representation(
     })
 }
 
-pub(crate) fn did_web_url(id: &str) -> Result<String, Error> {
-    let mut parts = id.split(':').peekable();
+pub(crate) fn to_url(did: &str) -> Result<String, Error> {
+    let mut parts = did.split(':').peekable();
     let domain_name = parts
         .next()
-        .ok_or_else(|| Error::InvalidMethodSpecificId(id.to_owned()))?;
+        .ok_or_else(|| Error::InvalidMethodSpecificId(did.to_owned()))?;
 
     // TODO:
     // - Validate domain name: alphanumeric, hyphen, dot. no IP address.
