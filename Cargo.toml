@@ -40,7 +40,7 @@ xsd-types = { version = "0.9.5", features = ["serde"] }
 [dev-dependencies]
 c2pa = { version = "0.33.0", features = ["file_io", "openssl_sign", "openssl_ffi_mutex"] }
 futures = "0.3.30"
-hyper = { version = "0.14", features = ["client", "http1", "server", "stream"] }
+hyper = { version = "0.14.30", features = ["client", "http1", "server", "stream"] }
 serde = { version = "1.0.197", features = ["derive"] }
 ssi-verification-methods-core = "0.1.1"
 tempfile = "3.10.1"
