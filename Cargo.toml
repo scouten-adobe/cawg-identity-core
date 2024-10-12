@@ -14,23 +14,26 @@ did-web = "0.3.1"
 hex-literal = "0.4.1"
 iref = "3.2.2"
 json-ld-syntax = "0.21.1"
+json-syntax = "0.12.5"
 jumbf = "0.4.0"
 linked-data = { version = "0.1.2", features = ["derive"] }
 multibase = "0.9.1"
 nonempty-collections = { version = "0.2.9", features = ["serde"] }
 non-empty-string = { version = "0.2.4", features = ["serde"] }
+rdf-types = "0.22.4"
 serde = { version = "1.0.197", features = ["derive"] }
 serde_bytes = "0.11.14"
 serde_json = "1.0.117"
 ssi-claims-core = "0.1.2"
+ssi-core = "0.2.1"
 ssi-dids-core = "0.1.1"
 ssi-json-ld = "0.3.0"
 ssi-jwk = "0.3.0"
 ssi-jws = "0.3.0"
-ssi-vc = "0.3.1"
+ssi-rdf = "0.1.0"
 static-iref = "3.0"
 thiserror = "1.0.61"
-xsd-types = "0.9.5"
+xsd-types = { version = "0.9.5", features = ["serde"] }
 
 [dev-dependencies]
 c2pa = { version = "0.33.0", features = ["file_io", "openssl_sign", "openssl_ffi_mutex"] }

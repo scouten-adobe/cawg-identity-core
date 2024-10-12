@@ -16,21 +16,16 @@ use iref::{Iri, UriBuf};
 use non_empty_string::NonEmptyString;
 use nonempty_collections::NEVec;
 use serde::{Deserialize, Serialize};
-use ssi_vc::{
-    syntax::{RequiredContext, RequiredType},
-    v2::SpecializedJsonCredential,
-};
 use xsd_types::DateTimeStamp;
 
-use crate::{SignerPayload, VerifiedIdentity, VerifiedIdentityType};
+use crate::{
+    internal::w3c_vc::credential::{CredentialV2, VerifiableCredentialSubtype},
+    SignerPayload, VerifiedIdentity, VerifiedIdentityType,
+};
 
-/// TO DO: Doc -- looks like SpecializedJsonCredential for our specific use
+/// TO DO: Doc -- looks like CredentialV2 for our specific use
 /// case.
-pub type IdentityAssertionVc = SpecializedJsonCredential<
-    IdentityClaimsAggregationVc,
-    IdentityClaimsAggregationVc,
-    IdentityClaimsAggregationVc,
->;
+pub type IdentityAssertionVc = CredentialV2<IdentityClaimsAggregationVc>;
 
 /// Identity claims aggregation context IRI.
 pub const IDENTITY_CLAIMS_AGGREGATION_CONTEXT_IRI: &Iri =
@@ -69,12 +64,14 @@ pub struct IdentityClaimsAggregationVc {
     pub c2pa_asset: SignerPayload,
 }
 
-impl RequiredContext for IdentityClaimsAggregationVc {
-    const CONTEXT_IRI: &'static Iri = IDENTITY_CLAIMS_AGGREGATION_CONTEXT_IRI;
-}
+impl VerifiableCredentialSubtype for IdentityClaimsAggregationVc {
+    fn required_contexts(&self) -> &[&'static Iri] {
+        &[IDENTITY_CLAIMS_AGGREGATION_CONTEXT_IRI]
+    }
 
-impl RequiredType for IdentityClaimsAggregationVc {
-    const REQUIRED_TYPE: &'static str = IDENTITY_CLAIMS_AGGREGATION_CREDENTIAL_TYPE;
+    fn required_types(&self) -> &[&'static str] {
+        &[IDENTITY_CLAIMS_AGGREGATION_CREDENTIAL_TYPE]
+    }
 }
 
 /// Every item in the `verifiedIdentities` array MUST contain information about
