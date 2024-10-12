@@ -170,10 +170,10 @@ impl IdentityAssertion {
 
         let signer_payload = self.check_signer_payload(manifest)?;
 
-        if cfg!(test) {
-            // Allow "naive" signature handler when in unit-test mode.
-
-            let nsh = crate::internal::naive_credential_handler::NaiveSignatureHandler {};
+        #[cfg(test)]
+        {
+            // Allow naive signature handler when in unit-test mode.
+            let nsh = crate::tests::fixtures::NaiveSignatureHandler {};
             if let Ok(named_actor) = nsh.check_signature(signer_payload, &self.signature).await {
                 return Ok(IdentityAssertionReport {
                     signer_payload,
