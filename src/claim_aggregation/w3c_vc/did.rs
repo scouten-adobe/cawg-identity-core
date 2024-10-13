@@ -80,9 +80,11 @@ impl Did {
     /// The input `data` must be a DID according to the
     /// [DID Syntax](https://w3c.github.io/did-core/#did-syntax).
     pub unsafe fn new_unchecked(data: &[u8]) -> &Self {
-        // SAFETY: DID is a transparent wrapper over `[u8]`,
-        //         but we didn't check if it is actually a DID.
-        std::mem::transmute(data)
+        unsafe {
+            // SAFETY: DID is a transparent wrapper over `[u8]`,
+            //         but we didn't check if it is actually a DID.
+            std::mem::transmute(data)
+        }
     }
 
     pub fn as_iri(&self) -> &Iri {
@@ -144,6 +146,95 @@ impl Did {
         unsafe {
             // SAFETY: the method specific id is a valid ASCII string.
             std::str::from_utf8_unchecked(self.method_specific_id_bytes())
+        }
+    }
+
+    /// Validates a DID string.
+    fn validate(data: &[u8]) -> Result<(), Unexpected> {
+        let mut bytes = data.iter().copied();
+        match Self::validate_from(0, &mut bytes)? {
+            (_, None) => Ok(()),
+            (i, Some(c)) => Err(Unexpected(i, Some(c))),
+        }
+    }
+
+    /// Validates a DID string.
+    fn validate_from(
+        mut i: usize,
+        bytes: &mut impl Iterator<Item = u8>,
+    ) -> Result<(usize, Option<u8>), Unexpected> {
+        enum State {
+            Scheme1,         // d
+            Scheme2,         // i
+            Scheme3,         // d
+            SchemeSeparator, // :
+            MethodNameStart,
+            MethodName,
+            MethodSpecificIdStartOrSeparator,
+            MethodSpecificIdPct1,
+            MethodSpecificIdPct2,
+            MethodSpecificId,
+        }
+
+        let mut state = State::Scheme1;
+        fn is_method_char(b: u8) -> bool {
+            matches!(b, 0x61..=0x7a) || b.is_ascii_digit()
+        }
+
+        fn is_id_char(b: u8) -> bool {
+            b.is_ascii_alphanumeric() || matches!(b, b'.' | b'-' | b'_')
+        }
+
+        loop {
+            match state {
+                State::Scheme1 => match bytes.next() {
+                    Some(b'd') => state = State::Scheme2,
+                    c => break Err(Unexpected(i, c)),
+                },
+                State::Scheme2 => match bytes.next() {
+                    Some(b'i') => state = State::Scheme3,
+                    c => break Err(Unexpected(i, c)),
+                },
+                State::Scheme3 => match bytes.next() {
+                    Some(b'd') => state = State::SchemeSeparator,
+                    c => break Err(Unexpected(i, c)),
+                },
+                State::SchemeSeparator => match bytes.next() {
+                    Some(b':') => state = State::MethodNameStart,
+                    c => break Err(Unexpected(i, c)),
+                },
+                State::MethodNameStart => match bytes.next() {
+                    Some(c) if is_method_char(c) => state = State::MethodName,
+                    c => break Err(Unexpected(i, c)),
+                },
+                State::MethodName => match bytes.next() {
+                    Some(b':') => state = State::MethodSpecificIdStartOrSeparator,
+                    Some(c) if is_method_char(c) => (),
+                    c => break Err(Unexpected(i, c)),
+                },
+                State::MethodSpecificIdStartOrSeparator => match bytes.next() {
+                    Some(b':') => (),
+                    Some(b'%') => state = State::MethodSpecificIdPct1,
+                    Some(c) if is_id_char(c) => state = State::MethodSpecificId,
+                    c => break Err(Unexpected(i, c)),
+                },
+                State::MethodSpecificIdPct1 => match bytes.next() {
+                    Some(c) if c.is_ascii_hexdigit() => state = State::MethodSpecificIdPct2,
+                    c => break Err(Unexpected(i, c)),
+                },
+                State::MethodSpecificIdPct2 => match bytes.next() {
+                    Some(c) if c.is_ascii_hexdigit() => state = State::MethodSpecificId,
+                    c => break Err(Unexpected(i, c)),
+                },
+                State::MethodSpecificId => match bytes.next() {
+                    Some(b':') => state = State::MethodSpecificIdStartOrSeparator,
+                    Some(b'%') => state = State::MethodSpecificIdPct1,
+                    Some(c) if is_id_char(c) => (),
+                    c => break Ok((i, c)),
+                },
+            }
+
+            i += 1
         }
     }
 }
@@ -424,97 +515,6 @@ impl fmt::Display for Unexpected {
         match self.1 {
             Some(b) => write!(f, "unexpected byte {b} at offset {0:#04x}", self.0),
             None => write!(f, "unexpected end at offset {0:#04x}", self.0),
-        }
-    }
-}
-
-impl Did {
-    /// Validates a DID string.
-    fn validate(data: &[u8]) -> Result<(), Unexpected> {
-        let mut bytes = data.iter().copied();
-        match Self::validate_from(0, &mut bytes)? {
-            (_, None) => Ok(()),
-            (i, Some(c)) => Err(Unexpected(i, Some(c))),
-        }
-    }
-
-    /// Validates a DID string.
-    fn validate_from(
-        mut i: usize,
-        bytes: &mut impl Iterator<Item = u8>,
-    ) -> Result<(usize, Option<u8>), Unexpected> {
-        enum State {
-            Scheme1,         // d
-            Scheme2,         // i
-            Scheme3,         // d
-            SchemeSeparator, // :
-            MethodNameStart,
-            MethodName,
-            MethodSpecificIdStartOrSeparator,
-            MethodSpecificIdPct1,
-            MethodSpecificIdPct2,
-            MethodSpecificId,
-        }
-
-        let mut state = State::Scheme1;
-        fn is_method_char(b: u8) -> bool {
-            matches!(b, 0x61..=0x7a) || b.is_ascii_digit()
-        }
-
-        fn is_id_char(b: u8) -> bool {
-            b.is_ascii_alphanumeric() || matches!(b, b'.' | b'-' | b'_')
-        }
-
-        loop {
-            match state {
-                State::Scheme1 => match bytes.next() {
-                    Some(b'd') => state = State::Scheme2,
-                    c => break Err(Unexpected(i, c)),
-                },
-                State::Scheme2 => match bytes.next() {
-                    Some(b'i') => state = State::Scheme3,
-                    c => break Err(Unexpected(i, c)),
-                },
-                State::Scheme3 => match bytes.next() {
-                    Some(b'd') => state = State::SchemeSeparator,
-                    c => break Err(Unexpected(i, c)),
-                },
-                State::SchemeSeparator => match bytes.next() {
-                    Some(b':') => state = State::MethodNameStart,
-                    c => break Err(Unexpected(i, c)),
-                },
-                State::MethodNameStart => match bytes.next() {
-                    Some(c) if is_method_char(c) => state = State::MethodName,
-                    c => break Err(Unexpected(i, c)),
-                },
-                State::MethodName => match bytes.next() {
-                    Some(b':') => state = State::MethodSpecificIdStartOrSeparator,
-                    Some(c) if is_method_char(c) => (),
-                    c => break Err(Unexpected(i, c)),
-                },
-                State::MethodSpecificIdStartOrSeparator => match bytes.next() {
-                    Some(b':') => (),
-                    Some(b'%') => state = State::MethodSpecificIdPct1,
-                    Some(c) if is_id_char(c) => state = State::MethodSpecificId,
-                    c => break Err(Unexpected(i, c)),
-                },
-                State::MethodSpecificIdPct1 => match bytes.next() {
-                    Some(c) if c.is_ascii_hexdigit() => state = State::MethodSpecificIdPct2,
-                    c => break Err(Unexpected(i, c)),
-                },
-                State::MethodSpecificIdPct2 => match bytes.next() {
-                    Some(c) if c.is_ascii_hexdigit() => state = State::MethodSpecificId,
-                    c => break Err(Unexpected(i, c)),
-                },
-                State::MethodSpecificId => match bytes.next() {
-                    Some(b':') => state = State::MethodSpecificIdStartOrSeparator,
-                    Some(b'%') => state = State::MethodSpecificIdPct1,
-                    Some(c) if is_id_char(c) => (),
-                    c => break Ok((i, c)),
-                },
-            }
-
-            i += 1
         }
     }
 }
