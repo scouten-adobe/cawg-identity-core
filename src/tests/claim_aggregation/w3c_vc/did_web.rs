@@ -1,4 +1,4 @@
-// Loosely derived from
+// Derived from
 // https://github.com/spruceid/ssi/blob/ssi/v0.9.0/crates/dids/methods/web/src/lib.rs
 // which was published under an Apache 2.0 license.
 
