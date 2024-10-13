@@ -11,4 +11,5 @@
 // specific language governing permissions and limitations under
 // each license.
 
+mod did;
 mod did_web;

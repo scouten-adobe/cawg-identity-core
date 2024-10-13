@@ -14,5 +14,6 @@
 //! Basic infrastructure for working with W3C Verifiable Credentials.
 
 pub(crate) mod credential;
+pub(crate) mod did;
 pub(crate) mod did_web;
 pub(super) mod serialization;
