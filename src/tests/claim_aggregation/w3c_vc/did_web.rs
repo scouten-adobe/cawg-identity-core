@@ -18,9 +18,6 @@
 // specific language governing permissions and limitations under
 // each license.
 
-#![allow(dead_code)] // TEMPORARY while refactoring
-#![allow(unused)] // TEMPORARY while refactoring
-
 use ssi_dids_core::did;
 
 use crate::claim_aggregation::w3c_vc::did_web;
