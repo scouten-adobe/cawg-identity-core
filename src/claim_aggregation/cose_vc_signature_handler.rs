@@ -124,6 +124,7 @@ impl SignatureHandler for CoseVcSignatureHandler {
                 jwk
             }
             "web" => {
+                #[allow(clippy::expect_used)]
                 let did_doc = did_web::resolve(primary_did)
                     .await
                     .expect("No output")
