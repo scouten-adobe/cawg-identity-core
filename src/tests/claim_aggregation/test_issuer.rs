@@ -15,10 +15,10 @@ use std::{fs::OpenOptions, io::Cursor, str::FromStr};
 
 use c2pa::{Manifest, ManifestStore};
 use coset::{CoseSign1Builder, HeaderBuilder, TaggedCborSerializable};
-use did_jwk::DIDJWK;
 use iref::UriBuf;
 use non_empty_string::NonEmptyString;
 use nonempty_collections::{nev, NEVec};
+use ssi_dids_core::DIDURLBuf;
 use ssi_jwk::JWK;
 use ssi_jws::JwsSigner;
 use thiserror::Error;
@@ -61,8 +61,8 @@ impl CredentialHolder for TestIssuer {
                 // but is strongly discouraged for production use cases. In other words,
                 // please don't copy and paste this into your own implementation!
 
-                let _user_did = DIDJWK::generate_url(&user_jwk.to_public());
-                let issuer_did = DIDJWK::generate_url(&issuer_jwk.to_public());
+                let _user_did = generate_did_jwk_url(&user_jwk.to_public());
+                let issuer_did = generate_did_jwk_url(&issuer_jwk.to_public());
 
                 // Use the identities as shown in https://creator-assertions.github.io/identity/1.1-draft/#vc-credentialsubject-verifiedIdentities.
 
@@ -296,4 +296,11 @@ fn sign_bytes(signer: &JWK, payload: &[u8]) -> Vec<u8> {
     // TO DO (#27): Remove panic.
     #[allow(clippy::unwrap_used)]
     ssi_jws::sign_bytes(algorithm, payload, signer).unwrap()
+}
+
+fn generate_did_jwk_url(key: &JWK) -> DIDURLBuf {
+    let key = key.to_public();
+    let normalized = serde_jcs::to_string(&key).unwrap();
+    let method_id = multibase::Base::Base64Url.encode(normalized);
+    DIDURLBuf::new(format!("did:jwk:{method_id}#0").into_bytes()).unwrap()
 }

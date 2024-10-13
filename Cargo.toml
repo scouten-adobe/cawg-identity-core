@@ -9,7 +9,6 @@ c2pa = { version = "0.33.0", features = ["openssl_ffi_mutex"] }
 chrono = "0.4.38"
 ciborium = "0.2.2"
 coset = "0.3.8"
-did-jwk = "0.2.1"
 hex-literal = "0.4.1"
 http = "0.2" # out of date, can we remove or update?
 iref = "3.2.2"
@@ -41,6 +40,7 @@ c2pa = { version = "0.33.0", features = ["file_io", "openssl_sign", "openssl_ffi
 futures = "0.3.30"
 hyper = { version = "0.14.30", features = ["client", "http1", "server", "stream"] }
 serde = { version = "1.0.197", features = ["derive"] }
+serde_jcs = "0.1.0" # unmaintained, try to remove
 ssi-verification-methods-core = "0.1.1"
 tempfile = "3.10.1"
 tokio = { version = "1.40", features = ["macros"] }
