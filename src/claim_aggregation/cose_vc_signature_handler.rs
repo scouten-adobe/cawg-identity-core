@@ -15,13 +15,12 @@ use std::fmt::{Debug, Formatter};
 
 use async_trait::async_trait;
 use coset::{CoseSign1, RegisteredLabelWithPrivate, TaggedCborSerializable};
-use did_web::DIDWeb;
 use nonempty_collections::{vector::Iter, NEVec, NonEmptyIterator};
-use ssi_dids_core::{DIDResolver, DIDURL};
+use ssi_dids_core::DIDURL;
 use ssi_jwk::JWK;
 
 use crate::{
-    claim_aggregation::{IdentityAssertionVc, VcVerifiedIdentity},
+    claim_aggregation::{w3c_vc::did_web, IdentityAssertionVc, VcVerifiedIdentity},
     identity_assertion::VerifiedIdentities,
     NamedActor, SignatureHandler, SignerPayload, ValidationResult, VerifiedIdentity,
 };
@@ -125,14 +124,13 @@ impl SignatureHandler for CoseVcSignatureHandler {
                 jwk
             }
             "web" => {
-                let did_doc = DIDWeb.dereference(issuer_id).await.unwrap().content;
+                let did_doc = did_web::resolve(primary_did)
+                    .await
+                    .expect("No output")
+                    .document;
 
-                let ssi_dids_core::resolution::Content::Resource(r) = did_doc else {
-                    panic!("not resource");
-                };
-                let ssi_dids_core::document::resource::Resource::Document(d) = r else {
-                    panic!("not document");
-                };
+                let d = did_doc.document();
+
                 let vm1 = d
                     .verification_relationships
                     .assertion_method

@@ -10,7 +10,6 @@ chrono = "0.4.38"
 ciborium = "0.2.2"
 coset = "0.3.8"
 did-jwk = "0.2.1"
-did-web = "0.3.1"
 hex-literal = "0.4.1"
 http = "0.2" # out of date, can we remove or update?
 iref = "3.2.2"
