@@ -25,7 +25,7 @@ use http::header;
 use ssi_dids_core::{
     document::representation::MediaType,
     resolution::{self, DIDMethodResolver, Error, Output},
-    DIDMethod, Document,
+    DIDMethod, Document, DID,
 };
 
 const USER_AGENT: &str = concat!(env!("CARGO_PKG_NAME"), "/", env!("CARGO_PKG_VERSION"));
@@ -53,8 +53,18 @@ pub enum InternalError {
     Response(reqwest::Error),
 }
 
-pub(crate) async fn resolve(method_specific_id: &str) -> Result<Output, Error> {
+pub(crate) async fn resolve(did: &DID) -> Result<Output, Error> {
     // let did = DIDBuf::new(format!("did:web:{method_specific_id}")).unwrap();
+
+    let method = did.method_name();
+    if method != "web" {
+        #[allow(clippy::panic)] // TEMPORARY while refactoring
+        panic!("Unexpected DID method {method}");
+    }
+
+    let method_specific_id = did.method_specific_id();
+
+    dbg!(method_specific_id);
 
     let url = to_url(method_specific_id)?;
     // TODO: https://w3c-ccg.github.io/did-method-web/#in-transit-security
