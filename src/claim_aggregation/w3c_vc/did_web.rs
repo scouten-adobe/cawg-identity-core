@@ -60,7 +60,7 @@ pub(crate) async fn resolve(did: &DID) -> Result<Output, Error> {
     #[allow(clippy::panic)] // TEMPORARY while refactoring
     if method != "web" {
         panic!("Unexpected DID method {method}");
-    }   
+    }
 
     let method_specific_id = did.method_specific_id();
 
