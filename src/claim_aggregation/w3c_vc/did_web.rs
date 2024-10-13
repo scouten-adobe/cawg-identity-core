@@ -18,14 +18,11 @@
 // specific language governing permissions and limitations under
 // each license.
 
-#![allow(dead_code)] // TEMPORARY while refactoring
-#![allow(unused)] // TEMPORARY while refactoring
-
 use http::header;
 use ssi_dids_core::{
     document::representation::MediaType,
-    resolution::{self, DIDMethodResolver, Error, Output},
-    DIDMethod, Document, DID,
+    resolution::{self, Error, Output},
+    Document, DID,
 };
 
 const USER_AGENT: &str = concat!(env!("CARGO_PKG_NAME"), "/", env!("CARGO_PKG_VERSION"));
