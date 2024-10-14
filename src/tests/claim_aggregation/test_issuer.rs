@@ -19,7 +19,6 @@ use iref::UriBuf;
 use non_empty_string::NonEmptyString;
 use nonempty_collections::{nev, NEVec};
 use ssi_jwk::JWK;
-use ssi_jws::JwsSigner;
 use thiserror::Error;
 use xsd_types::value::DateTimeStamp;
 
@@ -244,7 +243,6 @@ pub(crate) async fn sign_into_cose(
     vc: &IdentityAssertionVc,
     signer: &JWK,
 ) -> Result<Vec<u8>, TbdError> {
-    let info = signer.fetch_info().await.unwrap();
     let payload_bytes = serde_json::to_vec(vc).unwrap();
 
     let coset_alg = match signer.get_algorithm().unwrap() {
@@ -259,7 +257,7 @@ pub(crate) async fn sign_into_cose(
         .content_type("application/vc".to_owned())
         .build();
 
-    if let Some(key_id) = info.key_id.as_ref() {
+    if let Some(key_id) = signer.key_id.clone() {
         protected.key_id = key_id.as_bytes().to_vec();
     }
 
