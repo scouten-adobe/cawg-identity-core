@@ -19,9 +19,8 @@
 // each license.
 
 use http::header;
-use ssi_dids_core::{document::representation::MediaType, resolution::Error, Document};
 
-use super::did::Did;
+use super::{did::Did, did_doc::DidDocument};
 
 const USER_AGENT: &str = concat!(env!("CARGO_PKG_NAME"), "/", env!("CARGO_PKG_VERSION"));
 
@@ -34,7 +33,7 @@ thread_local! {
 }
 
 #[derive(Debug, thiserror::Error)]
-pub enum InternalError {
+pub enum DidWebError {
     #[error("error building HTTP client: {0}")]
     Client(reqwest::Error),
 
@@ -46,9 +45,18 @@ pub enum InternalError {
 
     #[error("error reading HTTP response: {0}")]
     Response(reqwest::Error),
+
+    #[error("the document was not found: {0}")]
+    NotFound(String),
+
+    #[error("the document was not a valid DID document: {0}")]
+    InvalidData(String),
+
+    #[error("invalid web DID: {0}")]
+    InvalidWebDid(String),
 }
 
-pub(crate) async fn resolve(did: &Did<'_>) -> Result<Document, Error> {
+pub(crate) async fn resolve(did: &Did<'_>) -> Result<DidDocument, DidWebError> {
     let method = did.method_name();
     #[allow(clippy::panic)] // TEMPORARY while refactoring
     if method != "web" {
@@ -72,38 +80,36 @@ pub(crate) async fn resolve(did: &Did<'_>) -> Result<Document, Error> {
     let client = reqwest::Client::builder()
         .default_headers(headers)
         .build()
-        .map_err(|e| Error::internal(InternalError::Client(e)))?;
+        .map_err(|e| DidWebError::Client(e))?;
 
     let resp = client
         .get(&url)
         .header(header::ACCEPT, "application/did+json")
         .send()
         .await
-        .map_err(|e| Error::internal(InternalError::Request(url.to_owned(), e)))?;
+        .map_err(|e| DidWebError::Request(url.to_owned(), e))?;
 
     resp.error_for_status_ref().map_err(|err| {
         if err.status() == Some(reqwest::StatusCode::NOT_FOUND) {
-            Error::NotFound
+            DidWebError::NotFound(url.clone())
         } else {
-            Error::internal(InternalError::Server(err.to_string()))
+            DidWebError::Server(err.to_string())
         }
     })?;
 
-    let document = resp
-        .bytes()
-        .await
-        .map_err(|e| Error::internal(InternalError::Response(e)))?;
+    let document = resp.bytes().await.map_err(|e| DidWebError::Response(e))?;
 
-    Document::from_bytes(MediaType::JsonLd, document.as_ref())
-        .map(|repr| repr.into_document())
-        .map_err(Error::InvalidData)
+    let json =
+        String::from_utf8(document.to_vec()).map_err(|_| DidWebError::InvalidData(url.clone()))?;
+
+    DidDocument::from_json(&json).map_err(|_| DidWebError::InvalidData(url))
 }
 
-pub(crate) fn to_url(did: &str) -> Result<String, Error> {
+pub(crate) fn to_url(did: &str) -> Result<String, DidWebError> {
     let mut parts = did.split(':').peekable();
     let domain_name = parts
         .next()
-        .ok_or_else(|| Error::InvalidMethodSpecificId(did.to_owned()))?;
+        .ok_or_else(|| DidWebError::InvalidWebDid(did.to_owned()))?;
 
     // TODO:
     // - Validate domain name: alphanumeric, hyphen, dot. no IP address.

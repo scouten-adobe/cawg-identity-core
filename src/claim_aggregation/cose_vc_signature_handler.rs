@@ -133,9 +133,8 @@ impl SignatureHandler for CoseVcSignatureHandler {
                     .assertion_method
                     .first()
                     .unwrap();
-                let ssi_dids_core::document::verification_method::ValueOrReference::Value(vm1) =
-                    vm1
-                else {
+
+                let super::w3c_vc::did_doc::ValueOrReference::Value(vm1) = vm1 else {
                     panic!("not value");
                 };
                 let jwk_prop = vm1.properties.get("publicKeyJwk").unwrap();
