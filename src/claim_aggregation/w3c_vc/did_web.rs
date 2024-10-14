@@ -80,7 +80,7 @@ pub(crate) async fn resolve(did: &Did<'_>) -> Result<DidDocument, DidWebError> {
     let client = reqwest::Client::builder()
         .default_headers(headers)
         .build()
-        .map_err(|e| DidWebError::Client(e))?;
+        .map_err(DidWebError::Client)?;
 
     let resp = client
         .get(&url)
@@ -97,7 +97,7 @@ pub(crate) async fn resolve(did: &Did<'_>) -> Result<DidDocument, DidWebError> {
         }
     })?;
 
-    let document = resp.bytes().await.map_err(|e| DidWebError::Response(e))?;
+    let document = resp.bytes().await.map_err(DidWebError::Response)?;
 
     let json =
         String::from_utf8(document.to_vec()).map_err(|_| DidWebError::InvalidData(url.clone()))?;
