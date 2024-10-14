@@ -24,6 +24,7 @@ use regex::Regex;
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
+#[allow(clippy::unwrap_used)]
 static VALID_DID: LazyLock<Regex> =
     LazyLock::new(|| Regex::new(r#"^did:[a-z0-9]+:[A-Za-z0-9/.%#\?_-]+"#).unwrap());
 // TO DO: Improve:
@@ -78,7 +79,7 @@ impl<'a> Did<'a> {
     /// Returns the DID without any fragment qualifier.
     pub fn split_fragment(self) -> (Self, Option<&'a str>) {
         // NOTE: Can replace with split_once when we move over to str.
-        if let Some((primary, fragment)) = self.0.split_once(|c| c == '#') {
+        if let Some((primary, fragment)) = self.0.split_once('#') {
             // SAFETY: A known subset of an existing checked DID.
             let primary = unsafe { Self::new_unchecked(primary) };
             (primary, Some(fragment))
@@ -184,7 +185,7 @@ impl<'a> PartialEq<Did<'a>> for DidBuf {
     }
 }
 
-impl<'a> PartialEq<&Did<'_>> for DidBuf {
+impl PartialEq<&Did<'_>> for DidBuf {
     fn eq(&self, other: &&Did<'_>) -> bool {
         &self.as_did() == *other
     }
