@@ -20,33 +20,11 @@
 // specific language governing permissions and limitations under
 // each license.
 
-#![allow(dead_code)] // TEMPORARY while refactoring
-#![allow(unused)] // TEMPORARY while refactoring
+use std::collections::BTreeMap;
 
-use std::{collections::BTreeMap, str::FromStr};
-
-use iref::IriBuf;
 use serde::{Deserialize, Serialize};
-use ssi_core::one_or_many::OneOrMany;
 
-// use ssi_verification_methods_core::{ProofPurpose, ProofPurposes};
-// use ssi_verification_methods_core::GenericVerificationMethod;
-
-// use super::{
-//     resource::{ExtractResource, FindResource, Resource, UsesResource},
-//     ResourceRef,
-// };
-use super::did::{Did, DidBuf};
-
-// pub mod representation;
-// pub mod resource;
-// pub mod service;
-
-// pub use representation::Represented;
-// pub use resource::{Resource, ResourceRef};
-// pub use service::Service;
-
-// use self::resource::{ExtractResource, FindResource};
+use super::did::DidBuf;
 
 /// A [DID document]
 ///
@@ -81,51 +59,10 @@ pub struct DidDocument {
 }
 
 impl DidDocument {
-    /// Construct a new DID document with the given id (DID).
-    pub fn new(id: DidBuf) -> DidDocument {
-        DidDocument {
-            id,
-            verification_relationships: VerificationRelationships::default(),
-            verification_method: Vec::new(),
-            property_set: BTreeMap::new(),
-        }
-    }
-
     /// Construct a DID document from JSON.
     pub fn from_json(json: &str) -> Result<Self, serde_json::Error> {
         serde_json::from_str(json)
     }
-
-    /*
-    /// Select an object in the DID document.
-    ///
-    /// See: <https://w3c-ccg.github.io/did-resolution/#dereferencing-algorithm-secondary>
-    pub fn find_resource(&self, id: &DIDURL) -> Option<ResourceRef> {
-        if self.id == *id {
-            Some(ResourceRef::DidDocument(self))
-        } else {
-            self.verification_method
-                .find_resource(&self.id, id)
-                .or_else(|| self.verification_relationships.find_resource(&self.id, id))
-        }
-    }
-
-    /// Select an object in the DID document.
-    ///
-    /// See: <https://w3c-ccg.github.io/did-resolution/#dereferencing-algorithm-secondary>
-    pub fn into_resource(self, id: &DIDURL) -> Option<Resource> {
-        if self.id == *id {
-            Some(Resource::DidDocument(self))
-        } else {
-            self.verification_method
-                .extract_resource(&self.id, id)
-                .or_else(|| {
-                    self.verification_relationships
-                        .extract_resource(&self.id, id)
-                })
-        }
-    }
-    */
 }
 
 #[derive(Debug, Default, Serialize, Deserialize, Clone, PartialEq, Eq)]
@@ -163,54 +100,6 @@ pub struct VerificationRelationships {
     pub capability_delegation: Vec<ValueOrReference>,
 }
 
-/*
-impl VerificationRelationships {
-    pub fn proof_purpose(&self, purpose: ProofPurpose) -> &[ValueOrReference] {
-        match purpose {
-            ProofPurpose::Authentication => &self.authentication,
-            ProofPurpose::Assertion => &self.assertion_method,
-            ProofPurpose::KeyAgreement => &self.key_agreement,
-            ProofPurpose::CapabilityInvocation => &self.capability_invocation,
-            ProofPurpose::CapabilityDelegation => &self.capability_delegation,
-        }
-    }
-
-    pub fn contains(&self, base_did: &DID, id: &DIDURL, proof_purposes: ProofPurposes) -> bool {
-        for p in proof_purposes {
-            for v in self.proof_purpose(p) {
-                if *v.id().resolve(base_did) == *id {
-                    return true;
-                }
-            }
-        }
-
-        false
-    }
-}
-
-impl FindResource for VerificationRelationships {
-    fn find_resource(&self, base_did: &DID, id: &DIDURL) -> Option<ResourceRef> {
-        self.authentication
-            .find_resource(base_did, id)
-            .or_else(|| self.assertion_method.find_resource(base_did, id))
-            .or_else(|| self.key_agreement.find_resource(base_did, id))
-            .or_else(|| self.capability_invocation.find_resource(base_did, id))
-            .or_else(|| self.capability_delegation.find_resource(base_did, id))
-    }
-}
-
-impl ExtractResource for VerificationRelationships {
-    fn extract_resource(self, base_did: &DID, id: &DIDURL) -> Option<Resource> {
-        self.authentication
-            .extract_resource(base_did, id)
-            .or_else(|| self.assertion_method.extract_resource(base_did, id))
-            .or_else(|| self.key_agreement.extract_resource(base_did, id))
-            .or_else(|| self.capability_invocation.extract_resource(base_did, id))
-            .or_else(|| self.capability_delegation.extract_resource(base_did, id))
-    }
-}
-*/
-
 /// Reference to, or value of, a verification method.
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
@@ -221,70 +110,11 @@ pub enum ValueOrReference {
     Value(DidVerificationMethod),
 }
 
-/*
-impl ValueOrReference {
-    pub fn id(&self) -> DIDURLReference {
-        match self {
-            Self::Reference(r) => r.as_did_reference(),
-            Self::Value(v) => DIDURLReference::Absolute(&v.id),
-        }
-    }
-
-    pub fn as_value(&self) -> Option<&DidVerificationMethod> {
-        match self {
-            Self::Value(v) => Some(v),
-            _ => None,
-        }
-    }
-}
-
-impl From<DIDURLBuf> for ValueOrReference {
-    fn from(value: DIDURLBuf) -> Self {
-        Self::Reference(value.into())
-    }
-}
-
-impl From<DIDURLReferenceBuf> for ValueOrReference {
-    fn from(value: DIDURLReferenceBuf) -> Self {
-        Self::Reference(value)
-    }
-}
-*/
-
 impl From<DidVerificationMethod> for ValueOrReference {
     fn from(value: DidVerificationMethod) -> Self {
         Self::Value(value)
     }
 }
-
-/*
-impl UsesResource for ValueOrReference {
-    fn uses_resource(&self, base_id: &DID, id: &DIDURL) -> bool {
-        match self {
-            Self::Reference(r) => *r.resolve(base_id) == *id,
-            Self::Value(v) => v.uses_resource(base_id, id),
-        }
-    }
-}
-
-impl FindResource for ValueOrReference {
-    fn find_resource(&self, base_did: &DID, id: &DIDURL) -> Option<ResourceRef> {
-        match self {
-            Self::Reference(_) => None,
-            Self::Value(m) => m.find_resource(base_did, id),
-        }
-    }
-}
-
-impl ExtractResource for ValueOrReference {
-    fn extract_resource(self, base_did: &DID, id: &DIDURL) -> Option<Resource> {
-        match self {
-            Self::Reference(_) => None,
-            Self::Value(m) => m.extract_resource(base_did, id),
-        }
-    }
-}
-*/
 
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq)]
 pub struct DidVerificationMethod {
@@ -310,58 +140,3 @@ pub struct DidVerificationMethod {
     #[serde(flatten)]
     pub properties: BTreeMap<String, serde_json::Value>,
 }
-
-impl DidVerificationMethod {
-    pub fn new(
-        id: DidBuf,
-        type_: String,
-        controller: DidBuf,
-        properties: BTreeMap<String, serde_json::Value>,
-    ) -> Self {
-        Self {
-            id,
-            type_,
-            controller,
-            properties,
-        }
-    }
-}
-
-/*
-impl From<DidVerificationMethod> for GenericVerificationMethod {
-    fn from(value: DidVerificationMethod) -> Self {
-        GenericVerificationMethod {
-            id: value.id.into(),
-            type_: value.type_,
-            controller: value.controller.into(),
-            properties: value.properties,
-        }
-    }
-}
-
-impl UsesResource for DidVerificationMethod {
-    fn uses_resource(&self, _base_did: &DID, id: &DIDURL) -> bool {
-        self.id == *id
-    }
-}
-
-impl FindResource for DidVerificationMethod {
-    fn find_resource(&self, _base_did: &DID, id: &DIDURL) -> Option<ResourceRef> {
-        if self.id == *id {
-            Some(ResourceRef::VerificationMethod(self))
-        } else {
-            None
-        }
-    }
-}
-
-impl ExtractResource for DidVerificationMethod {
-    fn extract_resource(self, _base_did: &DID, id: &DIDURL) -> Option<Resource> {
-        if self.id == *id {
-            Some(Resource::VerificationMethod(self))
-        } else {
-            None
-        }
-    }
-}
-*/
