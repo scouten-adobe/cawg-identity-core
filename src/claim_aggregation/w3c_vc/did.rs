@@ -29,14 +29,8 @@ use thiserror::Error;
 
 /// Error raised when a conversion to a DID fails.
 #[derive(Debug, Error)]
-#[error("invalid DID `{0}`: {1}")]
-pub struct InvalidDid<T>(pub T, pub Unexpected);
-
-impl<T> InvalidDid<T> {
-    pub fn map<U>(self, f: impl FnOnce(T) -> U) -> InvalidDid<U> {
-        InvalidDid(f(self.0), self.1)
-    }
-}
+#[error("invalid DID `{0}`")]
+pub struct InvalidDid(pub String);
 
 /// DID.
 ///
@@ -50,10 +44,10 @@ impl<'a> Did<'a> {
     ///
     /// Fails if the data is not a DID according to the
     /// [DID Syntax](https://w3c.github.io/did-core/#did-syntax).
-    pub fn new(data: &'a str) -> Result<Self, InvalidDid<&str>> {
+    pub fn new(data: &'a str) -> Result<Self, InvalidDid> {
         match Self::validate(data) {
             Ok(()) => Ok(Self(data)),
-            Err(e) => Err(InvalidDid(data, e)),
+            Err(_) => Err(InvalidDid(data.to_string())),
         }
     }
 
@@ -221,10 +215,10 @@ impl<'a> fmt::Display for Did<'a> {
 pub struct DidBuf(String);
 
 impl DidBuf {
-    pub fn new(data: String) -> Result<Self, InvalidDid<String>> {
+    pub fn new(data: String) -> Result<Self, InvalidDid> {
         match Did::validate(&data) {
             Ok(()) => Ok(Self(data)),
-            Err(e) => Err(InvalidDid(data, e)),
+            Err(_) => Err(InvalidDid(data)),
         }
     }
 
@@ -249,7 +243,7 @@ impl DidBuf {
 }
 
 impl TryFrom<String> for DidBuf {
-    type Error = InvalidDid<String>;
+    type Error = InvalidDid;
 
     fn try_from(value: String) -> Result<Self, Self::Error> {
         DidBuf::new(value)
@@ -257,7 +251,7 @@ impl TryFrom<String> for DidBuf {
 }
 
 impl FromStr for DidBuf {
-    type Err = InvalidDid<String>;
+    type Err = InvalidDid;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         s.to_owned().try_into()
