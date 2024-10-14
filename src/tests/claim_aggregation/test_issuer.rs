@@ -285,17 +285,23 @@ pub(crate) enum TbdError {
 }
 
 fn sign_bytes(signer: &JWK, payload: &[u8]) -> Vec<u8> {
-    // Copied this function out of impl JWSSigner for JWK
-    // to get rid of the async-ness, which isn't compatible
-    // with the coset interface.
+    // Q&D implementation of Ed25519 signing for now.
+    // TO DO: Configurable signing for general cases.
 
-    // TO DO (#27): Remove panic.
+    // TO DO (#27): Remove unwraps.
     #[allow(clippy::unwrap_used)]
     let algorithm = signer.get_algorithm().unwrap();
-
-    // TO DO (#27): Remove panic.
-    #[allow(clippy::unwrap_used)]
-    ssi_jws::sign_bytes(algorithm, payload, signer).unwrap()
+    match algorithm {
+        ssi_jwk::Algorithm::EdDSA => match &signer.params {
+            ssi_jwk::Params::OKP(okp) => {
+                let secret = ed25519_dalek::SigningKey::try_from(okp).unwrap();
+                use ed25519_dalek::Signer;
+                secret.sign(payload).to_bytes().to_vec()
+            }
+            _ => unimplemented!("only JWKParams::OKP is supported for now"),
+        },
+        _ => unimplemented!("signing algorithm {algorithm} not yet supported"),
+    }
 }
 
 fn generate_did_jwk_url(key: &JWK) -> DidBuf {
