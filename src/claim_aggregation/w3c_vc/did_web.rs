@@ -19,13 +19,8 @@
 // each license.
 
 use http::header;
-use ssi_dids_core::{
-    document::representation::MediaType,
-    resolution::{self, Error, Output},
-    Document,
-};
 
-use super::did::Did;
+use super::{did::Did, did_doc::DidDocument};
 
 const USER_AGENT: &str = concat!(env!("CARGO_PKG_NAME"), "/", env!("CARGO_PKG_VERSION"));
 
@@ -38,23 +33,30 @@ thread_local! {
 }
 
 #[derive(Debug, thiserror::Error)]
-pub enum InternalError {
-    #[error("Error building HTTP client: {0}")]
+pub enum DidWebError {
+    #[error("error building HTTP client: {0}")]
     Client(reqwest::Error),
 
-    #[error("Error sending HTTP request ({0}): {1}")]
+    #[error("error sending HTTP request ({0}): {1}")]
     Request(String, reqwest::Error),
 
-    #[error("Server error: {0}")]
+    #[error("server error: {0}")]
     Server(String),
 
-    #[error("Error reading HTTP response: {0}")]
+    #[error("error reading HTTP response: {0}")]
     Response(reqwest::Error),
+
+    #[error("the document was not found: {0}")]
+    NotFound(String),
+
+    #[error("the document was not a valid DID document: {0}")]
+    InvalidData(String),
+
+    #[error("invalid web DID: {0}")]
+    InvalidWebDid(String),
 }
 
-pub(crate) async fn resolve(did: &Did<'_>) -> Result<Output, Error> {
-    // let did = DIDBuf::new(format!("did:web:{method_specific_id}")).unwrap();
-
+pub(crate) async fn resolve(did: &Did<'_>) -> Result<DidDocument, DidWebError> {
     let method = did.method_name();
     #[allow(clippy::panic)] // TEMPORARY while refactoring
     if method != "web" {
@@ -78,51 +80,36 @@ pub(crate) async fn resolve(did: &Did<'_>) -> Result<Output, Error> {
     let client = reqwest::Client::builder()
         .default_headers(headers)
         .build()
-        .map_err(|e| Error::internal(InternalError::Client(e)))?;
+        .map_err(DidWebError::Client)?;
 
     let resp = client
         .get(&url)
-        .header(header::ACCEPT, MediaType::Json.to_string())
+        .header(header::ACCEPT, "application/did+json")
         .send()
         .await
-        .map_err(|e| Error::internal(InternalError::Request(url.to_owned(), e)))?;
+        .map_err(|e| DidWebError::Request(url.to_owned(), e))?;
 
     resp.error_for_status_ref().map_err(|err| {
         if err.status() == Some(reqwest::StatusCode::NOT_FOUND) {
-            Error::NotFound
+            DidWebError::NotFound(url.clone())
         } else {
-            Error::internal(InternalError::Server(err.to_string()))
+            DidWebError::Server(err.to_string())
         }
     })?;
 
-    let document = resp
-        .bytes()
-        .await
-        .map_err(|e| Error::internal(InternalError::Response(e)))?;
+    let document = resp.bytes().await.map_err(DidWebError::Response)?;
 
-    // TODO: set document created/updated metadata from HTTP headers?
-    let output: Output<Vec<u8>> = Output {
-        document: document.into(),
-        document_metadata: ssi_dids_core::document::Metadata::default(),
-        metadata: resolution::Metadata::from_content_type(Some(MediaType::JsonLd.to_string())),
-    };
+    let json =
+        String::from_utf8(document.to_vec()).map_err(|_| DidWebError::InvalidData(url.clone()))?;
 
-    match &output.metadata.content_type {
-        None => Err(Error::NoRepresentation),
-        Some(ty) => {
-            let ty: MediaType = ty.parse()?;
-            output
-                .try_map(|bytes| Document::from_bytes(ty, &bytes))
-                .map_err(Error::InvalidData)
-        }
-    }
+    DidDocument::from_json(&json).map_err(|_| DidWebError::InvalidData(url))
 }
 
-pub(crate) fn to_url(did: &str) -> Result<String, Error> {
+pub(crate) fn to_url(did: &str) -> Result<String, DidWebError> {
     let mut parts = did.split(':').peekable();
     let domain_name = parts
         .next()
-        .ok_or_else(|| Error::InvalidMethodSpecificId(did.to_owned()))?;
+        .ok_or_else(|| DidWebError::InvalidWebDid(did.to_owned()))?;
 
     // TODO:
     // - Validate domain name: alphanumeric, hyphen, dot. no IP address.

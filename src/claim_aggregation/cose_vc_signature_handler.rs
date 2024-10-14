@@ -126,21 +126,15 @@ impl SignatureHandler for CoseVcSignatureHandler {
             }
             "web" => {
                 #[allow(clippy::expect_used)]
-                let did_doc = did_web::resolve(&primary_did)
-                    .await
-                    .expect("No output")
-                    .document;
+                let did_doc = did_web::resolve(&primary_did).await.expect("No output");
 
-                let d = did_doc.document();
-
-                let vm1 = d
+                let vm1 = did_doc
                     .verification_relationships
                     .assertion_method
                     .first()
                     .unwrap();
-                let ssi_dids_core::document::verification_method::ValueOrReference::Value(vm1) =
-                    vm1
-                else {
+
+                let super::w3c_vc::did_doc::ValueOrReference::Value(vm1) = vm1 else {
                     panic!("not value");
                 };
                 let jwk_prop = vm1.properties.get("publicKeyJwk").unwrap();

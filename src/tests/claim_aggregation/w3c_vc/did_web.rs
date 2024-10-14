@@ -50,10 +50,12 @@ mod resolve {
         service::{make_service_fn, service_fn},
         Body, Response, Server,
     };
-    use ssi_dids_core::{document::representation::MediaType, Document};
 
     use super::did;
-    use crate::claim_aggregation::w3c_vc::did_web::{self, PROXY};
+    use crate::claim_aggregation::w3c_vc::{
+        did_doc::DidDocument,
+        did_web::{self, PROXY},
+    };
 
     #[tokio::test]
     async fn from_did_key() {
@@ -65,9 +67,9 @@ mod resolve {
 
         let doc = did_web::resolve(&did("did:web:localhost")).await.unwrap();
 
-        let doc_expected = Document::from_bytes(MediaType::JsonLd, DID_JSON.as_bytes()).unwrap();
+        let doc_expected = DidDocument::from_json(DID_JSON).unwrap();
 
-        assert_eq!(doc.document.document(), doc_expected.document());
+        assert_eq!(doc, doc_expected);
 
         PROXY.with(|proxy| {
             proxy.replace(None);
