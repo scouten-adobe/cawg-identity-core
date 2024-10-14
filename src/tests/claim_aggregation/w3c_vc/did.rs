@@ -23,7 +23,7 @@ mod new {
 
     #[test]
     fn valid_dids() {
-        let did = Did::new(b"did:method:foo").unwrap();
+        let did: &Did = Did::new(b"did:method:foo").unwrap();
         assert_eq!(did.method_name(), "method");
         assert_eq!(did.method_specific_id(), "foo");
 
@@ -45,5 +45,26 @@ mod new {
         Did::new(b"http:a:b").unwrap_err();
         Did::new(b"did::b").unwrap_err();
         Did::new(b"did:a:").unwrap_err();
+    }
+}
+
+mod split_fragment {
+    use crate::claim_aggregation::w3c_vc::did::Did;
+
+    #[test]
+    fn has_fragment() {
+        let did: &Did = Did::new(b"did:method:foo#bar").unwrap();
+        assert_eq!(did.method_name(), "method");
+        assert_eq!(did.method_specific_id(), "foo#bar");
+
+        let did_without_fragment = Did::new(b"did:method:foo").unwrap();
+        let fragment: &[u8] = b"bar";
+        assert_eq!(did.split_fragment(), (did_without_fragment, Some(fragment)));
+    }
+
+    #[test]
+    fn no_fragment() {
+        let did: &Did = Did::new(b"did:method:foo").unwrap();
+        assert_eq!(did.split_fragment(), (did, None));
     }
 }

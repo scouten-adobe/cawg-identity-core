@@ -149,6 +149,20 @@ impl Did {
         }
     }
 
+    /// Returns the DID without any fragment qualifier.
+    pub fn split_fragment(&self) -> (&Self, Option<&[u8]>) {
+        // NOTE: Can replace with split_once when we move over to str.
+        if let Some(index) = self.0.iter().position(|b| b == &b'#') {
+            let primary_did = &self.0[..index];
+            let fragment = &self.0[index + 1..];
+            // SAFETY: A known subset of an existing checked DID.
+            let primary = unsafe { Self::new_unchecked(primary_did) };
+            (primary, Some(fragment))
+        } else {
+            (&self, None)
+        }
+    }
+
     /// Validates a DID string.
     fn validate(data: &[u8]) -> Result<(), Unexpected> {
         let mut bytes = data.iter().copied();
@@ -229,7 +243,8 @@ impl Did {
                 State::MethodSpecificId => match bytes.next() {
                     Some(b':') => state = State::MethodSpecificIdStartOrSeparator,
                     Some(b'%') => state = State::MethodSpecificIdPct1,
-                    Some(c) if is_id_char(c) => (),
+                    // HACK: Add support for fragments here. Will sort out later.
+                    Some(c) if is_id_char(c) || c == b'#' => (),
                     c => break Ok((i, c)),
                 },
             }
