@@ -47,3 +47,38 @@ mod new {
         DidBuf::new(b"did:a:".to_vec()).unwrap_err();
     }
 }
+
+mod impl_serde {
+    use crate::claim_aggregation::w3c_vc::did::DidBuf;
+
+    #[derive(serde::Serialize, serde::Deserialize)]
+    struct Sample {
+        did: DidBuf,
+    }
+
+    const SAMPLE_WITH_DID: &str = r#"{"did":"did:method:foo"}"#;
+    const SAMPLE_WITH_BAD_DID: &str = r#"{"did": "did::b"}"#;
+
+    #[test]
+    fn from_json() {
+        let s: Sample = serde_json::from_str(&SAMPLE_WITH_DID).unwrap();
+        let did = s.did;
+        assert_eq!(did.method_name(), "method");
+        assert_eq!(did.method_specific_id(), "foo");
+    }
+
+    #[test]
+    #[should_panic]
+    fn from_json_err_invalid_did() {
+        let _: Sample = serde_json::from_str(&SAMPLE_WITH_BAD_DID).unwrap();
+    }
+
+    #[test]
+    fn to_json() {
+        let s = Sample {
+            did: DidBuf::new(b"did:method:foo".to_vec()).unwrap(),
+        };
+        let json = serde_json::to_string(&s).unwrap();
+        assert_eq!(&json, SAMPLE_WITH_DID);
+    }
+}
