@@ -20,6 +20,7 @@ multibase = "0.9.1"
 nonempty-collections = { version = "0.2.9", features = ["serde"] }
 non-empty-string = { version = "0.2.4", features = ["serde"] }
 rdf-types = "0.22.4"
+regex = "1.11"
 reqwest = { version = "0.11.27", default-features = false, features = ["rustls-tls"] }
 serde = { version = "1.0.197", features = ["derive"] }
 serde_bytes = "0.11.14"

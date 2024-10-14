@@ -18,30 +18,28 @@
 // specific language governing permissions and limitations under
 // each license.
 
-use ssi_dids_core::did;
-
-use crate::claim_aggregation::w3c_vc::did_web;
+use crate::claim_aggregation::w3c_vc::{did::Did, did_web};
 
 #[tokio::test]
 async fn to_url() {
     // https://w3c-ccg.github.io/did-method-web/#example-3-creating-the-did
     assert_eq!(
-        did_web::to_url(did!("did:web:w3c-ccg.github.io").method_specific_id()).unwrap(),
+        did_web::to_url(did("did:web:w3c-ccg.github.io").method_specific_id()).unwrap(),
         "https://w3c-ccg.github.io/.well-known/did.json"
     );
     // https://w3c-ccg.github.io/did-method-web/#example-4-creating-the-did-with-optional-path
     assert_eq!(
-        did_web::to_url(did!("did:web:w3c-ccg.github.io:user:alice").method_specific_id()).unwrap(),
+        did_web::to_url(did("did:web:w3c-ccg.github.io:user:alice").method_specific_id()).unwrap(),
         "https://w3c-ccg.github.io/user/alice/did.json"
     );
     // https://w3c-ccg.github.io/did-method-web/#optional-path-considerations
     assert_eq!(
-        did_web::to_url(did!("did:web:example.com:u:bob").method_specific_id()).unwrap(),
+        did_web::to_url(did("did:web:example.com:u:bob").method_specific_id()).unwrap(),
         "https://example.com/u/bob/did.json"
     );
     // https://w3c-ccg.github.io/did-method-web/#example-creating-the-did-with-optional-path-and-port
     assert_eq!(
-        did_web::to_url(did!("did:web:example.com%3A443:u:bob").method_specific_id()).unwrap(),
+        did_web::to_url(did("did:web:example.com%3A443:u:bob").method_specific_id()).unwrap(),
         "https://example.com:443/u/bob/did.json"
     );
 }
@@ -52,8 +50,9 @@ mod resolve {
         service::{make_service_fn, service_fn},
         Body, Response, Server,
     };
-    use ssi_dids_core::{did, document::representation::MediaType, Document};
+    use ssi_dids_core::{document::representation::MediaType, Document};
 
+    use super::did;
     use crate::claim_aggregation::w3c_vc::did_web::{self, PROXY};
 
     #[tokio::test]
@@ -64,7 +63,7 @@ mod resolve {
             proxy.replace(Some(url));
         });
 
-        let doc = did_web::resolve(did!("did:web:localhost")).await.unwrap();
+        let doc = did_web::resolve(&did("did:web:localhost")).await.unwrap();
 
         let doc_expected = Document::from_bytes(MediaType::JsonLd, DID_JSON.as_bytes()).unwrap();
 
@@ -191,4 +190,8 @@ mod resolve {
         let shutdown = || shutdown_tx.send(());
         Ok((url, shutdown))
     }
+}
+
+fn did(s: &'static str) -> Did<'static> {
+    Did::new(s).unwrap()
 }

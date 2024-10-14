@@ -16,11 +16,13 @@ use std::fmt::{Debug, Formatter};
 use async_trait::async_trait;
 use coset::{CoseSign1, RegisteredLabelWithPrivate, TaggedCborSerializable};
 use nonempty_collections::{vector::Iter, NEVec, NonEmptyIterator};
-use ssi_dids_core::DIDURL;
 use ssi_jwk::JWK;
 
 use crate::{
-    claim_aggregation::{w3c_vc::did_web, IdentityAssertionVc, VcVerifiedIdentity},
+    claim_aggregation::{
+        w3c_vc::{did::Did, did_web},
+        IdentityAssertionVc, VcVerifiedIdentity,
+    },
     identity_assertion::VerifiedIdentities,
     NamedActor, SignatureHandler, SignerPayload, ValidationResult, VerifiedIdentity,
 };
@@ -109,9 +111,8 @@ impl SignatureHandler for CoseVcSignatureHandler {
 
         // TO DO (#27): Remove panic.
         #[allow(clippy::unwrap_used)]
-        let issuer_id = DIDURL::new(asset_vc.issuer.as_bytes()).unwrap();
-        let (primary_did, _fragment) = issuer_id.without_fragment();
-        let primary_did = primary_did.did();
+        let issuer_id = Did::new(&asset_vc.issuer).unwrap();
+        let (primary_did, _fragment) = issuer_id.split_fragment();
 
         // TO DO (#27): Remove panic.
         #[allow(clippy::unwrap_used)]
@@ -125,7 +126,7 @@ impl SignatureHandler for CoseVcSignatureHandler {
             }
             "web" => {
                 #[allow(clippy::expect_used)]
-                let did_doc = did_web::resolve(primary_did)
+                let did_doc = did_web::resolve(&primary_did)
                     .await
                     .expect("No output")
                     .document;
