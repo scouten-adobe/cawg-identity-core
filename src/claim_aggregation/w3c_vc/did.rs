@@ -115,7 +115,9 @@ impl Did {
     }
 
     /// Returns the offset of the `:` byte just after the method name.
+    #[allow(clippy::unwrap_used)]
     fn method_name_separator_offset(&self) -> usize {
+        // SAFETY: We have validated that this is a well-formed DID already.
         self.0[5..].iter().position(|b| *b == b':').unwrap() + 5 // +5 and not
                                                                  // +4 because
                                                                  // the method
@@ -159,7 +161,7 @@ impl Did {
             let primary = unsafe { Self::new_unchecked(primary_did) };
             (primary, Some(fragment))
         } else {
-            (&self, None)
+            (self, None)
         }
     }
 

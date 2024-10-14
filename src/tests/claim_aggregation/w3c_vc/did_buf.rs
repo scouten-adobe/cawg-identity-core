@@ -61,7 +61,7 @@ mod impl_serde {
 
     #[test]
     fn from_json() {
-        let s: Sample = serde_json::from_str(&SAMPLE_WITH_DID).unwrap();
+        let s: Sample = serde_json::from_str(SAMPLE_WITH_DID).unwrap();
         let did = s.did;
         assert_eq!(did.method_name(), "method");
         assert_eq!(did.method_specific_id(), "foo");
@@ -70,7 +70,7 @@ mod impl_serde {
     #[test]
     #[should_panic]
     fn from_json_err_invalid_did() {
-        let _: Sample = serde_json::from_str(&SAMPLE_WITH_BAD_DID).unwrap();
+        let _: Sample = serde_json::from_str(SAMPLE_WITH_BAD_DID).unwrap();
     }
 
     #[test]
