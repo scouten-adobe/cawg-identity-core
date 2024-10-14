@@ -23,7 +23,7 @@ mod new {
 
     #[test]
     fn valid_dids() {
-        let did: &Did = Did::new("did:method:foo").unwrap();
+        let did = Did::new("did:method:foo").unwrap();
         assert_eq!(did.method_name(), "method");
         assert_eq!(did.method_specific_id(), "foo");
 
@@ -53,7 +53,7 @@ mod split_fragment {
 
     #[test]
     fn has_fragment() {
-        let did: &Did = Did::new("did:method:foo#bar").unwrap();
+        let did = Did::new("did:method:foo#bar").unwrap();
         assert_eq!(did.method_name(), "method");
         assert_eq!(did.method_specific_id(), "foo#bar");
 
@@ -64,7 +64,8 @@ mod split_fragment {
 
     #[test]
     fn no_fragment() {
-        let did: &Did = Did::new("did:method:foo").unwrap();
-        assert_eq!(did.split_fragment(), (did, None));
+        let did = Did::new("did:method:foo").unwrap();
+        let did2 = Did::new("did:method:foo").unwrap();
+        assert_eq!(did.split_fragment(), (did2, None));
     }
 }

@@ -63,7 +63,7 @@ mod resolve {
             proxy.replace(Some(url));
         });
 
-        let doc = did_web::resolve(did("did:web:localhost")).await.unwrap();
+        let doc = did_web::resolve(&did("did:web:localhost")).await.unwrap();
 
         let doc_expected = Document::from_bytes(MediaType::JsonLd, DID_JSON.as_bytes()).unwrap();
 
@@ -192,6 +192,6 @@ mod resolve {
     }
 }
 
-fn did(s: &'static str) -> &'static Did {
+fn did(s: &'static str) -> Did<'static> {
     Did::new(s).unwrap()
 }

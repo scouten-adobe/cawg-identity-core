@@ -52,7 +52,7 @@ pub enum InternalError {
     Response(reqwest::Error),
 }
 
-pub(crate) async fn resolve(did: &Did) -> Result<Output, Error> {
+pub(crate) async fn resolve(did: &Did<'_>) -> Result<Output, Error> {
     // let did = DIDBuf::new(format!("did:web:{method_specific_id}")).unwrap();
 
     let method = did.method_name();

@@ -24,18 +24,22 @@ mod new {
     #[test]
     fn valid_dids() {
         let did = DidBuf::new("did:method:foo".to_string()).unwrap();
+        let did = did.as_did();
         assert_eq!(did.method_name(), "method");
         assert_eq!(did.method_specific_id(), "foo");
 
         let did = DidBuf::new("did:a:b".to_string()).unwrap();
+        let did = did.as_did();
         assert_eq!(did.method_name(), "a");
         assert_eq!(did.method_specific_id(), "b");
 
         let did = DidBuf::new("did:jwk:eyJjcnYiOiJQLTI1NiIsImt0eSI6IkVDIiwieCI6ImFjYklRaXVNczNpOF91c3pFakoydHBUdFJNNEVVM3l6OTFQSDZDZEgyVjAiLCJ5IjoiX0tjeUxqOXZXTXB0bm1LdG00NkdxRHo4d2Y3NEk1TEtncmwyR3pIM25TRSJ9".to_string()).unwrap();
+        let did = did.as_did();
         assert_eq!(did.method_name(), "jwk");
         assert_eq!(did.method_specific_id(), "eyJjcnYiOiJQLTI1NiIsImt0eSI6IkVDIiwieCI6ImFjYklRaXVNczNpOF91c3pFakoydHBUdFJNNEVVM3l6OTFQSDZDZEgyVjAiLCJ5IjoiX0tjeUxqOXZXTXB0bm1LdG00NkdxRHo4d2Y3NEk1TEtncmwyR3pIM25TRSJ9");
 
         let did = DidBuf::new("did:web:example.com%3A443:u:bob".to_string()).unwrap();
+        let did = did.as_did();
         assert_eq!(did.method_name(), "web");
         assert_eq!(did.method_specific_id(), "example.com%3A443:u:bob");
     }
@@ -63,6 +67,7 @@ mod impl_serde {
     fn from_json() {
         let s: Sample = serde_json::from_str(SAMPLE_WITH_DID).unwrap();
         let did = s.did;
+        let did = did.as_did();
         assert_eq!(did.method_name(), "method");
         assert_eq!(did.method_specific_id(), "foo");
     }

@@ -21,7 +21,7 @@
 #![allow(dead_code)]
 #![allow(unused_macros)]
 
-use std::{borrow::Borrow, fmt, ops::Deref, str::FromStr};
+use std::{fmt, ops::Deref, str::FromStr};
 
 use iref::UriBuf;
 use serde::{Deserialize, Serialize};
@@ -43,38 +43,23 @@ impl<T> InvalidDid<T> {
 /// This type is unsized and used to represent borrowed DIDs. Use `DidBuf` for
 /// owned DIDs.
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
-#[repr(transparent)]
-pub struct Did(str);
+pub struct Did<'a>(&'a str);
 
-impl Did {
+impl<'a> Did<'a> {
     /// Converts the input `data` to a DID.
     ///
     /// Fails if the data is not a DID according to the
     /// [DID Syntax](https://w3c.github.io/did-core/#did-syntax).
-    pub fn new<B: ?Sized + AsRef<str>>(data: &B) -> Result<&Self, InvalidDid<&B>> {
-        let bytes = data.as_ref();
-        match Self::validate(bytes) {
-            Ok(()) => Ok(unsafe {
-                // SAFETY: DID is a transparent wrapper over `[u8]`,
-                //         and we just checked that `data` is a DID.
-                std::mem::transmute::<&str, &Self>(bytes)
-            }),
+    pub fn new(data: &'a str) -> Result<Self, InvalidDid<&str>> {
+        match Self::validate(data) {
+            Ok(()) => Ok(Self(data)),
             Err(e) => Err(InvalidDid(data, e)),
         }
     }
 
-    /// Converts the input `data` to a DID without validation.
-    ///
-    /// # Safety
-    ///
-    /// The input `data` must be a DID according to the
-    /// [DID Syntax](https://w3c.github.io/did-core/#did-syntax).
-    pub unsafe fn new_unchecked(data: &str) -> &Self {
-        unsafe {
-            // SAFETY: DID is a transparent wrapper over `[u8]`,
-            //         but we didn't check if it is actually a DID.
-            std::mem::transmute(data)
-        }
+    pub unsafe fn new_unchecked(data: &'a str) -> Self {
+        // UNSAFE because we aren't checking here to see if this is a DID.
+        Self(data)
     }
 
     /// Returns the DID as a string.
@@ -109,7 +94,7 @@ impl Did {
     }
 
     /// Returns the DID without any fragment qualifier.
-    pub fn split_fragment(&self) -> (&Self, Option<&str>) {
+    pub fn split_fragment(self) -> (Self, Option<&'a str>) {
         // NOTE: Can replace with split_once when we move over to str.
         if let Some((primary, fragment)) = self.0.split_once(|c| c == '#') {
             // SAFETY: A known subset of an existing checked DID.
@@ -211,7 +196,7 @@ impl Did {
     }
 }
 
-impl Deref for Did {
+impl<'a> Deref for Did<'a> {
     type Target = str;
 
     fn deref(&self) -> &Self::Target {
@@ -219,21 +204,13 @@ impl Deref for Did {
     }
 }
 
-impl PartialEq<DidBuf> for Did {
+impl<'a> PartialEq<DidBuf> for Did<'a> {
     fn eq(&self, other: &DidBuf) -> bool {
-        self == other.as_did()
+        self == &other.as_did()
     }
 }
 
-impl ToOwned for Did {
-    type Owned = DidBuf;
-
-    fn to_owned(&self) -> Self::Owned {
-        unsafe { DidBuf::new_unchecked(self.0.to_owned()) }
-    }
-}
-
-impl fmt::Display for Did {
+impl<'a> fmt::Display for Did<'a> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         self.as_str().fmt(f)
     }
@@ -255,11 +232,15 @@ impl DidBuf {
         Self(data)
     }
 
-    pub fn as_did(&self) -> &Did {
+    pub fn as_did(&self) -> Did {
         unsafe {
             // SAFETY: we validated the data in `Self::new`.
             Did::new_unchecked(&self.0)
         }
+    }
+
+    pub fn as_str(&self) -> &str {
+        self.0.as_str()
     }
 
     pub fn into_uri(self) -> UriBuf {
@@ -280,20 +261,6 @@ impl FromStr for DidBuf {
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         s.to_owned().try_into()
-    }
-}
-
-impl Deref for DidBuf {
-    type Target = Did;
-
-    fn deref(&self) -> &Self::Target {
-        self.as_did()
-    }
-}
-
-impl Borrow<Did> for DidBuf {
-    fn borrow(&self) -> &Did {
-        self.as_did()
     }
 }
 
@@ -321,15 +288,15 @@ impl<'a> PartialEq<&'a str> for DidBuf {
     }
 }
 
-impl PartialEq<Did> for DidBuf {
-    fn eq(&self, other: &Did) -> bool {
-        self.as_did() == other
+impl<'a> PartialEq<Did<'a>> for DidBuf {
+    fn eq(&self, other: &Did<'a>) -> bool {
+        &self.as_did() == other
     }
 }
 
-impl<'a> PartialEq<&'a Did> for DidBuf {
-    fn eq(&self, other: &&'a Did) -> bool {
-        self.as_did() == *other
+impl<'a> PartialEq<&Did<'_>> for DidBuf {
+    fn eq(&self, other: &&Did<'_>) -> bool {
+        &self.as_did() == *other
     }
 }
 
