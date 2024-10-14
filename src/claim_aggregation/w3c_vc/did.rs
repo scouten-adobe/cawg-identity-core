@@ -18,18 +18,14 @@
 // specific language governing permissions and limitations under
 // each license.
 
-#![allow(dead_code)]
-#![allow(unused_macros)]
+use std::{fmt, ops::Deref, str::FromStr, sync::LazyLock};
 
-use std::{fmt, ops::Deref, str::FromStr};
-use std::sync::LazyLock;
-
-use iref::UriBuf;
 use regex::Regex;
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
-static VALID_DID: LazyLock<Regex> = LazyLock::new(|| Regex::new(r#"^did:[a-z0-9]+:[A-Za-z0-9/.%#\?_-]+"#).unwrap());
+static VALID_DID: LazyLock<Regex> =
+    LazyLock::new(|| Regex::new(r#"^did:[a-z0-9]+:[A-Za-z0-9/.%#\?_-]+"#).unwrap());
 // TO DO: Improve:
 //  * handing of %xx encoding
 //  * ? query handling
@@ -61,22 +57,12 @@ impl<'a> Did<'a> {
         Self(data)
     }
 
-    /// Returns the DID as a string.
-    pub fn as_str(&self) -> &str {
-        &self.0
-    }
-
-    /// Returns the DID as a byte string.
-    pub fn as_bytes(&self) -> &[u8] {
-        &self.0.as_bytes()
-    }
-
     /// Returns the offset of the `:` byte just after the method name.
     #[allow(clippy::unwrap_used)]
     fn method_name_separator_offset(&self) -> usize {
         // SAFETY: We have validated that this is a well-formed DID already.
         self.0[5..].chars().position(|c| c == ':').unwrap() + 5
-            // +5 and not +4 because the method name cannot be empty.
+        // +5 and not +4 because the method name cannot be empty.
     }
 
     /// Returns the DID method name.
@@ -135,10 +121,6 @@ impl DidBuf {
         }
     }
 
-    pub unsafe fn new_unchecked(data: String) -> Self {
-        Self(data)
-    }
-
     pub fn as_did(&self) -> Did {
         unsafe {
             // SAFETY: we validated the data in `Self::new`.
@@ -150,8 +132,9 @@ impl DidBuf {
         self.0.as_str()
     }
 
-    pub fn into_uri(self) -> UriBuf {
-        unsafe { UriBuf::new_unchecked(self.0.into_bytes()) }
+    #[cfg(test)] // currently only used in test code
+    pub fn into_uri(self) -> iref::UriBuf {
+        unsafe { iref::UriBuf::new_unchecked(self.0.into_bytes()) }
     }
 }
 
