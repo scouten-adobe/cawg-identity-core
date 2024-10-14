@@ -22,15 +22,19 @@
 #![allow(unused_macros)]
 
 use std::{fmt, ops::Deref, str::FromStr};
+use std::sync::LazyLock;
 
 use iref::UriBuf;
+use regex::Regex;
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
-/// Error raised when a conversion to a DID fails.
-#[derive(Debug, Error)]
-#[error("invalid DID `{0}`")]
-pub struct InvalidDid(pub String);
+static VALID_DID: LazyLock<Regex> = LazyLock::new(|| Regex::new(r#"^did:[a-z0-9]+:[A-Za-z0-9/.%#\?_-]+"#).unwrap());
+// TO DO: Improve:
+//  * handing of %xx encoding
+//  * ? query handling
+//  * # fragment handling
+//  * path parsing
 
 /// DID.
 ///
@@ -45,9 +49,10 @@ impl<'a> Did<'a> {
     /// Fails if the data is not a DID according to the
     /// [DID Syntax](https://w3c.github.io/did-core/#did-syntax).
     pub fn new(data: &'a str) -> Result<Self, InvalidDid> {
-        match Self::validate(data) {
-            Ok(()) => Ok(Self(data)),
-            Err(_) => Err(InvalidDid(data.to_string())),
+        if Regex::is_match(&VALID_DID, data) {
+            Ok(Self(data))
+        } else {
+            Err(InvalidDid(data.to_string()))
         }
     }
 
@@ -70,11 +75,8 @@ impl<'a> Did<'a> {
     #[allow(clippy::unwrap_used)]
     fn method_name_separator_offset(&self) -> usize {
         // SAFETY: We have validated that this is a well-formed DID already.
-        self.0[5..].chars().position(|c| c == ':').unwrap() + 5 // +5 and not
-                                                                // +4 because
-                                                                // the method
-                                                                // name cannot
-                                                                // be empty.
+        self.0[5..].chars().position(|c| c == ':').unwrap() + 5
+            // +5 and not +4 because the method name cannot be empty.
     }
 
     /// Returns the DID method name.
@@ -98,103 +100,13 @@ impl<'a> Did<'a> {
             (self, None)
         }
     }
-
-    /// Validates a DID string.
-    fn validate(data: &str) -> Result<(), Unexpected> {
-        let mut chars = data.chars();
-        match Self::validate_from(0, &mut chars)? {
-            (_, None) => Ok(()),
-            (i, Some(c)) => Err(Unexpected(i, Some(c))),
-        }
-    }
-
-    /// Validates a DID string.
-    fn validate_from(
-        mut i: usize,
-        bytes: &mut std::str::Chars<'_>,
-    ) -> Result<(usize, Option<char>), Unexpected> {
-        enum State {
-            Scheme1,         // d
-            Scheme2,         // i
-            Scheme3,         // d
-            SchemeSeparator, // :
-            MethodNameStart,
-            MethodName,
-            MethodSpecificIdStartOrSeparator,
-            MethodSpecificIdPct1,
-            MethodSpecificIdPct2,
-            MethodSpecificId,
-        }
-
-        let mut state = State::Scheme1;
-        fn is_method_char(b: char) -> bool {
-            matches!(b, 'a'..='z') || b.is_ascii_digit()
-        }
-
-        fn is_id_char(b: char) -> bool {
-            b.is_ascii_alphanumeric() || matches!(b, '.' | '-' | '_')
-        }
-
-        loop {
-            match state {
-                State::Scheme1 => match bytes.next() {
-                    Some('d') => state = State::Scheme2,
-                    c => break Err(Unexpected(i, c)),
-                },
-                State::Scheme2 => match bytes.next() {
-                    Some('i') => state = State::Scheme3,
-                    c => break Err(Unexpected(i, c)),
-                },
-                State::Scheme3 => match bytes.next() {
-                    Some('d') => state = State::SchemeSeparator,
-                    c => break Err(Unexpected(i, c)),
-                },
-                State::SchemeSeparator => match bytes.next() {
-                    Some(':') => state = State::MethodNameStart,
-                    c => break Err(Unexpected(i, c)),
-                },
-                State::MethodNameStart => match bytes.next() {
-                    Some(c) if is_method_char(c) => state = State::MethodName,
-                    c => break Err(Unexpected(i, c)),
-                },
-                State::MethodName => match bytes.next() {
-                    Some(':') => state = State::MethodSpecificIdStartOrSeparator,
-                    Some(c) if is_method_char(c) => (),
-                    c => break Err(Unexpected(i, c)),
-                },
-                State::MethodSpecificIdStartOrSeparator => match bytes.next() {
-                    Some(':') => (),
-                    Some('%') => state = State::MethodSpecificIdPct1,
-                    Some(c) if is_id_char(c) => state = State::MethodSpecificId,
-                    c => break Err(Unexpected(i, c)),
-                },
-                State::MethodSpecificIdPct1 => match bytes.next() {
-                    Some(c) if c.is_ascii_hexdigit() => state = State::MethodSpecificIdPct2,
-                    c => break Err(Unexpected(i, c)),
-                },
-                State::MethodSpecificIdPct2 => match bytes.next() {
-                    Some(c) if c.is_ascii_hexdigit() => state = State::MethodSpecificId,
-                    c => break Err(Unexpected(i, c)),
-                },
-                State::MethodSpecificId => match bytes.next() {
-                    Some(':') => state = State::MethodSpecificIdStartOrSeparator,
-                    Some('%') => state = State::MethodSpecificIdPct1,
-                    // HACK: Add support for fragments here. Will sort out later.
-                    Some(c) if is_id_char(c) || c == '#' => (),
-                    c => break Ok((i, c)),
-                },
-            }
-
-            i += 1
-        }
-    }
 }
 
 impl<'a> Deref for Did<'a> {
     type Target = str;
 
     fn deref(&self) -> &Self::Target {
-        self.as_str()
+        self.0
     }
 }
 
@@ -206,7 +118,7 @@ impl<'a> PartialEq<DidBuf> for Did<'a> {
 
 impl<'a> fmt::Display for Did<'a> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        self.as_str().fmt(f)
+        self.0.fmt(f)
     }
 }
 
@@ -216,9 +128,10 @@ pub struct DidBuf(String);
 
 impl DidBuf {
     pub fn new(data: String) -> Result<Self, InvalidDid> {
-        match Did::validate(&data) {
-            Ok(()) => Ok(Self(data)),
-            Err(_) => Err(InvalidDid(data)),
+        if Regex::is_match(&VALID_DID, &data) {
+            Ok(Self(data))
+        } else {
+            Err(InvalidDid(data))
         }
     }
 
@@ -260,13 +173,13 @@ impl FromStr for DidBuf {
 
 impl fmt::Display for DidBuf {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        self.as_str().fmt(f)
+        self.0.fmt(f)
     }
 }
 
 impl fmt::Debug for DidBuf {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        self.as_str().fmt(f)
+        self.0.fmt(f)
     }
 }
 
@@ -299,7 +212,7 @@ impl Serialize for DidBuf {
     where
         S: serde::Serializer,
     {
-        self.as_str().serialize(serializer)
+        self.0.serialize(serializer)
     }
 }
 
@@ -336,14 +249,7 @@ impl<'de> Deserialize<'de> for DidBuf {
     }
 }
 
-#[derive(Debug, thiserror::Error)]
-pub struct Unexpected(pub usize, pub Option<char>);
-
-impl fmt::Display for Unexpected {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self.1 {
-            Some(b) => write!(f, "unexpected byte {b} at offset {0:#04x}", self.0),
-            None => write!(f, "unexpected end at offset {0:#04x}", self.0),
-        }
-    }
-}
+/// Error raised when a conversion to a DID fails.
+#[derive(Debug, Error)]
+#[error("invalid DID `{0}`")]
+pub struct InvalidDid(pub String);
