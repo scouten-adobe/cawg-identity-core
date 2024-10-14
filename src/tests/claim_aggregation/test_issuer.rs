@@ -18,7 +18,6 @@ use coset::{CoseSign1Builder, HeaderBuilder, TaggedCborSerializable};
 use iref::UriBuf;
 use non_empty_string::NonEmptyString;
 use nonempty_collections::{nev, NEVec};
-use ssi_dids_core::DIDURLBuf;
 use ssi_jwk::JWK;
 use ssi_jws::JwsSigner;
 use thiserror::Error;
@@ -27,7 +26,8 @@ use xsd_types::value::DateTimeStamp;
 use crate::{
     builder::{CredentialHolder, IdentityAssertionBuilder, ManifestBuilder},
     claim_aggregation::{
-        IdentityAssertionVc, IdentityClaimsAggregationVc, IdentityProvider, VcVerifiedIdentity,
+        w3c_vc::did::DidBuf, IdentityAssertionVc, IdentityClaimsAggregationVc, IdentityProvider,
+        VcVerifiedIdentity,
     },
     tests::fixtures::{temp_c2pa_signer, temp_dir_path},
     IdentityAssertion, SignerPayload,
@@ -298,9 +298,9 @@ fn sign_bytes(signer: &JWK, payload: &[u8]) -> Vec<u8> {
     ssi_jws::sign_bytes(algorithm, payload, signer).unwrap()
 }
 
-fn generate_did_jwk_url(key: &JWK) -> DIDURLBuf {
+fn generate_did_jwk_url(key: &JWK) -> DidBuf {
     let key = key.to_public();
     let normalized = serde_jcs::to_string(&key).unwrap();
     let method_id = multibase::Base::Base64Url.encode(normalized);
-    DIDURLBuf::new(format!("did:jwk:{method_id}#0").into_bytes()).unwrap()
+    DidBuf::new(format!("did:jwk:{method_id}#0").into_bytes()).unwrap()
 }

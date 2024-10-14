@@ -22,8 +22,10 @@ use http::header;
 use ssi_dids_core::{
     document::representation::MediaType,
     resolution::{self, Error, Output},
-    Document, DID,
+    Document,
 };
+
+use super::did::Did;
 
 const USER_AGENT: &str = concat!(env!("CARGO_PKG_NAME"), "/", env!("CARGO_PKG_VERSION"));
 
@@ -50,7 +52,7 @@ pub enum InternalError {
     Response(reqwest::Error),
 }
 
-pub(crate) async fn resolve(did: &DID) -> Result<Output, Error> {
+pub(crate) async fn resolve(did: &Did) -> Result<Output, Error> {
     // let did = DIDBuf::new(format!("did:web:{method_specific_id}")).unwrap();
 
     let method = did.method_name();

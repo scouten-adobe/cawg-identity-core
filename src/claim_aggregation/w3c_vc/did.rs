@@ -27,10 +27,6 @@ use iref::{Iri, IriBuf, Uri, UriBuf};
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
-// mod url;
-
-// pub use url::*;
-
 /// Error raised when a conversion to a DID fails.
 #[derive(Debug, Error)]
 #[error("invalid DID `{0}`: {1}")]
@@ -40,12 +36,6 @@ impl<T> InvalidDid<T> {
     pub fn map<U>(self, f: impl FnOnce(T) -> U) -> InvalidDid<U> {
         InvalidDid(f(self.0), self.1)
     }
-}
-
-macro_rules! did {
-    ($did:literal) => {
-        $crate::claim_aggregation::w3c_vc::did::Did::new($did).unwrap()
-    };
 }
 
 /// DID.
