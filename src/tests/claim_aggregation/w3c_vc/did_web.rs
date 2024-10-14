@@ -193,5 +193,5 @@ mod resolve {
 }
 
 fn did(s: &'static str) -> &'static Did {
-    Did::new(s.as_bytes()).unwrap()
+    Did::new(s).unwrap()
 }

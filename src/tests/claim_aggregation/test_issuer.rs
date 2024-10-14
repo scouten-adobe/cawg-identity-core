@@ -302,5 +302,5 @@ fn generate_did_jwk_url(key: &JWK) -> DidBuf {
     let key = key.to_public();
     let normalized = serde_jcs::to_string(&key).unwrap();
     let method_id = multibase::Base::Base64Url.encode(normalized);
-    DidBuf::new(format!("did:jwk:{method_id}#0").into_bytes()).unwrap()
+    DidBuf::new(format!("did:jwk:{method_id}#0")).unwrap()
 }

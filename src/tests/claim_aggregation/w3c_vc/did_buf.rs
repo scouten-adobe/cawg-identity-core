@@ -23,28 +23,28 @@ mod new {
 
     #[test]
     fn valid_dids() {
-        let did = DidBuf::new(b"did:method:foo".to_vec()).unwrap();
+        let did = DidBuf::new("did:method:foo".to_string()).unwrap();
         assert_eq!(did.method_name(), "method");
         assert_eq!(did.method_specific_id(), "foo");
 
-        let did = DidBuf::new(b"did:a:b".to_vec()).unwrap();
+        let did = DidBuf::new("did:a:b".to_string()).unwrap();
         assert_eq!(did.method_name(), "a");
         assert_eq!(did.method_specific_id(), "b");
 
-        let did = DidBuf::new(b"did:jwk:eyJjcnYiOiJQLTI1NiIsImt0eSI6IkVDIiwieCI6ImFjYklRaXVNczNpOF91c3pFakoydHBUdFJNNEVVM3l6OTFQSDZDZEgyVjAiLCJ5IjoiX0tjeUxqOXZXTXB0bm1LdG00NkdxRHo4d2Y3NEk1TEtncmwyR3pIM25TRSJ9".to_vec()).unwrap();
+        let did = DidBuf::new("did:jwk:eyJjcnYiOiJQLTI1NiIsImt0eSI6IkVDIiwieCI6ImFjYklRaXVNczNpOF91c3pFakoydHBUdFJNNEVVM3l6OTFQSDZDZEgyVjAiLCJ5IjoiX0tjeUxqOXZXTXB0bm1LdG00NkdxRHo4d2Y3NEk1TEtncmwyR3pIM25TRSJ9".to_string()).unwrap();
         assert_eq!(did.method_name(), "jwk");
         assert_eq!(did.method_specific_id(), "eyJjcnYiOiJQLTI1NiIsImt0eSI6IkVDIiwieCI6ImFjYklRaXVNczNpOF91c3pFakoydHBUdFJNNEVVM3l6OTFQSDZDZEgyVjAiLCJ5IjoiX0tjeUxqOXZXTXB0bm1LdG00NkdxRHo4d2Y3NEk1TEtncmwyR3pIM25TRSJ9");
 
-        let did = DidBuf::new(b"did:web:example.com%3A443:u:bob".to_vec()).unwrap();
+        let did = DidBuf::new("did:web:example.com%3A443:u:bob".to_string()).unwrap();
         assert_eq!(did.method_name(), "web");
         assert_eq!(did.method_specific_id(), "example.com%3A443:u:bob");
     }
 
     #[test]
     fn err_invalid_did() {
-        DidBuf::new(b"http:a:b".to_vec()).unwrap_err();
-        DidBuf::new(b"did::b".to_vec()).unwrap_err();
-        DidBuf::new(b"did:a:".to_vec()).unwrap_err();
+        DidBuf::new("http:a:b".to_string()).unwrap_err();
+        DidBuf::new("did::b".to_string()).unwrap_err();
+        DidBuf::new("did:a:".to_string()).unwrap_err();
     }
 }
 
@@ -76,7 +76,7 @@ mod impl_serde {
     #[test]
     fn to_json() {
         let s = Sample {
-            did: DidBuf::new(b"did:method:foo".to_vec()).unwrap(),
+            did: DidBuf::new("did:method:foo".to_string()).unwrap(),
         };
         let json = serde_json::to_string(&s).unwrap();
         assert_eq!(&json, SAMPLE_WITH_DID);

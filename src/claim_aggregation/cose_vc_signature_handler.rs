@@ -111,7 +111,7 @@ impl SignatureHandler for CoseVcSignatureHandler {
 
         // TO DO (#27): Remove panic.
         #[allow(clippy::unwrap_used)]
-        let issuer_id = Did::new(asset_vc.issuer.as_bytes()).unwrap();
+        let issuer_id = Did::new(&asset_vc.issuer).unwrap();
         let (primary_did, _fragment) = issuer_id.split_fragment();
 
         // TO DO (#27): Remove panic.
