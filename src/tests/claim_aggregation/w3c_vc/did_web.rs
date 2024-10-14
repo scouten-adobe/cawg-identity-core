@@ -192,6 +192,6 @@ mod resolve {
     }
 }
 
-fn did(s: &'static str) -> &Did {
+fn did(s: &'static str) -> &'static Did {
     Did::new(s.as_bytes()).unwrap()
 }
