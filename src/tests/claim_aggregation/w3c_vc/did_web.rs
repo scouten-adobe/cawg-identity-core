@@ -65,9 +65,11 @@ mod resolve {
 
         let doc = did_web::resolve(&did("did:web:localhost")).await.unwrap();
 
-        let doc_expected = Document::from_bytes(MediaType::JsonLd, DID_JSON.as_bytes()).unwrap();
+        let doc_expected = Document::from_bytes(MediaType::JsonLd, DID_JSON.as_bytes())
+            .unwrap()
+            .into_document();
 
-        assert_eq!(doc.document.document(), doc_expected.document());
+        assert_eq!(doc, doc_expected);
 
         PROXY.with(|proxy| {
             proxy.replace(None);

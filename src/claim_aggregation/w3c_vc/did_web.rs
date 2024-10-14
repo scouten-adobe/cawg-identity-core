@@ -19,11 +19,7 @@
 // each license.
 
 use http::header;
-use ssi_dids_core::{
-    document::representation::MediaType,
-    resolution::{self, Error, Output},
-    Document,
-};
+use ssi_dids_core::{document::representation::MediaType, resolution::Error, Document};
 
 use super::did::Did;
 
@@ -39,22 +35,20 @@ thread_local! {
 
 #[derive(Debug, thiserror::Error)]
 pub enum InternalError {
-    #[error("Error building HTTP client: {0}")]
+    #[error("error building HTTP client: {0}")]
     Client(reqwest::Error),
 
-    #[error("Error sending HTTP request ({0}): {1}")]
+    #[error("error sending HTTP request ({0}): {1}")]
     Request(String, reqwest::Error),
 
-    #[error("Server error: {0}")]
+    #[error("server error: {0}")]
     Server(String),
 
-    #[error("Error reading HTTP response: {0}")]
+    #[error("error reading HTTP response: {0}")]
     Response(reqwest::Error),
 }
 
-pub(crate) async fn resolve(did: &Did<'_>) -> Result<Output, Error> {
-    // let did = DIDBuf::new(format!("did:web:{method_specific_id}")).unwrap();
-
+pub(crate) async fn resolve(did: &Did<'_>) -> Result<Document, Error> {
     let method = did.method_name();
     #[allow(clippy::panic)] // TEMPORARY while refactoring
     if method != "web" {
@@ -82,7 +76,7 @@ pub(crate) async fn resolve(did: &Did<'_>) -> Result<Output, Error> {
 
     let resp = client
         .get(&url)
-        .header(header::ACCEPT, MediaType::Json.to_string())
+        .header(header::ACCEPT, "application/did+json")
         .send()
         .await
         .map_err(|e| Error::internal(InternalError::Request(url.to_owned(), e)))?;
@@ -100,22 +94,9 @@ pub(crate) async fn resolve(did: &Did<'_>) -> Result<Output, Error> {
         .await
         .map_err(|e| Error::internal(InternalError::Response(e)))?;
 
-    // TODO: set document created/updated metadata from HTTP headers?
-    let output: Output<Vec<u8>> = Output {
-        document: document.into(),
-        document_metadata: ssi_dids_core::document::Metadata::default(),
-        metadata: resolution::Metadata::from_content_type(Some(MediaType::JsonLd.to_string())),
-    };
-
-    match &output.metadata.content_type {
-        None => Err(Error::NoRepresentation),
-        Some(ty) => {
-            let ty: MediaType = ty.parse()?;
-            output
-                .try_map(|bytes| Document::from_bytes(ty, &bytes))
-                .map_err(Error::InvalidData)
-        }
-    }
+    Document::from_bytes(MediaType::JsonLd, document.as_ref())
+        .map(|repr| repr.into_document())
+        .map_err(Error::InvalidData)
 }
 
 pub(crate) fn to_url(did: &str) -> Result<String, Error> {
