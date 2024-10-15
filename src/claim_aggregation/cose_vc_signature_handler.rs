@@ -62,7 +62,7 @@ impl SignatureHandler for CoseVcSignatureHandler {
 
         // TO DO (#27): Remove panic.
         #[allow(clippy::panic)]
-        let ssi_alg = if let Some(ref alg) = sign1.protected.header.alg {
+        let _ssi_alg = if let Some(ref alg) = sign1.protected.header.alg {
             match alg {
                 RegisteredLabelWithPrivate::Assigned(coset::iana::Algorithm::EdDSA) => {
                     ssi_jwk::Algorithm::EdDSA
@@ -169,7 +169,13 @@ impl SignatureHandler for CoseVcSignatureHandler {
         #[allow(clippy::unwrap_used)]
         sign1
             .verify_signature(b"", |sig, data| {
-                ssi_jws::verify_bytes(ssi_alg, data, &jwk, sig)
+                use ed25519_dalek::Verifier;
+                let public_key = ed25519_dalek::VerifyingKey::try_from(okp)?;
+                let signature: ed25519_dalek::Signature =
+                    sig.try_into().map_err(ssi_jwk::Error::from)?;
+                public_key
+                    .verify(data, &signature)
+                    .map_err(ssi_jwk::Error::from)
             })
             .unwrap();
 
