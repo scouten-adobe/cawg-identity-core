@@ -25,10 +25,10 @@ const ED25519_JSON: &str = r#"{"kty":"OKP","crv":"Ed25519","x":"G80iskrv_nE69qbG
 
 #[test]
 fn ed25519_from_str() {
-    let _jwk: JWK = serde_json::from_str(ED25519_JSON).unwrap();
+    let _jwk: Jwk = serde_json::from_str(ED25519_JSON).unwrap();
 }
 
 #[test]
 fn generate_ed25519() {
-    let _key = JWK::generate_ed25519().unwrap();
+    let _key = Jwk::generate_ed25519().unwrap();
 }

@@ -34,7 +34,7 @@ use zeroize::Zeroize;
 // use simple_asn1::{ASN1Block, ASN1Class, ToASN1};
 
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Hash, Eq)]
-pub(crate) struct JWK {
+pub(crate) struct Jwk {
     #[serde(rename = "use")]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub public_key_use: Option<String>,
@@ -63,7 +63,7 @@ pub(crate) struct JWK {
     pub params: Params,
 }
 
-impl FromStr for JWK {
+impl FromStr for Jwk {
     type Err = serde_json::Error;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
@@ -71,7 +71,7 @@ impl FromStr for JWK {
     }
 }
 
-impl TryFrom<&[u8]> for JWK {
+impl TryFrom<&[u8]> for Jwk {
     type Error = serde_json::Error;
 
     fn try_from(bytes: &[u8]) -> Result<Self, Self::Error> {
@@ -79,7 +79,7 @@ impl TryFrom<&[u8]> for JWK {
     }
 }
 
-impl TryFrom<serde_json::Value> for JWK {
+impl TryFrom<serde_json::Value> for Jwk {
     type Error = serde_json::Error;
 
     fn try_from(value: serde_json::Value) -> Result<Self, Self::Error> {
@@ -87,7 +87,7 @@ impl TryFrom<serde_json::Value> for JWK {
     }
 }
 
-impl fmt::Display for JWK {
+impl fmt::Display for Jwk {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let json =
             serde_json::to_string_pretty(self).unwrap_or_else(|_| "unable to serialize".to_owned());
@@ -95,7 +95,7 @@ impl fmt::Display for JWK {
     }
 }
 
-impl From<Params> for JWK {
+impl From<Params> for Jwk {
     fn from(params: Params) -> Self {
         Self {
             params,
@@ -110,7 +110,7 @@ impl From<Params> for JWK {
         }
     }
 }
-// linked_data::json_literal!(JWK);
+// linked_data::json_literal!(Jwk);
 
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Hash, Eq, Zeroize)]
 #[serde(tag = "kty")]
@@ -120,7 +120,8 @@ pub enum Params {
     // RSA(RSAParams),
     // #[serde(rename = "oct")]
     // Symmetric(SymmetricParams),
-    OKP(OctetParams),
+    #[serde(rename = "OKP")]
+    Okp(OctetParams),
 }
 
 impl Drop for OctetParams {
@@ -152,12 +153,12 @@ pub struct OctetParams {
 pub struct Base64urlUInt(pub Vec<u8>);
 type Base64urlUIntString = String;
 
-impl JWK {
-    pub fn generate_ed25519() -> Result<JWK, Error> {
+impl Jwk {
+    pub fn generate_ed25519() -> Result<Jwk, Error> {
         let mut csprng = rand::rngs::OsRng {};
         let secret = ed25519_dalek::SigningKey::generate(&mut csprng);
         let public = secret.verifying_key();
-        Ok(JWK::from(Params::OKP(OctetParams {
+        Ok(Jwk::from(Params::Okp(OctetParams {
             curve: "Ed25519".to_string(),
             public_key: Base64urlUInt(public.as_ref().to_vec()),
             private_key: Some(Base64urlUInt(secret.to_bytes().to_vec())),
@@ -169,7 +170,7 @@ impl JWK {
             return Some(algorithm);
         }
         match &self.params {
-            Params::OKP(okp_params) if okp_params.curve == "Ed25519" => {
+            Params::Okp(okp_params) if okp_params.curve == "Ed25519" => {
                 return Some(Algorithm::EdDsa);
             }
             _ => {}
@@ -189,9 +190,9 @@ impl JWK {
     //     self.params.is_public()
     // }
 
-    // /// Compare JWK equality by public key properties.
-    // /// Equivalent to comparing by [JWK Thumbprint][Self::thumbprint].
-    // pub fn equals_public(&self, other: &JWK) -> bool {
+    // /// Compare Jwk equality by public key properties.
+    // /// Equivalent to comparing by [Jwk Thumbprint][Self::thumbprint].
+    // pub fn equals_public(&self, other: &Jwk) -> bool {
     //     match (&self.params, &other.params) {
     //         (
     //             Params::RSA(RSAParams {
@@ -205,7 +206,7 @@ impl JWK {
     //                 ..
     //             }),
     //         ) => n1 == n2 && e1 == e2,
-    //         (Params::OKP(okp1), Params::OKP(okp2)) => {
+    //         (Params::Okp(okp1), Params::Okp(okp2)) => {
     //             okp1.curve == okp2.curve && okp1.public_key == okp2.public_key
     //         }
     //         (
@@ -235,7 +236,7 @@ impl JWK {
     // }
 
     // pub fn thumbprint(&self) -> Result<String, Error> {
-    //     // JWK parameters for thumbprint hashing must be in lexicographical
+    //     // Jwk parameters for thumbprint hashing must be in lexicographical
     // order, and without     // string escaping.
     //     // https://datatracker.ietf.org/doc/html/rfc7638#section-3.1
     //     let json_string = match &self.params {
@@ -249,9 +250,9 @@ impl JWK {
     //                 String::from(n)
     //             )
     //         }
-    //         Params::OKP(okp_params) => {
+    //         Params::Okp(okp_params) => {
     //             format!(
-    //                 r#"{{"crv":"{}","kty":"OKP","x":"{}"}}"#,
+    //                 r#"{{"crv":"{}","kty":"Okp","x":"{}"}}"#,
     //                 okp_params.curve.clone(),
     //                 String::from(okp_params.public_key.clone())
     //             )
@@ -308,14 +309,14 @@ impl TryFrom<&OctetParams> for ed25519_dalek::SigningKey {
 }
 */
 
-pub fn ed25519_parse(data: &[u8]) -> Result<JWK, Error> {
+pub fn ed25519_parse(data: &[u8]) -> Result<Jwk, Error> {
     let public_key = ed25519_dalek::VerifyingKey::try_from(data)?;
     Ok(public_key.into())
 }
 
-impl From<ed25519_dalek::VerifyingKey> for JWK {
+impl From<ed25519_dalek::VerifyingKey> for Jwk {
     fn from(value: ed25519_dalek::VerifyingKey) -> Self {
-        JWK::from(Params::OKP(OctetParams {
+        Jwk::from(Params::Okp(OctetParams {
             curve: "Ed25519".to_string(),
             public_key: Base64urlUInt(value.to_bytes().to_vec()),
             private_key: None,
@@ -323,9 +324,9 @@ impl From<ed25519_dalek::VerifyingKey> for JWK {
     }
 }
 
-fn ed25519_parse_private(data: &[u8]) -> Result<JWK, Error> {
+fn ed25519_parse_private(data: &[u8]) -> Result<Jwk, Error> {
     let key: ed25519_dalek::SigningKey = data.try_into()?;
-    Ok(JWK::from(Params::OKP(OctetParams {
+    Ok(Jwk::from(Params::Okp(OctetParams {
         curve: "Ed25519".to_string(),
         public_key: Base64urlUInt(ed25519_dalek::VerifyingKey::from(&key).as_bytes().to_vec()),
         private_key: Some(Base64urlUInt(data.to_owned())),
@@ -373,12 +374,12 @@ pub enum Algorithm {
 #[derive(Error, Debug)]
 #[non_exhaustive]
 pub enum Error {
-    /// Missing curve in JWK
-    #[error("Missing curve in JWK")]
+    /// Missing curve in Jwk
+    #[error("Missing curve in Jwk")]
     MissingCurve,
 
-    /// Missing elliptic curve point in JWK
-    #[error("Missing elliptic curve point in JWK")]
+    /// Missing elliptic curve point in Jwk
+    #[error("Missing elliptic curve point in Jwk")]
     MissingPoint,
 
     /// Missing key value for symmetric key
@@ -391,14 +392,14 @@ pub enum Error {
 
     /// Key type not implemented
     #[error("Key type not implemented for {0}")]
-    KeyTypeNotImplemented(Box<JWK>),
+    KeyTypeNotImplemented(Box<Jwk>),
 
     /// Curve not implemented
     #[error("Curve not implemented: '{0}'")]
     CurveNotImplemented(String),
 
-    /// Missing private key parameter in JWK
-    #[error("Missing private key parameter in JWK")]
+    /// Missing private key parameter in Jwk
+    #[error("Missing private key parameter in Jwk")]
     MissingPrivateKey,
 
     /// Invalid key length
