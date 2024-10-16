@@ -16,11 +16,14 @@ use std::fmt::{Debug, Formatter};
 use async_trait::async_trait;
 use coset::{CoseSign1, RegisteredLabelWithPrivate, TaggedCborSerializable};
 use nonempty_collections::{vector::Iter, NEVec, NonEmptyIterator};
-use ssi_jwk::JWK;
 
 use crate::{
     claim_aggregation::{
-        w3c_vc::{did::Did, did_web},
+        w3c_vc::{
+            did::Did,
+            did_web,
+            jwk::{Algorithm, Jwk, JwkError, Params},
+        },
         IdentityAssertionVc, VcVerifiedIdentity,
     },
     identity_assertion::VerifiedIdentities,
@@ -65,7 +68,7 @@ impl SignatureHandler for CoseVcSignatureHandler {
         let _ssi_alg = if let Some(ref alg) = sign1.protected.header.alg {
             match alg {
                 RegisteredLabelWithPrivate::Assigned(coset::iana::Algorithm::EdDSA) => {
-                    ssi_jwk::Algorithm::EdDSA
+                    Algorithm::EdDsa
                 }
                 _ => {
                     panic!("TO DO: Add suport for signing alg {alg:?}");
@@ -121,7 +124,7 @@ impl SignatureHandler for CoseVcSignatureHandler {
             "jwk" => {
                 let jwk = primary_did.method_specific_id();
                 let jwk = multibase::Base::decode(&multibase::Base::Base64Url, jwk).unwrap();
-                let jwk: JWK = serde_json::from_slice(&jwk).unwrap();
+                let jwk: Jwk = serde_json::from_slice(&jwk).unwrap();
                 jwk
             }
             "web" => {
@@ -144,7 +147,7 @@ impl SignatureHandler for CoseVcSignatureHandler {
                 let jwk_json = serde_json::to_string_pretty(jwk_prop).unwrap();
                 dbg!(&jwk_json);
 
-                let jwk: JWK = serde_json::from_str(&jwk_json).unwrap();
+                let jwk: Jwk = serde_json::from_str(&jwk_json).unwrap();
                 dbg!(&jwk);
 
                 jwk
@@ -157,10 +160,10 @@ impl SignatureHandler for CoseVcSignatureHandler {
         // TEMPORARY only support ED25519.
         // TO DO (#27): Remove panic.
         #[allow(clippy::panic)]
-        let ssi_jwk::Params::OKP(ref okp) = jwk.params
-        else {
-            panic!("Temporarily unsupported params type");
-        };
+        let Params::Okp(ref okp) = jwk.params;
+        // else {
+        //     panic!("Temporarily unsupported params type");
+        // };
         assert_eq!(okp.curve, "Ed25519");
 
         // Check the signature, which needs to have the same `aad` provided, by
@@ -171,11 +174,8 @@ impl SignatureHandler for CoseVcSignatureHandler {
             .verify_signature(b"", |sig, data| {
                 use ed25519_dalek::Verifier;
                 let public_key = ed25519_dalek::VerifyingKey::try_from(okp)?;
-                let signature: ed25519_dalek::Signature =
-                    sig.try_into().map_err(ssi_jwk::Error::from)?;
-                public_key
-                    .verify(data, &signature)
-                    .map_err(ssi_jwk::Error::from)
+                let signature: ed25519_dalek::Signature = sig.try_into().map_err(JwkError::from)?;
+                public_key.verify(data, &signature).map_err(JwkError::from)
             })
             .unwrap();
 

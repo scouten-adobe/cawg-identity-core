@@ -154,7 +154,7 @@ pub struct Base64urlUInt(pub Vec<u8>);
 type Base64urlUIntString = String;
 
 impl Jwk {
-    pub fn generate_ed25519() -> Result<Jwk, Error> {
+    pub fn generate_ed25519() -> Result<Jwk, JwkError> {
         let mut csprng = rand::rngs::OsRng {};
         let secret = ed25519_dalek::SigningKey::generate(&mut csprng);
         let public = secret.verifying_key();
@@ -235,15 +235,15 @@ impl Jwk {
     //     }
     // }
 
-    // pub fn thumbprint(&self) -> Result<String, Error> {
+    // pub fn thumbprint(&self) -> Result<String, JwkError> {
     //     // Jwk parameters for thumbprint hashing must be in lexicographical
     // order, and without     // string escaping.
     //     // https://datatracker.ietf.org/doc/html/rfc7638#section-3.1
     //     let json_string = match &self.params {
     //         Params::RSA(rsa_params) => {
     //             let n =
-    // rsa_params.modulus.as_ref().ok_or(Error::MissingModulus)?;
-    // let e = rsa_params.exponent.as_ref().ok_or(Error::MissingExponent)?;
+    // rsa_params.modulus.as_ref().ok_or(JwkError::MissingModulus)?;
+    // let e = rsa_params.exponent.as_ref().ok_or(JwkError::MissingExponent)?;
     //             format!(
     //                 r#"{{"e":"{}","kty":"RSA","n":"{}"}}"#,
     //                 String::from(e),
@@ -258,10 +258,10 @@ impl Jwk {
     //             )
     //         }
     //         Params::EC(ec_params) => {
-    //             let curve = ec_params.curve.as_ref().ok_or(Error::MissingCurve)?;
-    //             let x =
-    // ec_params.x_coordinate.as_ref().ok_or(Error::MissingPoint)?;
-    // let y = ec_params.y_coordinate.as_ref().ok_or(Error::MissingPoint)?;
+    //             let curve =
+    // ec_params.curve.as_ref().ok_or(JwkError::MissingCurve)?;             let
+    // x = ec_params.x_coordinate.as_ref().ok_or(JwkError::MissingPoint)?;
+    // let y = ec_params.y_coordinate.as_ref().ok_or(JwkError::MissingPoint)?;
     //             format!(
     //                 r#"{{"crv":"{}","kty":"EC","x":"{}","y":"{}"}}"#,
     //                 curve.clone(),
@@ -273,7 +273,7 @@ impl Jwk {
     //             let k = sym_params
     //                 .key_value
     //                 .as_ref()
-    //                 .ok_or(Error::MissingKeyValue)?;
+    //                 .ok_or(JwkError::MissingKeyValue)?;
     //             format!(r#"{{"k":"{}","kty":"oct"}}"#, String::from(k))
     //         }
     //     };
@@ -283,33 +283,34 @@ impl Jwk {
     // }
 }
 
-/*
 impl TryFrom<&OctetParams> for ed25519_dalek::VerifyingKey {
-    type Error = Error;
+    type Error = JwkError;
+
     fn try_from(params: &OctetParams) -> Result<Self, Self::Error> {
         if params.curve != *"Ed25519" {
-            return Err(Error::CurveNotImplemented(params.curve.to_string()));
+            return Err(JwkError::CurveNotImplemented(params.curve.to_string()));
         }
-        Ok(params.public_key.0.as_slice().as_ref().try_into()?)
+        Ok(params.public_key.0.as_slice().try_into()?)
     }
 }
 
+/*
 impl TryFrom<&OctetParams> for ed25519_dalek::SigningKey {
-    type Error = Error;
-    fn try_from(params: &OctetParams) -> Result<Self, Self::Error> {
+    type Error = JwkError;
+    fn try_from(params: &OctetParams) -> Result<Self, Self::JwkError> {
         if params.curve != *"Ed25519" {
-            return Err(Error::CurveNotImplemented(params.curve.to_string()));
+            return Err(JwkError::CurveNotImplemented(params.curve.to_string()));
         }
         let private_key = params
             .private_key
             .as_ref()
-            .ok_or(Error::MissingPrivateKey)?;
+            .ok_or(JwkError::MissingPrivateKey)?;
         Ok(private_key.0.as_slice().as_ref().try_into()?)
     }
 }
 */
 
-pub fn ed25519_parse(data: &[u8]) -> Result<Jwk, Error> {
+pub fn ed25519_parse(data: &[u8]) -> Result<Jwk, JwkError> {
     let public_key = ed25519_dalek::VerifyingKey::try_from(data)?;
     Ok(public_key.into())
 }
@@ -324,7 +325,7 @@ impl From<ed25519_dalek::VerifyingKey> for Jwk {
     }
 }
 
-fn ed25519_parse_private(data: &[u8]) -> Result<Jwk, Error> {
+fn ed25519_parse_private(data: &[u8]) -> Result<Jwk, JwkError> {
     let key: ed25519_dalek::SigningKey = data.try_into()?;
     Ok(Jwk::from(Params::Okp(OctetParams {
         curve: "Ed25519".to_string(),
@@ -371,15 +372,15 @@ pub enum Algorithm {
     None,
 }
 
-#[derive(Error, Debug)]
+#[derive(Debug, Error)]
 #[non_exhaustive]
-pub enum Error {
-    /// Missing curve in Jwk
-    #[error("Missing curve in Jwk")]
+pub enum JwkError {
+    /// Missing curve in JWK
+    #[error("Missing curve in JWK")]
     MissingCurve,
 
-    /// Missing elliptic curve point in Jwk
-    #[error("Missing elliptic curve point in Jwk")]
+    /// Missing elliptic curve point in JWK
+    #[error("Missing elliptic curve point in JWK")]
     MissingPoint,
 
     /// Missing key value for symmetric key
@@ -391,15 +392,15 @@ pub enum Error {
     UnsupportedKeyType,
 
     /// Key type not implemented
-    #[error("Key type not implemented for {0}")]
-    KeyTypeNotImplemented(Box<Jwk>),
+    #[error("Key type {0} not implemented")]
+    KeyTypeNotImplemented(String),
 
     /// Curve not implemented
     #[error("Curve not implemented: '{0}'")]
     CurveNotImplemented(String),
 
-    /// Missing private key parameter in Jwk
-    #[error("Missing private key parameter in Jwk")]
+    /// Missing private key parameter in JWK
+    #[error("Missing private key parameter in JWK")]
     MissingPrivateKey,
 
     /// Invalid key length
