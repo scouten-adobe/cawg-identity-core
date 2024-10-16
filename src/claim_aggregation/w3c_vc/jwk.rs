@@ -18,9 +18,6 @@
 // specific language governing permissions and limitations under
 // each license.
 
-#![allow(dead_code)]
-#![allow(unused)]
-
 use std::{
     convert::TryFrom, fmt, num::ParseIntError, result::Result, str::FromStr, string::FromUtf8Error,
 };
@@ -30,35 +27,40 @@ use serde::{Deserialize, Serialize};
 use thiserror::Error;
 use zeroize::Zeroize;
 
-// use num_bigint::{BigInt, Sign};
-// use simple_asn1::{ASN1Block, ASN1Class, ToASN1};
-
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Hash, Eq)]
 pub(crate) struct Jwk {
     #[serde(rename = "use")]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub public_key_use: Option<String>,
+
     #[serde(rename = "key_ops")]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub key_operations: Option<Vec<String>>,
+
     #[serde(rename = "alg")]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub algorithm: Option<Algorithm>,
+
     #[serde(rename = "kid")]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub key_id: Option<String>,
+
     #[serde(rename = "x5u")]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub x509_url: Option<String>,
+
     #[serde(rename = "x5c")]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub x509_certificate_chain: Option<Vec<String>>,
+
     #[serde(rename = "x5t")]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub x509_thumbprint_sha1: Option<Base64urlUInt>,
+
     #[serde(rename = "x5t#S256")]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub x509_thumbprint_sha256: Option<Base64urlUInt>,
+
     #[serde(flatten)]
     pub params: Params,
 }
@@ -126,6 +128,7 @@ pub enum Params {
 
 impl Params {
     /// Strip private key material
+    #[cfg(test)] // So far, only used in test code
     pub fn to_public(&self) -> Self {
         match self {
             // Self::EC(params) => Self::EC(params.to_public()),
@@ -150,6 +153,7 @@ pub struct OctetParams {
     // Parameters for Octet Key Pair Public Keys
     #[serde(rename = "crv")]
     pub curve: String,
+
     #[serde(rename = "x")]
     pub public_key: Base64urlUInt,
 
@@ -176,6 +180,7 @@ pub struct Base64urlUInt(pub Vec<u8>);
 type Base64urlUIntString = String;
 
 impl Jwk {
+    #[cfg(test)]
     pub fn generate_ed25519() -> Result<Jwk, JwkError> {
         let mut csprng = rand::rngs::OsRng {};
         let secret = ed25519_dalek::SigningKey::generate(&mut csprng);
@@ -187,6 +192,7 @@ impl Jwk {
         })))
     }
 
+    #[cfg(test)]
     pub fn get_algorithm(&self) -> Option<Algorithm> {
         if let Some(algorithm) = self.algorithm {
             return Some(algorithm);
@@ -201,108 +207,12 @@ impl Jwk {
     }
 
     /// Strip private key material
-    // TODO: use separate type
+    #[cfg(test)]
     pub fn to_public(&self) -> Self {
         let mut key = self.clone();
         key.params = key.params.to_public();
         key
     }
-
-    // pub fn is_public(&self) -> bool {
-    //     self.params.is_public()
-    // }
-
-    // /// Compare Jwk equality by public key properties.
-    // /// Equivalent to comparing by [Jwk Thumbprint][Self::thumbprint].
-    // pub fn equals_public(&self, other: &Jwk) -> bool {
-    //     match (&self.params, &other.params) {
-    //         (
-    //             Params::RSA(RSAParams {
-    //                 modulus: Some(n1),
-    //                 exponent: Some(e1),
-    //                 ..
-    //             }),
-    //             Params::RSA(RSAParams {
-    //                 modulus: Some(n2),
-    //                 exponent: Some(e2),
-    //                 ..
-    //             }),
-    //         ) => n1 == n2 && e1 == e2,
-    //         (Params::Okp(okp1), Params::Okp(okp2)) => {
-    //             okp1.curve == okp2.curve && okp1.public_key == okp2.public_key
-    //         }
-    //         (
-    //             Params::EC(ECParams {
-    //                 curve: Some(crv1),
-    //                 x_coordinate: Some(x1),
-    //                 y_coordinate: Some(y1),
-    //                 ..
-    //             }),
-    //             Params::EC(ECParams {
-    //                 curve: Some(crv2),
-    //                 x_coordinate: Some(x2),
-    //                 y_coordinate: Some(y2),
-    //                 ..
-    //             }),
-    //         ) => crv1 == crv2 && x1 == x2 && y1 == y2,
-    //         (
-    //             Params::Symmetric(SymmetricParams {
-    //                 key_value: Some(kv1),
-    //             }),
-    //             Params::Symmetric(SymmetricParams {
-    //                 key_value: Some(kv2),
-    //             }),
-    //         ) => kv1 == kv2,
-    //         _ => false,
-    //     }
-    // }
-
-    // pub fn thumbprint(&self) -> Result<String, JwkError> {
-    //     // Jwk parameters for thumbprint hashing must be in lexicographical
-    // order, and without     // string escaping.
-    //     // https://datatracker.ietf.org/doc/html/rfc7638#section-3.1
-    //     let json_string = match &self.params {
-    //         Params::RSA(rsa_params) => {
-    //             let n =
-    // rsa_params.modulus.as_ref().ok_or(JwkError::MissingModulus)?;
-    // let e = rsa_params.exponent.as_ref().ok_or(JwkError::MissingExponent)?;
-    //             format!(
-    //                 r#"{{"e":"{}","kty":"RSA","n":"{}"}}"#,
-    //                 String::from(e),
-    //                 String::from(n)
-    //             )
-    //         }
-    //         Params::Okp(okp_params) => {
-    //             format!(
-    //                 r#"{{"crv":"{}","kty":"Okp","x":"{}"}}"#,
-    //                 okp_params.curve.clone(),
-    //                 String::from(okp_params.public_key.clone())
-    //             )
-    //         }
-    //         Params::EC(ec_params) => {
-    //             let curve =
-    // ec_params.curve.as_ref().ok_or(JwkError::MissingCurve)?;             let
-    // x = ec_params.x_coordinate.as_ref().ok_or(JwkError::MissingPoint)?;
-    // let y = ec_params.y_coordinate.as_ref().ok_or(JwkError::MissingPoint)?;
-    //             format!(
-    //                 r#"{{"crv":"{}","kty":"EC","x":"{}","y":"{}"}}"#,
-    //                 curve.clone(),
-    //                 String::from(x),
-    //                 String::from(y)
-    //             )
-    //         }
-    //         Params::Symmetric(sym_params) => {
-    //             let k = sym_params
-    //                 .key_value
-    //                 .as_ref()
-    //                 .ok_or(JwkError::MissingKeyValue)?;
-    //             format!(r#"{{"k":"{}","kty":"oct"}}"#, String::from(k))
-    //         }
-    //     };
-    //     let hash = ssi_crypto::hashes::sha256::sha256(json_string.as_bytes());
-    //     let thumbprint = String::from(Base64urlUInt(hash.to_vec()));
-    //     Ok(thumbprint)
-    // }
 }
 
 impl TryFrom<&OctetParams> for ed25519_dalek::VerifyingKey {
@@ -333,11 +243,6 @@ impl TryFrom<&OctetParams> for ed25519_dalek::SigningKey {
     }
 }
 
-pub fn ed25519_parse(data: &[u8]) -> Result<Jwk, JwkError> {
-    let public_key = ed25519_dalek::VerifyingKey::try_from(data)?;
-    Ok(public_key.into())
-}
-
 impl From<ed25519_dalek::VerifyingKey> for Jwk {
     fn from(value: ed25519_dalek::VerifyingKey) -> Self {
         Jwk::from(Params::Okp(OctetParams {
@@ -346,15 +251,6 @@ impl From<ed25519_dalek::VerifyingKey> for Jwk {
             private_key: None,
         }))
     }
-}
-
-fn ed25519_parse_private(data: &[u8]) -> Result<Jwk, JwkError> {
-    let key: ed25519_dalek::SigningKey = data.try_into()?;
-    Ok(Jwk::from(Params::Okp(OctetParams {
-        curve: "Ed25519".to_string(),
-        public_key: Base64urlUInt(ed25519_dalek::VerifyingKey::from(&key).as_bytes().to_vec()),
-        private_key: Some(Base64urlUInt(data.to_owned())),
-    })))
 }
 
 const BASE64_URL_SAFE_INDIFFERENT_PAD: base64::engine::GeneralPurpose =
