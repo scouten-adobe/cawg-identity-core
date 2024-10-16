@@ -124,6 +124,18 @@ pub enum Params {
     Okp(OctetParams),
 }
 
+impl Params {
+    /// Strip private key material
+    pub fn to_public(&self) -> Self {
+        match self {
+            // Self::EC(params) => Self::EC(params.to_public()),
+            // Self::RSA(params) => Self::RSA(params.to_public()),
+            // Self::Symmetric(params) => Self::Symmetric(params.to_public()),
+            Self::Okp(params) => Self::Okp(params.to_public()),
+        }
+    }
+}
+
 impl Drop for OctetParams {
     fn drop(&mut self) {
         // Zeroize private key
@@ -145,6 +157,16 @@ pub struct OctetParams {
     #[serde(rename = "d")]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub private_key: Option<Base64urlUInt>,
+}
+
+impl OctetParams {
+    pub fn to_public(&self) -> Self {
+        Self {
+            curve: self.curve.clone(),
+            public_key: self.public_key.clone(),
+            private_key: None,
+        }
+    }
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Hash, Eq, Zeroize)]
@@ -178,13 +200,13 @@ impl Jwk {
         None
     }
 
-    // /// Strip private key material
-    // // TODO: use separate type
-    // pub fn to_public(&self) -> Self {
-    //     let mut key = self.clone();
-    //     key.params = key.params.to_public();
-    //     key
-    // }
+    /// Strip private key material
+    // TODO: use separate type
+    pub fn to_public(&self) -> Self {
+        let mut key = self.clone();
+        key.params = key.params.to_public();
+        key
+    }
 
     // pub fn is_public(&self) -> bool {
     //     self.params.is_public()
@@ -294,21 +316,22 @@ impl TryFrom<&OctetParams> for ed25519_dalek::VerifyingKey {
     }
 }
 
-/*
 impl TryFrom<&OctetParams> for ed25519_dalek::SigningKey {
     type Error = JwkError;
-    fn try_from(params: &OctetParams) -> Result<Self, Self::JwkError> {
+
+    fn try_from(params: &OctetParams) -> Result<Self, Self::Error> {
         if params.curve != *"Ed25519" {
             return Err(JwkError::CurveNotImplemented(params.curve.to_string()));
         }
+
         let private_key = params
             .private_key
             .as_ref()
             .ok_or(JwkError::MissingPrivateKey)?;
-        Ok(private_key.0.as_slice().as_ref().try_into()?)
+
+        Ok(private_key.0.as_slice().try_into()?)
     }
 }
-*/
 
 pub fn ed25519_parse(data: &[u8]) -> Result<Jwk, JwkError> {
     let public_key = ed25519_dalek::VerifyingKey::try_from(data)?;

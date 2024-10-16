@@ -18,15 +18,17 @@ use coset::{CoseSign1Builder, HeaderBuilder, TaggedCborSerializable};
 use iref::UriBuf;
 use non_empty_string::NonEmptyString;
 use nonempty_collections::{nev, NEVec};
-use ssi_jwk::JWK;
 use thiserror::Error;
 use xsd_types::value::DateTimeStamp;
 
 use crate::{
     builder::{CredentialHolder, IdentityAssertionBuilder, ManifestBuilder},
     claim_aggregation::{
-        w3c_vc::did::DidBuf, IdentityAssertionVc, IdentityClaimsAggregationVc, IdentityProvider,
-        VcVerifiedIdentity,
+        w3c_vc::{
+            did::DidBuf,
+            jwk::{Algorithm, Jwk, Params},
+        },
+        IdentityAssertionVc, IdentityClaimsAggregationVc, IdentityProvider, VcVerifiedIdentity,
     },
     tests::fixtures::{temp_c2pa_signer, temp_dir_path},
     IdentityAssertion, SignerPayload,
@@ -38,7 +40,7 @@ pub(super) struct TestIssuer {
 }
 
 enum TestSetup {
-    UserAndIssuerJwk(JWK, JWK),
+    UserAndIssuerJwk(Jwk, Jwk),
     // Credential(Credential), // redo for ssi 0.8.0
 }
 
@@ -140,8 +142,8 @@ impl TestIssuer {
     pub(super) fn new() -> Self {
         Self {
             setup: TestSetup::UserAndIssuerJwk(
-                JWK::generate_ed25519().unwrap(),
-                JWK::generate_ed25519().unwrap(),
+                Jwk::generate_ed25519().unwrap(),
+                Jwk::generate_ed25519().unwrap(),
             ),
         }
     }
@@ -241,12 +243,12 @@ fn non_empty_str(s: &str) -> NonEmptyString {
 
 pub(crate) async fn sign_into_cose(
     vc: &IdentityAssertionVc,
-    signer: &JWK,
+    signer: &Jwk,
 ) -> Result<Vec<u8>, TbdError> {
     let payload_bytes = serde_json::to_vec(vc).unwrap();
 
     let coset_alg = match signer.get_algorithm().unwrap() {
-        ssi_jwk::Algorithm::EdDSA => coset::iana::Algorithm::EdDSA,
+        Algorithm::EdDsa => coset::iana::Algorithm::EdDSA,
         ssi_alg => {
             unimplemented!("Add support for SSI alg {ssi_alg:?}")
         }
@@ -282,7 +284,7 @@ pub(crate) enum TbdError {
     SomethingWentWrong,
 }
 
-fn sign_bytes(signer: &JWK, payload: &[u8]) -> Vec<u8> {
+fn sign_bytes(signer: &Jwk, payload: &[u8]) -> Vec<u8> {
     // Q&D implementation of Ed25519 signing for now.
     // TO DO: Configurable signing for general cases.
 
@@ -290,19 +292,18 @@ fn sign_bytes(signer: &JWK, payload: &[u8]) -> Vec<u8> {
     #[allow(clippy::unwrap_used)]
     let algorithm = signer.get_algorithm().unwrap();
     match algorithm {
-        ssi_jwk::Algorithm::EdDSA => match &signer.params {
-            ssi_jwk::Params::OKP(okp) => {
+        Algorithm::EdDsa => match &signer.params {
+            Params::Okp(okp) => {
                 let secret = ed25519_dalek::SigningKey::try_from(okp).unwrap();
                 use ed25519_dalek::Signer;
                 secret.sign(payload).to_bytes().to_vec()
-            }
-            _ => unimplemented!("only JWKParams::OKP is supported for now"),
+            } // _ => unimplemented!("only JWKParams::OKP is supported for now"),
         },
-        _ => unimplemented!("signing algorithm {algorithm} not yet supported"),
+        _ => unimplemented!("signing algorithm not yet supported"),
     }
 }
 
-fn generate_did_jwk_url(key: &JWK) -> DidBuf {
+fn generate_did_jwk_url(key: &Jwk) -> DidBuf {
     let key = key.to_public();
     let normalized = serde_jcs::to_string(&key).unwrap();
     let method_id = multibase::Base::Base64Url.encode(normalized);
