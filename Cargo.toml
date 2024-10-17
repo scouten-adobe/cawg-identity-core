@@ -16,7 +16,6 @@ http = "0.2" # out of date, can we remove or update?
 iref = { version = "3.2.2", features = ["serde"] }
 json-syntax = { version = "0.12.5", features = ["serde"] }
 jumbf = "0.4.0"
-linked-data = { version = "0.1.2", features = ["derive"] }
 multibase = "0.9.1"
 nonempty-collections = { version = "0.2.9", features = ["serde"] }
 non-empty-string = { version = "=0.2.4", features = ["serde"] }
