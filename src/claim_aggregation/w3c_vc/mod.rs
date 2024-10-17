@@ -11,5 +11,11 @@
 // specific language governing permissions and limitations under
 // each license.
 
-pub(crate) mod c2pa_parser;
-pub(crate) mod debug_byte_slice;
+//! Basic infrastructure for working with W3C Verifiable Credentials.
+
+pub(crate) mod credential;
+pub(crate) mod did;
+pub(crate) mod did_doc;
+pub(crate) mod did_web;
+pub(crate) mod jwk;
+pub(super) mod serialization;

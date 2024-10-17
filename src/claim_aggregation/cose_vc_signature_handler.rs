@@ -11,20 +11,21 @@
 // specific language governing permissions and limitations under
 // each license.
 
-use std::{
-    fmt::{Debug, Formatter},
-    slice::Iter,
-};
+use std::fmt::{Debug, Formatter};
 
 use async_trait::async_trait;
 use coset::{CoseSign1, RegisteredLabelWithPrivate, TaggedCborSerializable};
-use did_web::DIDWeb;
-use ssi_dids_core::{DIDResolver, DIDURL};
-use ssi_jwk::JWK;
-use ssi_vc::syntax::NonEmptyVec;
+use nonempty_collections::{vector::Iter, NEVec, NonEmptyIterator};
 
 use crate::{
-    claim_aggregation::{IdentityAssertionVc, VcVerifiedIdentity},
+    claim_aggregation::{
+        w3c_vc::{
+            did::Did,
+            did_web,
+            jwk::{Algorithm, Jwk, JwkError, Params},
+        },
+        IdentityAssertionVc, VcVerifiedIdentity,
+    },
     identity_assertion::VerifiedIdentities,
     NamedActor, SignatureHandler, SignerPayload, ValidationResult, VerifiedIdentity,
 };
@@ -64,10 +65,10 @@ impl SignatureHandler for CoseVcSignatureHandler {
 
         // TO DO (#27): Remove panic.
         #[allow(clippy::panic)]
-        let ssi_alg = if let Some(ref alg) = sign1.protected.header.alg {
+        let _ssi_alg = if let Some(ref alg) = sign1.protected.header.alg {
             match alg {
                 RegisteredLabelWithPrivate::Assigned(coset::iana::Algorithm::EdDSA) => {
-                    ssi_jwk::Algorithm::EdDSA
+                    Algorithm::EdDsa
                 }
                 _ => {
                     panic!("TO DO: Add suport for signing alg {alg:?}");
@@ -111,12 +112,10 @@ impl SignatureHandler for CoseVcSignatureHandler {
         // Discover public key for issuer DID and validate signature.
         // TEMPORARY version supports did:jwk and did:web only.
 
-        let issuer_id = asset_vc.issuer.id();
         // TO DO (#27): Remove panic.
         #[allow(clippy::unwrap_used)]
-        let issuer_id = DIDURL::new(issuer_id.as_bytes()).unwrap();
-        let (primary_did, _fragment) = issuer_id.without_fragment();
-        let primary_did = primary_did.did();
+        let issuer_id = Did::new(&asset_vc.issuer).unwrap();
+        let (primary_did, _fragment) = issuer_id.split_fragment();
 
         // TO DO (#27): Remove panic.
         #[allow(clippy::unwrap_used)]
@@ -125,26 +124,20 @@ impl SignatureHandler for CoseVcSignatureHandler {
             "jwk" => {
                 let jwk = primary_did.method_specific_id();
                 let jwk = multibase::Base::decode(&multibase::Base::Base64Url, jwk).unwrap();
-                let jwk: JWK = serde_json::from_slice(&jwk).unwrap();
+                let jwk: Jwk = serde_json::from_slice(&jwk).unwrap();
                 jwk
             }
             "web" => {
-                let did_doc = DIDWeb.dereference(issuer_id).await.unwrap().content;
+                #[allow(clippy::expect_used)]
+                let did_doc = did_web::resolve(&primary_did).await.expect("No output");
 
-                let ssi_dids_core::resolution::Content::Resource(r) = did_doc else {
-                    panic!("not resource");
-                };
-                let ssi_dids_core::document::resource::Resource::Document(d) = r else {
-                    panic!("not document");
-                };
-                let vm1 = d
+                let vm1 = did_doc
                     .verification_relationships
                     .assertion_method
                     .first()
                     .unwrap();
-                let ssi_dids_core::document::verification_method::ValueOrReference::Value(vm1) =
-                    vm1
-                else {
+
+                let super::w3c_vc::did_doc::ValueOrReference::Value(vm1) = vm1 else {
                     panic!("not value");
                 };
                 let jwk_prop = vm1.properties.get("publicKeyJwk").unwrap();
@@ -154,7 +147,7 @@ impl SignatureHandler for CoseVcSignatureHandler {
                 let jwk_json = serde_json::to_string_pretty(jwk_prop).unwrap();
                 dbg!(&jwk_json);
 
-                let jwk: JWK = serde_json::from_str(&jwk_json).unwrap();
+                let jwk: Jwk = serde_json::from_str(&jwk_json).unwrap();
                 dbg!(&jwk);
 
                 jwk
@@ -167,10 +160,10 @@ impl SignatureHandler for CoseVcSignatureHandler {
         // TEMPORARY only support ED25519.
         // TO DO (#27): Remove panic.
         #[allow(clippy::panic)]
-        let ssi_jwk::Params::OKP(ref okp) = jwk.params
-        else {
-            panic!("Temporarily unsupported params type");
-        };
+        let Params::Okp(ref okp) = jwk.params;
+        // else {
+        //     panic!("Temporarily unsupported params type");
+        // };
         assert_eq!(okp.curve, "Ed25519");
 
         // Check the signature, which needs to have the same `aad` provided, by
@@ -179,7 +172,10 @@ impl SignatureHandler for CoseVcSignatureHandler {
         #[allow(clippy::unwrap_used)]
         sign1
             .verify_signature(b"", |sig, data| {
-                ssi_jws::verify_bytes(ssi_alg, data, &jwk, sig)
+                use ed25519_dalek::Verifier;
+                let public_key = ed25519_dalek::VerifyingKey::try_from(okp)?;
+                let signature: ed25519_dalek::Signature = sig.try_into().map_err(JwkError::from)?;
+                public_key.verify(data, &signature).map_err(JwkError::from)
             })
             .unwrap();
 
@@ -216,11 +212,7 @@ impl<'a> NamedActor<'a> for VcNamedActor {
     }
 
     fn verified_identities(&self) -> VerifiedIdentities {
-        // TO DO: Can we do a safe unwrap here because first()
-        // should be guaranteed to exist?
-        // TO DO (#27): Remove panic.
-        #[allow(clippy::unwrap_used)]
-        let subject = self.0.credential_subjects.first().unwrap();
+        let subject = self.0.credential_subjects.first();
         Box::new(VcVerifiedIdentities::new(&subject.verified_identities))
     }
 }
@@ -243,7 +235,7 @@ impl Debug for VcNamedActor {
 struct VcVerifiedIdentities<'a>(Iter<'a, VcVerifiedIdentity>);
 
 impl<'a> VcVerifiedIdentities<'a> {
-    fn new(verified_identities: &'a NonEmptyVec<VcVerifiedIdentity>) -> Self {
+    fn new(verified_identities: &'a NEVec<VcVerifiedIdentity>) -> Self {
         Self(verified_identities.iter())
     }
 }

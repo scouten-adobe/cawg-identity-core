@@ -21,6 +21,9 @@ use std::{env, path::PathBuf};
 use c2pa::{Signer, SigningAlg};
 use tempfile::TempDir;
 
+mod naive_credential_holder;
+pub(crate) use naive_credential_holder::{NaiveCredentialHolder, NaiveSignatureHandler};
+
 pub(crate) fn fixture_path(name: &str) -> PathBuf {
     let root_dir = &env::var("CARGO_MANIFEST_DIR").unwrap();
 

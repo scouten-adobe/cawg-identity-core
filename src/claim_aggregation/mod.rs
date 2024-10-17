@@ -27,4 +27,4 @@ pub use identity_claims_aggregation_vc::{
     IdentityAssertionVc, IdentityClaimsAggregationVc, IdentityProvider, VcVerifiedIdentity,
 };
 
-pub(crate) mod temp_cose;
+pub(crate) mod w3c_vc;

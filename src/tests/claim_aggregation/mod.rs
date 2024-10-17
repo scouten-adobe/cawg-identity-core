@@ -18,3 +18,4 @@ mod test_issuer;
 
 #[cfg(not(target_arch = "wasm32"))]
 mod validation_error_cases;
+mod w3c_vc;

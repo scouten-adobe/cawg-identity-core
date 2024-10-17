@@ -5,30 +5,27 @@ edition = "2021"
 
 [dependencies]
 async-trait = "0.1.78"
-chrono = "0.4.38"
+base64 = "0.22"
+c2pa = { version = "0.33.0", features = ["openssl_ffi_mutex"] }
+chrono = { version = "0.4.38", features = ["serde"] }
 ciborium = "0.2.2"
 coset = "0.3.8"
-did-jwk = "0.2.1"
-did-web = "0.3.1"
+ed25519-dalek = { version = "2.1.1", features = ["rand_core"] }
 hex-literal = "0.4.1"
-iref = "3.2.2"
-json-ld-syntax = "0.21.1"
+iref = { version = "3.2.2", features = ["serde"] }
 jumbf = "0.4.0"
-linked-data = { version = "0.1.2", features = ["derive"] }
 multibase = "0.9.1"
-non-empty-string = { version = "0.2.4", features = ["serde"] }
+nonempty-collections = { version = "0.2.9", features = ["serde"] }
+non-empty-string = { version = "=0.2.4", features = ["serde"] }
+rand = "0.8.5"
+regex = "1.11"
+reqwest = { version = "0.12.8", default-features = false, features = ["rustls-tls"] }
 serde = { version = "1.0.197", features = ["derive"] }
 serde_bytes = "0.11.14"
 serde_json = "1.0.117"
-ssi-claims-core = "0.1.2"
-ssi-dids-core = "0.1.1"
-ssi-json-ld = "0.3.0"
-ssi-jwk = "0.3.0"
-ssi-jws = "0.3.0"
-ssi-vc = "0.3.1"
 static-iref = "3.0"
 thiserror = "1.0.61"
-xsd-types = "0.9.5"
+zeroize = { version = "1.8", features = ["zeroize_derive"] }
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 c2pa = { version = "0.33.0", features = ["openssl_ffi_mutex"] }
@@ -37,6 +34,7 @@ c2pa = { version = "0.33.0", features = ["openssl_ffi_mutex"] }
 c2pa = { version = "0.33.0", features = [] }
 
 [dev-dependencies]
+httpmock = "0.7.0"
 serde = { version = "1.0.197", features = ["derive"] }
 tempfile = "3.10.1"
 tokio = { version = "1.40", features = ["macros"] }

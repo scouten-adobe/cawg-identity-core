@@ -11,23 +11,24 @@
 // specific language governing permissions and limitations under
 // each license.
 
-#![allow(dead_code)] // TEMPORARY while rebuilding
-
 use std::{fs::OpenOptions, io::Cursor, str::FromStr};
 
 use c2pa::{Manifest, ManifestStore};
-use did_jwk::DIDJWK;
+use chrono::{DateTime, FixedOffset, Utc};
+use coset::{CoseSign1Builder, HeaderBuilder, TaggedCborSerializable};
 use iref::UriBuf;
 use non_empty_string::NonEmptyString;
-use ssi_jwk::JWK;
-use ssi_vc::syntax::{IdOr, NonEmptyVec};
-use xsd_types::value::DateTimeStamp;
+use nonempty_collections::{nev, NEVec};
+use thiserror::Error;
 
 use crate::{
     builder::{CredentialHolder, IdentityAssertionBuilder, ManifestBuilder},
     claim_aggregation::{
-        temp_cose::CoseVc, IdentityAssertionVc, IdentityClaimsAggregationVc, IdentityProvider,
-        VcVerifiedIdentity,
+        w3c_vc::{
+            did::DidBuf,
+            jwk::{Algorithm, Jwk, Params},
+        },
+        IdentityAssertionVc, IdentityClaimsAggregationVc, IdentityProvider, VcVerifiedIdentity,
     },
     tests::fixtures::{temp_c2pa_signer, temp_dir_path},
     IdentityAssertion, SignerPayload,
@@ -39,7 +40,7 @@ pub(super) struct TestIssuer {
 }
 
 enum TestSetup {
-    UserAndIssuerJwk(JWK, JWK),
+    UserAndIssuerJwk(Jwk, Jwk),
     // Credential(Credential), // redo for ssi 0.8.0
 }
 
@@ -61,12 +62,12 @@ impl CredentialHolder for TestIssuer {
                 // but is strongly discouraged for production use cases. In other words,
                 // please don't copy and paste this into your own implementation!
 
-                let _user_did = DIDJWK::generate_url(&user_jwk.to_public());
-                let issuer_did = DIDJWK::generate_url(&issuer_jwk.to_public());
+                let _user_did = generate_did_jwk_url(&user_jwk.to_public());
+                let issuer_did = generate_did_jwk_url(&issuer_jwk.to_public());
 
                 // Use the identities as shown in https://creator-assertions.github.io/identity/1.1-draft/#vc-credentialsubject-verifiedIdentities.
 
-                let verified_identities: NonEmptyVec<VcVerifiedIdentity> = NonEmptyVec::try_from_vec(vec![
+                let verified_identities: NEVec<VcVerifiedIdentity> = nev![
                     VcVerifiedIdentity {
                         type_: non_empty_str("cawg.document_verification"),
                         name: Some(non_empty_str("First-Name Last-Name")),
@@ -76,9 +77,8 @@ impl CredentialHolder for TestIssuer {
                         provider: IdentityProvider {
                             id: UriBuf::from_str("https://example-id-verifier.com").unwrap(),
                             name: non_empty_str("Example ID Verifier"),
-                            // "proof": "https://example-id-verifier.com/proofs/1"
                         },
-                        verified_at: DateTimeStamp::from_str("2024-07-26T22:30:15Z").unwrap(),
+                        verified_at: DateTime::<FixedOffset>::from_str("2024-07-26T22:30:15Z").unwrap(),
                     },
                     VcVerifiedIdentity {
                         type_: non_empty_str("cawg.affiliation"),
@@ -90,9 +90,8 @@ impl CredentialHolder for TestIssuer {
                             id: UriBuf::from_str("https://example-affiliated-organization.com")
                                 .unwrap(),
                             name: non_empty_str("Example Affiliated Organization"),
-                            // "proof": "https://example-affiliated-organization.com/proofs/ck4592p5lk8u05mdg8bg5ac7ishlqfh1"
                         },
-                        verified_at: DateTimeStamp::from_str("2024-07-26T22:29:57Z").unwrap(),
+                        verified_at: DateTime::<FixedOffset>::from_str("2024-07-26T22:29:57Z").unwrap(),
                     },
                     VcVerifiedIdentity {
                         type_: non_empty_str("cawg.social_media"),
@@ -105,7 +104,7 @@ impl CredentialHolder for TestIssuer {
                                 .unwrap(),
                             name: non_empty_str("Example Social Network"),
                         },
-                        verified_at: DateTimeStamp::from_str("2024-05-27T08:40:39.569856Z").unwrap(),
+                        verified_at: DateTime::<FixedOffset>::from_str("2024-05-27T08:40:39.569856Z").unwrap(),
                     },
                     VcVerifiedIdentity {
                         type_: non_empty_str("cawg.crypto_wallet"),
@@ -118,29 +117,22 @@ impl CredentialHolder for TestIssuer {
                                 .unwrap(),
                             name: non_empty_str("Example Crypto Wallet"),
                         },
-                        verified_at: DateTimeStamp::from_str("2024-05-27T08:40:39.569856Z").unwrap(),
-                    },
-                ]).unwrap();
+                        verified_at: DateTime::<FixedOffset>::from_str("2024-05-27T08:40:39.569856Z").unwrap(),
+                    }
+                ];
 
                 let cia = IdentityClaimsAggregationVc {
                     verified_identities,
                     c2pa_asset: signer_payload.clone(),
                 };
 
-                let subjects = NonEmptyVec::new(cia);
+                let subjects = NEVec::new(cia);
 
-                let mut asset_vc = IdentityAssertionVc::new(
-                    None,
-                    IdOr::Id(issuer_did.clone().into_uri()),
-                    subjects,
-                );
+                let mut asset_vc = IdentityAssertionVc::new(None, issuer_did.into_uri(), subjects);
 
-                asset_vc.valid_from = Some(DateTimeStamp::now());
+                asset_vc.valid_from = Some(Utc::now().into());
 
-                let cose_vc = CoseVc(asset_vc);
-                let cose = cose_vc.sign_into_cose(issuer_jwk).await.unwrap();
-
-                Ok(cose)
+                Ok(sign_into_cose(&asset_vc, issuer_jwk).await.unwrap())
             }
         }
     }
@@ -150,8 +142,8 @@ impl TestIssuer {
     pub(super) fn new() -> Self {
         Self {
             setup: TestSetup::UserAndIssuerJwk(
-                JWK::generate_ed25519().unwrap(),
-                JWK::generate_ed25519().unwrap(),
+                Jwk::generate_ed25519().unwrap(),
+                Jwk::generate_ed25519().unwrap(),
             ),
         }
     }
@@ -245,4 +237,75 @@ impl TestIssuer {
 
 fn non_empty_str(s: &str) -> NonEmptyString {
     NonEmptyString::try_from(s).unwrap()
+}
+
+// TEMPORARY home for this while we figure out new signing interface
+
+pub(crate) async fn sign_into_cose(
+    vc: &IdentityAssertionVc,
+    signer: &Jwk,
+) -> Result<Vec<u8>, TbdError> {
+    let payload_bytes = serde_json::to_vec(vc).unwrap();
+
+    let coset_alg = match signer.get_algorithm().unwrap() {
+        Algorithm::EdDsa => coset::iana::Algorithm::EdDSA,
+        ssi_alg => {
+            unimplemented!("Add support for SSI alg {ssi_alg:?}")
+        }
+    };
+
+    let mut protected = HeaderBuilder::new()
+        .algorithm(coset_alg)
+        .content_type("application/vc".to_owned())
+        .build();
+
+    if let Some(key_id) = signer.key_id.clone() {
+        protected.key_id = key_id.as_bytes().to_vec();
+    }
+
+    let sign1 = CoseSign1Builder::new()
+        .protected(protected)
+        .payload(payload_bytes.to_vec())
+        .create_signature(b"", |pt| sign_bytes(signer, pt))
+        .build();
+
+    // TO DO (#27): Remove panic.
+    #[allow(clippy::unwrap_used)]
+    Ok(sign1.to_tagged_vec().unwrap())
+}
+
+// TEMPORARY error struct while we sort out new signing interface
+// This is here mostly to remind us that upstream code will need to handle
+// errors.
+#[derive(Debug, Error)]
+pub(crate) enum TbdError {
+    #[allow(dead_code)]
+    #[error("Something went wrong")]
+    SomethingWentWrong,
+}
+
+fn sign_bytes(signer: &Jwk, payload: &[u8]) -> Vec<u8> {
+    // Q&D implementation of Ed25519 signing for now.
+    // TO DO: Configurable signing for general cases.
+
+    // TO DO (#27): Remove unwraps.
+    #[allow(clippy::unwrap_used)]
+    let algorithm = signer.get_algorithm().unwrap();
+    match algorithm {
+        Algorithm::EdDsa => match &signer.params {
+            Params::Okp(okp) => {
+                let secret = ed25519_dalek::SigningKey::try_from(okp).unwrap();
+                use ed25519_dalek::Signer;
+                secret.sign(payload).to_bytes().to_vec()
+            } // _ => unimplemented!("only JWKParams::OKP is supported for now"),
+        },
+        _ => unimplemented!("signing algorithm not yet supported"),
+    }
+}
+
+fn generate_did_jwk_url(key: &Jwk) -> DidBuf {
+    let key = key.to_public();
+    let normalized = serde_json::to_string(&key).unwrap();
+    let method_id = multibase::Base::Base64Url.encode(normalized);
+    DidBuf::new(format!("did:jwk:{method_id}#0")).unwrap()
 }
