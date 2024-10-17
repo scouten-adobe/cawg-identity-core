@@ -18,7 +18,7 @@
 // specific language governing permissions and limitations under
 // each license.
 
-use http::header;
+use reqwest::header;
 
 use super::{did::Did, did_doc::DidDocument};
 
