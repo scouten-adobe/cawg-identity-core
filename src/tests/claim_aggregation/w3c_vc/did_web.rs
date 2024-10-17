@@ -45,11 +45,7 @@ async fn to_url() {
 }
 
 mod resolve {
-    use http::header::{HeaderValue, CONTENT_TYPE};
-    use hyper::{
-        service::{make_service_fn, service_fn},
-        Body, Response, Server,
-    };
+    use httpmock::prelude::*;
 
     use super::did;
     use crate::claim_aggregation::w3c_vc::{
@@ -59,23 +55,42 @@ mod resolve {
 
     #[tokio::test]
     async fn from_did_key() {
-        let (url, shutdown) = web_server().unwrap();
+        const DID_JSON: &str = r#"{
+            "@context": "https://www.w3.org/ns/did/v1",
+            "id": "did:web:localhost",
+            "verificationMethod": [{
+                "id": "did:web:localhost#key1",
+                "type": "Ed25519VerificationKey2018",
+                "controller": "did:web:localhost",
+                "publicKeyBase58": "2sXRz2VfrpySNEL6xmXJWQg6iY94qwNp1qrJJFBuPWmH"
+            }],
+            "assertionMethod": ["did:web:localhost#key1"]
+        }"#;
+
+        let server = MockServer::start();
 
         PROXY.with(|proxy| {
-            proxy.replace(Some(url));
+            let server_url = server.url("/").replace("127.0.0.1", "localhost");
+            dbg!(&server_url);
+            proxy.replace(Some(server_url));
+        });
+
+        let did_doc_mock = server.mock(|when, then| {
+            when.method(GET).path("/.well-known/did.json");
+            then.status(200)
+                .header("content-type", "application/json")
+                .body(DID_JSON);
         });
 
         let doc = did_web::resolve(&did("did:web:localhost")).await.unwrap();
-
         let doc_expected = DidDocument::from_json(DID_JSON).unwrap();
-
         assert_eq!(doc, doc_expected);
 
         PROXY.with(|proxy| {
             proxy.replace(None);
         });
 
-        shutdown().ok();
+        did_doc_mock.assert();
     }
 
     /*
@@ -134,64 +149,6 @@ mod resolve {
         shutdown().ok();
     }
     */
-
-    const DID_URL: &str = "http://localhost/.well-known/did.json";
-    const DID_JSON: &str = r#"{
-  "@context": "https://www.w3.org/ns/did/v1",
-  "id": "did:web:localhost",
-  "verificationMethod": [{
-     "id": "did:web:localhost#key1",
-     "type": "Ed25519VerificationKey2018",
-     "controller": "did:web:localhost",
-     "publicKeyBase58": "2sXRz2VfrpySNEL6xmXJWQg6iY94qwNp1qrJJFBuPWmH"
-  }],
-  "assertionMethod": ["did:web:localhost#key1"]
-}"#;
-
-    // localhost web server for serving did:web DID documents.
-    // TODO: pass arguments here instead of using const
-    fn web_server() -> Result<(String, impl FnOnce() -> Result<(), ()>), hyper::Error> {
-        let addr = ([127, 0, 0, 1], 0).into();
-
-        let make_svc = make_service_fn(|_| async move {
-            Ok::<_, hyper::Error>(service_fn(|req| async move {
-                let uri = req.uri();
-
-                // Skip leading slash
-                let proxied_url: String = uri.path().chars().skip(1).collect();
-                if proxied_url == DID_URL {
-                    let body = Body::from(DID_JSON);
-                    let mut response = Response::new(body);
-                    response
-                        .headers_mut()
-                        .insert(CONTENT_TYPE, HeaderValue::from_static("application/json"));
-                    return Ok::<_, hyper::Error>(response);
-                }
-
-                let (mut parts, body) = Response::<Body>::default().into_parts();
-                parts.status = hyper::StatusCode::NOT_FOUND;
-
-                let response = Response::from_parts(parts, body);
-                Ok::<_, hyper::Error>(response)
-            }))
-        });
-
-        let server = Server::try_bind(&addr)?.serve(make_svc);
-        let url = "http://".to_string() + &server.local_addr().to_string() + "/";
-
-        let (shutdown_tx, shutdown_rx) = futures::channel::oneshot::channel();
-
-        let graceful = server.with_graceful_shutdown(async {
-            shutdown_rx.await.ok();
-        });
-
-        tokio::task::spawn(async move {
-            graceful.await.ok();
-        });
-
-        let shutdown = || shutdown_tx.send(());
-        Ok((url, shutdown))
-    }
 }
 
 fn did(s: &'static str) -> Did<'static> {

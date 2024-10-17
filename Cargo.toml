@@ -30,8 +30,7 @@ zeroize = { version = "1.8", features = ["zeroize_derive"] }
 [dev-dependencies]
 c2pa = { version = "0.33.0", features = ["file_io", "openssl_sign", "openssl_ffi_mutex"] }
 futures = "0.3.30"
-http = "0.2" # out of date, upgrade or remove
-hyper = { version = "0.14.30", features = ["client", "http1", "server", "stream", "tcp"] }
+httpmock = "0.7.0"
 serde = { version = "1.0.197", features = ["derive"] }
 tempfile = "3.10.1"
 tokio = { version = "1.40", features = ["macros"] }
