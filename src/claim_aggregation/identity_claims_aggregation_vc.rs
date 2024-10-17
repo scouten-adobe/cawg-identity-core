@@ -39,8 +39,7 @@ pub const IDENTITY_CLAIMS_AGGREGATION_CREDENTIAL_TYPE: &str = "IdentityClaimsAgg
 /// the _C2PA asset_ in which the **identity assertion** appears.
 ///
 /// [W3C verifiable credential]: https://www.w3.org/TR/vc-data-model-2.0/
-#[derive(Debug, Deserialize, Serialize, linked_data::Serialize, linked_data::Deserialize)]
-#[ld(prefix("cawg" = "https://creator-assertions.github.io/tbd/tbd"))]
+#[derive(Debug, Deserialize, Serialize)]
 pub struct IdentityClaimsAggregationVc {
     /// ## Verified identities
     ///
@@ -49,7 +48,6 @@ pub struct IdentityClaimsAggregationVc {
     /// as verified by the _identity assertion generator_ or a service contacted
     /// by the _identity assertion generator._
     #[serde(rename = "verifiedIdentities")]
-    #[ld("cawg:verifiedIdentities")]
     pub verified_identities: NEVec<VcVerifiedIdentity>,
 
     /// ## Binding to C2PA asset
@@ -60,7 +58,6 @@ pub struct IdentityClaimsAggregationVc {
     /// * All CBOR bytestring values in `signer_payload` data structure (for example, `hash` entries in the `hashlink` data structure) MUST be converted to the corresponding base 64 encoding as specified in [Section 4, “Base 64 Encoding,”](https://datatracker.ietf.org/doc/html/rfc4648#section-4) of RFC 4648. The base 64 encoding MUST NOT use the URL-safe variation of base 64. The encoding MUST NOT include line feeds or additional annotations not directly required by the core base 64 specification.
     /// * The JSON encoding MUST use the field names exactly as specified in [Section 5.1, “Overview”](https://creator-assertions.github.io/identity/1.1-draft/#_overview).
     #[serde(rename = "c2paAsset")]
-    #[ld("cawg:c2paAsset")]
     pub c2pa_asset: SignerPayload,
 }
 
@@ -77,10 +74,7 @@ impl VerifiableCredentialSubtype for IdentityClaimsAggregationVc {
 /// Every item in the `verifiedIdentities` array MUST contain information about
 /// the _named actor_ as verified by the _identity assertion generator_ or a
 /// service contacted by the _identity assertion generator._
-#[derive(
-    Clone, Debug, Deserialize, Serialize, linked_data::Serialize, linked_data::Deserialize,
-)]
-#[ld(prefix("cawg" = "https://creator-assertions.github.io/tbd/tbd"))]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct VcVerifiedIdentity {
     /// ## Verified identity type
     ///
@@ -88,7 +82,6 @@ pub struct VcVerifiedIdentity {
     /// non-empty string that defines the type of verification that was
     /// performed by the identity provider.
     #[serde(rename = "type")]
-    #[ld("cawg:type")]
     pub type_: NonEmptyString,
 
     /// ## Display name
@@ -101,7 +94,6 @@ pub struct VcVerifiedIdentity {
     /// the `verifiedIdentities[?].name` property MUST be present and MUST
     /// exactly match the name found on the identity documents.
     #[serde(skip_serializing_if = "Option::is_none")]
-    #[ld("cawg:name")]
     pub name: Option<NonEmptyString>,
 
     /// ## User name
@@ -115,7 +107,6 @@ pub struct VcVerifiedIdentity {
     /// the unique alphanumeric string that can be used to identity the _named
     /// actor_ within this service.
     #[serde(skip_serializing_if = "Option::is_none")]
-    #[ld("cawg:username")]
     pub username: Option<NonEmptyString>,
 
     /// ## Address
@@ -129,7 +120,6 @@ pub struct VcVerifiedIdentity {
     /// unique alphanumeric string that can be used to identity the _named
     /// actor_ within this service.
     #[serde(skip_serializing_if = "Option::is_none")]
-    #[ld("cawg:address")]
     pub address: Option<NonEmptyString>,
 
     /// ## URI
@@ -142,7 +132,6 @@ pub struct VcVerifiedIdentity {
     /// RECOMMENDED that the `verifiedIdentities[?].uri` be the primary web URI
     /// for the _named actor’s_ social media account.
     #[serde(skip_serializing_if = "Option::is_none")]
-    #[ld("cawg:uri")]
     pub uri: Option<UriBuf>,
 
     /// ## Identity verification date
@@ -152,7 +141,6 @@ pub struct VcVerifiedIdentity {
     /// time when the relationship between the _named actor_ and the _identity
     /// provider_ was verified by the _identity assertion generator._
     #[serde(rename = "verifiedAt")]
-    #[ld("cawg:verifiedAt")]
     pub verified_at: DateTimeStamp,
 
     /// ## Identity provider details
@@ -160,7 +148,6 @@ pub struct VcVerifiedIdentity {
     /// The `verifiedIdentities[?].provider` property MUST be an object and MUST
     /// be present. It contains details about the _identity provider_ and the
     /// identity verification process.
-    #[ld("cawg:provider")]
     pub provider: IdentityProvider,
 }
 
@@ -203,10 +190,7 @@ impl VerifiedIdentity for VcVerifiedIdentity {
 /// verification process. This specification mentions at least three properties
 /// that MAY be used to represent the _named actor’s_ verification details:
 /// `id`, `name`, and `proof`.
-#[derive(
-    Clone, Debug, Deserialize, Serialize, linked_data::Serialize, linked_data::Deserialize,
-)]
-#[ld(prefix("cawg" = "https://creator-assertions.github.io/tbd/tbd"))]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct IdentityProvider {
     /// ## Identity provider ID
     ///
@@ -215,7 +199,6 @@ pub struct IdentityProvider {
     /// authenticity of the _identity provider._ This proof of authenticity of
     /// the identity provider MUST NOT be confused with the proof of
     /// verification of the _named actor._
-    #[ld(id)]
     pub id: UriBuf,
 
     /// ## Identity provider name
@@ -223,6 +206,5 @@ pub struct IdentityProvider {
     /// The `verifiedIdentities[?].provider.name` MUST be present and MUST be a
     /// non-empty string. ///The `verifiedIdentities[?].provider.name` property
     /// is the user-visible name of the _identity provider._
-    #[ld("cawg:name")]
     pub name: NonEmptyString,
 }

@@ -112,7 +112,6 @@ impl From<Params> for Jwk {
         }
     }
 }
-// linked_data::json_literal!(Jwk);
 
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Hash, Eq, Zeroize)]
 #[serde(tag = "kty")]
