@@ -18,6 +18,7 @@
 #![allow(clippy::panic)]
 #![allow(clippy::unwrap_used)]
 
+#[cfg(not(target_arch = "wasm32"))]
 mod builder;
 mod claim_aggregation;
 pub(crate) mod fixtures;
