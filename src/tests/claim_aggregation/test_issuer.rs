@@ -14,12 +14,12 @@
 use std::{fs::OpenOptions, io::Cursor, str::FromStr};
 
 use c2pa::{Manifest, ManifestStore};
+use chrono::{DateTime, FixedOffset, Utc};
 use coset::{CoseSign1Builder, HeaderBuilder, TaggedCborSerializable};
 use iref::UriBuf;
 use non_empty_string::NonEmptyString;
 use nonempty_collections::{nev, NEVec};
 use thiserror::Error;
-use xsd_types::value::DateTimeStamp;
 
 use crate::{
     builder::{CredentialHolder, IdentityAssertionBuilder, ManifestBuilder},
@@ -78,7 +78,7 @@ impl CredentialHolder for TestIssuer {
                             id: UriBuf::from_str("https://example-id-verifier.com").unwrap(),
                             name: non_empty_str("Example ID Verifier"),
                         },
-                        verified_at: DateTimeStamp::from_str("2024-07-26T22:30:15Z").unwrap(),
+                        verified_at: DateTime::<FixedOffset>::from_str("2024-07-26T22:30:15Z").unwrap(),
                     },
                     VcVerifiedIdentity {
                         type_: non_empty_str("cawg.affiliation"),
@@ -91,7 +91,7 @@ impl CredentialHolder for TestIssuer {
                                 .unwrap(),
                             name: non_empty_str("Example Affiliated Organization"),
                         },
-                        verified_at: DateTimeStamp::from_str("2024-07-26T22:29:57Z").unwrap(),
+                        verified_at: DateTime::<FixedOffset>::from_str("2024-07-26T22:29:57Z").unwrap(),
                     },
                     VcVerifiedIdentity {
                         type_: non_empty_str("cawg.social_media"),
@@ -104,7 +104,7 @@ impl CredentialHolder for TestIssuer {
                                 .unwrap(),
                             name: non_empty_str("Example Social Network"),
                         },
-                        verified_at: DateTimeStamp::from_str("2024-05-27T08:40:39.569856Z").unwrap(),
+                        verified_at: DateTime::<FixedOffset>::from_str("2024-05-27T08:40:39.569856Z").unwrap(),
                     },
                     VcVerifiedIdentity {
                         type_: non_empty_str("cawg.crypto_wallet"),
@@ -117,7 +117,7 @@ impl CredentialHolder for TestIssuer {
                                 .unwrap(),
                             name: non_empty_str("Example Crypto Wallet"),
                         },
-                        verified_at: DateTimeStamp::from_str("2024-05-27T08:40:39.569856Z").unwrap(),
+                        verified_at: DateTime::<FixedOffset>::from_str("2024-05-27T08:40:39.569856Z").unwrap(),
                     }
                 ];
 
@@ -130,7 +130,7 @@ impl CredentialHolder for TestIssuer {
 
                 let mut asset_vc = IdentityAssertionVc::new(None, issuer_did.into_uri(), subjects);
 
-                asset_vc.valid_from = Some(DateTimeStamp::now());
+                asset_vc.valid_from = Some(Utc::now().into());
 
                 Ok(sign_into_cose(&asset_vc, issuer_jwk).await.unwrap())
             }
