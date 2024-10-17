@@ -137,7 +137,10 @@ pub(crate) fn to_url(did: &str) -> Result<String, DidWebError> {
     #[cfg(test)]
     PROXY.with(|proxy| {
         if let Some(ref proxy) = *proxy.borrow() {
-            url = proxy.clone() + &url;
+            if domain_name == "localhost" {
+                url = format!("{proxy}{path}/did.json");
+                dbg!(&url);
+            }
         }
     });
 
