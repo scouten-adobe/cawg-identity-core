@@ -130,7 +130,7 @@ impl CredentialHolder for TestIssuer {
 
                 let mut asset_vc = IdentityAssertionVc::new(None, issuer_did.into_uri(), subjects);
 
-                asset_vc.valid_from = Some(Utc::now().try_into().unwrap());
+                asset_vc.valid_from = Some(Utc::now().into());
 
                 Ok(sign_into_cose(&asset_vc, issuer_jwk).await.unwrap())
             }
