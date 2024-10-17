@@ -305,7 +305,7 @@ fn sign_bytes(signer: &Jwk, payload: &[u8]) -> Vec<u8> {
 
 fn generate_did_jwk_url(key: &Jwk) -> DidBuf {
     let key = key.to_public();
-    let normalized = serde_jcs::to_string(&key).unwrap();
+    let normalized = serde_json::to_string(&key).unwrap();
     let method_id = multibase::Base::Base64Url.encode(normalized);
     DidBuf::new(format!("did:jwk:{method_id}#0")).unwrap()
 }
