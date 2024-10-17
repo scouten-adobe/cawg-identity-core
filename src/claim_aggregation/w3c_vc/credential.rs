@@ -60,7 +60,7 @@ where
     pub valid_until: Option<xsd_types::DateTimeStamp>,
 
     #[serde(flatten)]
-    pub extra_properties: BTreeMap<String, json_syntax::Value>,
+    pub extra_properties: BTreeMap<String, serde_json::Value>,
 }
 
 impl<T> CredentialV2<T>
@@ -97,7 +97,7 @@ where
             credential_subjects,
             valid_from: None,
             valid_until: None,
-            extra_properties: BTreeMap::<String, json_syntax::Value>::default(),
+            extra_properties: BTreeMap::<String, serde_json::Value>::default(),
         }
     }
 }
