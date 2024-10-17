@@ -17,4 +17,5 @@ pub(crate) mod credential;
 pub(crate) mod did;
 pub(crate) mod did_doc;
 pub(crate) mod did_web;
+pub(crate) mod jwk;
 pub(super) mod serialization;

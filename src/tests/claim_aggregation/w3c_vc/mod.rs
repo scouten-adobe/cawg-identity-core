@@ -14,3 +14,4 @@
 mod did;
 mod did_buf;
 mod did_web;
+mod jwk;
