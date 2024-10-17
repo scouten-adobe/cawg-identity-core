@@ -13,6 +13,7 @@
 
 use std::collections::BTreeMap;
 
+use chrono::{DateTime, FixedOffset};
 use iref::{Iri, IriBuf, UriBuf};
 use nonempty_collections::NEVec;
 use serde::{Deserialize, Serialize};
@@ -53,11 +54,11 @@ where
 
     #[serde(rename = "validFrom")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub valid_from: Option<xsd_types::DateTimeStamp>,
+    pub valid_from: Option<DateTime<FixedOffset>>,
 
     #[serde(rename = "validUntil")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub valid_until: Option<xsd_types::DateTimeStamp>,
+    pub valid_until: Option<DateTime<FixedOffset>>,
 
     #[serde(flatten)]
     pub extra_properties: BTreeMap<String, serde_json::Value>,

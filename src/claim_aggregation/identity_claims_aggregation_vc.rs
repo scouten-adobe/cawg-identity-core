@@ -16,7 +16,6 @@ use iref::{Iri, UriBuf};
 use non_empty_string::NonEmptyString;
 use nonempty_collections::NEVec;
 use serde::{Deserialize, Serialize};
-use xsd_types::DateTimeStamp;
 
 use crate::{
     claim_aggregation::w3c_vc::credential::{CredentialV2, VerifiableCredentialSubtype},
@@ -141,7 +140,7 @@ pub struct VcVerifiedIdentity {
     /// time when the relationship between the _named actor_ and the _identity
     /// provider_ was verified by the _identity assertion generator._
     #[serde(rename = "verifiedAt")]
-    pub verified_at: DateTimeStamp,
+    pub verified_at: DateTime<FixedOffset>,
 
     /// ## Identity provider details
     ///
@@ -179,7 +178,7 @@ impl VerifiedIdentity for VcVerifiedIdentity {
     }
 
     fn verified_at(&self) -> DateTime<FixedOffset> {
-        self.verified_at.to_chrono_date_time()
+        self.verified_at
     }
 }
 
