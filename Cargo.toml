@@ -12,7 +12,6 @@ ciborium = "0.2.2"
 coset = "0.3.8"
 ed25519-dalek = { version = "2.1.1", features = ["rand_core"] }
 hex-literal = "0.4.1"
-http = "0.2" # out of date, can we remove or update?
 iref = { version = "3.2.2", features = ["serde"] }
 jumbf = "0.4.0"
 multibase = "0.9.1"
@@ -20,7 +19,7 @@ nonempty-collections = { version = "0.2.9", features = ["serde"] }
 non-empty-string = { version = "=0.2.4", features = ["serde"] }
 rand = "0.8.5"
 regex = "1.11"
-reqwest = { version = "0.11.27", default-features = false, features = ["rustls-tls"] }
+reqwest = { version = "0.12.8", default-features = false, features = ["rustls-tls"] }
 serde = { version = "1.0.197", features = ["derive"] }
 serde_bytes = "0.11.14"
 serde_json = "1.0.117"
@@ -31,7 +30,8 @@ zeroize = { version = "1.5", features = ["zeroize_derive"] }
 [dev-dependencies]
 c2pa = { version = "0.33.0", features = ["file_io", "openssl_sign", "openssl_ffi_mutex"] }
 futures = "0.3.30"
-hyper = { version = "0.14.30", features = ["client", "http1", "server", "stream"] }
+http = "0.2" # out of date, upgrade or remove
+hyper = { version = "0.14.30", features = ["client", "http1", "server", "stream", "tcp"] }
 serde = { version = "1.0.197", features = ["derive"] }
 tempfile = "3.10.1"
 tokio = { version = "1.40", features = ["macros"] }
