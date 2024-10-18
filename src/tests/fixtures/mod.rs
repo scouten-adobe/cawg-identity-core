@@ -11,10 +11,6 @@
 // specific language governing permissions and limitations under
 // each license.
 
-#![allow(dead_code)]
-// This code should only used from unit tests.
-// Silence warnings about unused code when not building tests.
-
 use std::{env, path::PathBuf};
 
 #[cfg(not(target_arch = "wasm32"))]
@@ -22,7 +18,9 @@ use c2pa::{Signer, SigningAlg};
 use tempfile::TempDir;
 
 mod naive_credential_holder;
-pub(crate) use naive_credential_holder::{NaiveCredentialHolder, NaiveSignatureHandler};
+#[cfg(not(target_arch = "wasm32"))]
+pub(crate) use naive_credential_holder::NaiveCredentialHolder;
+pub(crate) use naive_credential_holder::NaiveSignatureHandler;
 
 pub(crate) fn fixture_path(name: &str) -> PathBuf {
     let root_dir = &env::var("CARGO_MANIFEST_DIR").unwrap();
