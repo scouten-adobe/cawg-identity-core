@@ -100,6 +100,7 @@ impl Debug for NaiveNamedActor {
     }
 }
 
+#[allow(unused)] // .0 not necessarily referenced
 pub(crate) struct NaiveVerifiedIdentities<'a>(&'a NaiveNamedActor);
 
 impl<'a> Iterator for NaiveVerifiedIdentities<'a> {
