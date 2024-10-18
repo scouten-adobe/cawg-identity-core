@@ -44,6 +44,7 @@ async fn to_url() {
     );
 }
 
+#[cfg(not(target_arch = "wasm32"))]
 mod resolve {
     use httpmock::prelude::*;
 
