@@ -18,8 +18,6 @@
 // specific language governing permissions and limitations under
 // each license.
 
-use reqwest::header;
-
 use super::{did::Did, did_doc::DidDocument};
 
 const USER_AGENT: &str = concat!(env!("CARGO_PKG_NAME"), "/", env!("CARGO_PKG_VERSION"));
@@ -32,19 +30,28 @@ thread_local! {
     pub(crate) static PROXY: RefCell<Option<String>> = const { RefCell::new(None) };
 }
 
+#[cfg(target_arch = "wasm32")]
+#[derive(Debug, thiserror::Error)]
+pub enum HttpError {
+    #[error("temporary")]
+    Mumble,
+}
+#[cfg(not(target_arch = "wasm32"))]
+use reqwest::Error as HttpError;
+
 #[derive(Debug, thiserror::Error)]
 pub enum DidWebError {
     #[error("error building HTTP client: {0}")]
-    Client(reqwest::Error),
+    Client(HttpError),
 
     #[error("error sending HTTP request ({0}): {1}")]
-    Request(String, reqwest::Error),
+    Request(String, HttpError),
 
     #[error("server error: {0}")]
     Server(String),
 
     #[error("error reading HTTP response: {0}")]
-    Response(reqwest::Error),
+    Response(HttpError),
 
     #[error("the document was not found: {0}")]
     NotFound(String),
@@ -70,39 +77,53 @@ pub(crate) async fn resolve(did: &Did<'_>) -> Result<DidDocument, DidWebError> {
     let url = to_url(method_specific_id)?;
     // TODO: https://w3c-ccg.github.io/did-method-web/#in-transit-security
 
-    let mut headers = reqwest::header::HeaderMap::new();
+    let did_doc = get_did_doc(&url).await?;
 
-    headers.insert(
-        "User-Agent",
-        reqwest::header::HeaderValue::from_static(USER_AGENT),
-    );
-
-    let client = reqwest::Client::builder()
-        .default_headers(headers)
-        .build()
-        .map_err(DidWebError::Client)?;
-
-    let resp = client
-        .get(&url)
-        .header(header::ACCEPT, "application/did+json")
-        .send()
-        .await
-        .map_err(|e| DidWebError::Request(url.to_owned(), e))?;
-
-    resp.error_for_status_ref().map_err(|err| {
-        if err.status() == Some(reqwest::StatusCode::NOT_FOUND) {
-            DidWebError::NotFound(url.clone())
-        } else {
-            DidWebError::Server(err.to_string())
-        }
-    })?;
-
-    let document = resp.bytes().await.map_err(DidWebError::Response)?;
-
-    let json =
-        String::from_utf8(document.to_vec()).map_err(|_| DidWebError::InvalidData(url.clone()))?;
+    let json = String::from_utf8(did_doc).map_err(|_| DidWebError::InvalidData(url.clone()))?;
 
     DidDocument::from_json(&json).map_err(|_| DidWebError::InvalidData(url))
+}
+
+async fn get_did_doc(url: &str) -> Result<Vec<u8>, DidWebError> {
+    #[cfg(not(target_arch = "wasm32"))]
+    {
+        use reqwest::header;
+
+        let mut headers = reqwest::header::HeaderMap::new();
+
+        headers.insert(
+            "User-Agent",
+            reqwest::header::HeaderValue::from_static(USER_AGENT),
+        );
+
+        let client = reqwest::Client::builder()
+            .default_headers(headers)
+            .build()
+            .map_err(DidWebError::Client)?;
+
+        let resp = client
+            .get(url)
+            .header(header::ACCEPT, "application/did+json")
+            .send()
+            .await
+            .map_err(|e: reqwest::Error| DidWebError::Request(url.to_owned(), e))?;
+
+        resp.error_for_status_ref().map_err(|err| {
+            if err.status() == Some(reqwest::StatusCode::NOT_FOUND) {
+                DidWebError::NotFound(url.to_string())
+            } else {
+                DidWebError::Server(err.to_string())
+            }
+        })?;
+
+        let document = resp.bytes().await.map_err(DidWebError::Response)?;
+        Ok(document.to_vec())
+    }
+
+    #[cfg(target_arch = "wasm32")]
+    {
+        unimplemented!("check back soon");
+    }
 }
 
 pub(crate) fn to_url(did: &str) -> Result<String, DidWebError> {
