@@ -41,7 +41,8 @@ use crate::{
 /// [§3.3.1 Securing JSON-LD Verifiable Credentials with COSE]: https://w3c.github.io/vc-jose-cose/#securing-vcs-with-cose
 pub struct CoseVcSignatureHandler {}
 
-#[async_trait]
+#[cfg_attr(not(target_arch = "wasm32"), async_trait)]
+#[cfg_attr(target_arch = "wasm32", async_trait(?Send))]
 impl SignatureHandler for CoseVcSignatureHandler {
     fn can_handle_sig_type(sig_type: &str) -> bool {
         sig_type == "cawg.identity_claims_aggregation"

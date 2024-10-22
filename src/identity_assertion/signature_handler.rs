@@ -18,7 +18,8 @@ use crate::identity_assertion::{NamedActor, SignerPayload, ValidationResult};
 /// A `SignatureHandler` can read one kind of signature from an identity
 /// assertion, assess the validity of the signature, and return information
 /// about the corresponding credential subject.
-#[async_trait]
+#[cfg_attr(not(target_arch = "wasm32"), async_trait)]
+#[cfg_attr(target_arch = "wasm32", async_trait(?Send))]
 pub trait SignatureHandler {
     /// Returns true if this handler can process a signature with
     /// the given `sig_type` code.

@@ -18,6 +18,8 @@
 // specific language governing permissions and limitations under
 // each license.
 
+#![allow(unused)] // TEMPORARY
+
 use std::{
     convert::TryFrom, fmt, num::ParseIntError, result::Result, str::FromStr, string::FromUtf8Error,
 };

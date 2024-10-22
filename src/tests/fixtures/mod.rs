@@ -11,6 +11,8 @@
 // specific language governing permissions and limitations under
 // each license.
 
+#![allow(unused)] // TEMPORARY
+
 use std::{env, path::PathBuf};
 
 #[cfg(not(target_arch = "wasm32"))]
