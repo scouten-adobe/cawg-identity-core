@@ -30,14 +30,10 @@ thread_local! {
     pub(crate) static PROXY: RefCell<Option<String>> = const { RefCell::new(None) };
 }
 
-#[cfg(target_arch = "wasm32")]
-#[derive(Debug, thiserror::Error)]
-pub enum HttpError {
-    #[error("temporary")]
-    Mumble,
-}
 #[cfg(not(target_arch = "wasm32"))]
 use reqwest::Error as HttpError;
+#[cfg(target_arch = "wasm32")]
+use String as HttpError;
 
 #[derive(Debug, thiserror::Error)]
 pub enum DidWebError {
@@ -122,7 +118,40 @@ async fn get_did_doc(url: &str) -> Result<Vec<u8>, DidWebError> {
 
     #[cfg(target_arch = "wasm32")]
     {
-        unimplemented!("check back soon");
+        use wasm_bindgen::prelude::*;
+        use wasm_bindgen_futures::JsFuture;
+        use web_sys::{Request, RequestInit, RequestMode, Response};
+
+        let opts = RequestInit::new();
+        opts.set_method("GET");
+        opts.set_mode(RequestMode::Cors);
+
+        let request = Request::new_with_str_and_init(&url, &opts)
+            .map_err(|_| DidWebError::Client("Request::new_with_str_and_init".to_string()))?;
+
+        request
+            .headers()
+            .set("accept", "application/did+json")
+            .map_err(|_| DidWebError::Client("Set headers".to_string()))?;
+
+        let window = web_sys::window().unwrap();
+        let resp_value = JsFuture::from(window.fetch_with_request(&request))
+            .await
+            .map_err(|_| DidWebError::Client("window.fetch_with_request".to_string()))?;
+
+        assert!(resp_value.is_instance_of::<Response>());
+        let resp: Response = resp_value.dyn_into().unwrap();
+
+        JsFuture::from(
+            resp.blob()
+                .map_err(|_| DidWebError::Client("window.resp.bytes()".to_string()))?,
+        )
+        .await
+        .map(|blob| {
+            let array = js_sys::Uint8Array::new(&blob);
+            array.to_vec()
+        })
+        .map_err(|e| DidWebError::Server("resp.blob()".to_string()))
     }
 }
 
