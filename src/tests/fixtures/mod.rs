@@ -11,17 +11,18 @@
 // specific language governing permissions and limitations under
 // each license.
 
-#![allow(dead_code)]
-// This code should only used from unit tests.
-// Silence warnings about unused code when not building tests.
+#![allow(unused)] // TEMPORARY
 
 use std::{env, path::PathBuf};
 
-use c2pa::{create_signer, Signer, SigningAlg};
+#[cfg(not(target_arch = "wasm32"))]
+use c2pa::{Signer, SigningAlg};
 use tempfile::TempDir;
 
 mod naive_credential_holder;
-pub(crate) use naive_credential_holder::{NaiveCredentialHolder, NaiveSignatureHandler};
+#[cfg(not(target_arch = "wasm32"))]
+pub(crate) use naive_credential_holder::NaiveCredentialHolder;
+pub(crate) use naive_credential_holder::NaiveSignatureHandler;
 
 pub(crate) fn fixture_path(name: &str) -> PathBuf {
     let root_dir = &env::var("CARGO_MANIFEST_DIR").unwrap();
@@ -41,9 +42,10 @@ pub(crate) fn temp_dir_path(temp_dir: &TempDir, file_name: &str) -> PathBuf {
     path
 }
 
+#[cfg(not(target_arch = "wasm32"))]
 pub(crate) fn temp_c2pa_signer() -> Box<dyn Signer> {
     let sign_cert = include_bytes!("../../tests/fixtures/certs/ps256.pub").to_vec();
     let pem_key = include_bytes!("../../tests/fixtures/certs/ps256.pem").to_vec();
 
-    create_signer::from_keys(&sign_cert, &pem_key, SigningAlg::Ps256, None).unwrap()
+    c2pa::create_signer::from_keys(&sign_cert, &pem_key, SigningAlg::Ps256, None).unwrap()
 }

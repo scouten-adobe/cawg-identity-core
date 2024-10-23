@@ -76,6 +76,24 @@ jobs:
       - name: Run unit tests (cross build)
         run: cross test --all-targets --all-features --target ${{ matrix.target }}
 
+  tests-wasm:
+    name: Unit tests (WASM)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install wasm-pack
+        run: curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
+
+      - name: Run Wasm tests
+        run: wasm-pack test --chrome --headless
+        working-directory: .
+
   test-default-disabled:
     name: Unit tests with default features disabled
     runs-on: ${{ matrix.os }}

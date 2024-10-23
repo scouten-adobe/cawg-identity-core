@@ -11,6 +11,8 @@
 // specific language governing permissions and limitations under
 // each license.
 
+use async_trait::async_trait;
+
 use crate::SignerPayload;
 
 /// An implementation of `CredentialHolder` is able to generate a signature over
@@ -21,7 +23,8 @@ use crate::SignerPayload;
 /// methods] from the CAWG Identity Assertion specification.
 ///
 /// [§8. Credentials, signatures, and validation methods]: https://creator-assertions.github.io/identity/1.0-draft/#_credentials_signatures_and_validation_methods
-#[async_trait::async_trait]
+#[cfg_attr(not(target_arch = "wasm32"), async_trait)]
+#[cfg_attr(target_arch = "wasm32", async_trait(?Send))]
 pub trait CredentialHolder {
     /// Returns the designated `sig_type` value for this kind of credential.
     fn sig_type(&self) -> &'static str;

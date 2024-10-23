@@ -18,6 +18,8 @@
 // specific language governing permissions and limitations under
 // each license.
 
+#![allow(unused)] // TEMPORARY
+
 use std::{fmt, ops::Deref, str::FromStr, sync::LazyLock};
 
 use regex::Regex;

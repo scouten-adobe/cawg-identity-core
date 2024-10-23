@@ -20,8 +20,8 @@
 
 use crate::claim_aggregation::w3c_vc::{did::Did, did_web};
 
-#[tokio::test]
-async fn to_url() {
+#[test]
+fn to_url() {
     // https://w3c-ccg.github.io/did-method-web/#example-3-creating-the-did
     assert_eq!(
         did_web::to_url(did("did:web:w3c-ccg.github.io").method_specific_id()).unwrap(),
@@ -44,6 +44,7 @@ async fn to_url() {
     );
 }
 
+#[cfg(not(target_arch = "wasm32"))]
 mod resolve {
     use httpmock::prelude::*;
 

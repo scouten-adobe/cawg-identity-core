@@ -31,7 +31,8 @@ use crate::{
 
 pub(crate) struct NaiveCredentialHolder {}
 
-#[async_trait]
+#[cfg_attr(not(target_arch = "wasm32"), async_trait)]
+#[cfg_attr(target_arch = "wasm32", async_trait(?Send))]
 impl CredentialHolder for NaiveCredentialHolder {
     fn sig_type(&self) -> &'static str {
         "INVALID.identity.naive_credential"
@@ -55,7 +56,8 @@ impl CredentialHolder for NaiveCredentialHolder {
 
 pub(crate) struct NaiveSignatureHandler {}
 
-#[async_trait]
+#[cfg_attr(not(target_arch = "wasm32"), async_trait)]
+#[cfg_attr(target_arch = "wasm32", async_trait(?Send))]
 impl SignatureHandler for NaiveSignatureHandler {
     fn can_handle_sig_type(sig_type: &str) -> bool {
         sig_type == "INVALID.identity.naive_credential"
@@ -100,6 +102,7 @@ impl Debug for NaiveNamedActor {
     }
 }
 
+#[allow(unused)] // .0 not necessarily referenced
 pub(crate) struct NaiveVerifiedIdentities<'a>(&'a NaiveNamedActor);
 
 impl<'a> Iterator for NaiveVerifiedIdentities<'a> {

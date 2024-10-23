@@ -27,9 +27,22 @@ static-iref = "3.0"
 thiserror = "1.0.61"
 zeroize = { version = "1.8", features = ["zeroize_derive"] }
 
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+c2pa = { version = "0.37.0", features = ["openssl_ffi_mutex"] }
+
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+c2pa = { version = "0.37.0", features = [] }
+wasm-bindgen = "0.2.95"
+
 [dev-dependencies]
-c2pa = { version = "0.37.0", features = ["file_io", "openssl_sign", "openssl_ffi_mutex"] }
-httpmock = "0.7.0"
 serde = { version = "1.0.197", features = ["derive"] }
 tempfile = "3.10.1"
+
+[target.'cfg(not(target_arch = "wasm32"))'.dev-dependencies]
+c2pa = { version = "0.37.0", features = ["file_io", "openssl_sign", "openssl_ffi_mutex", "v1_api"] }
+httpmock = "0.7.0"
 tokio = { version = "1.40", features = ["macros"] }
+
+[target.'cfg(target_arch = "wasm32")'.dev-dependencies]
+c2pa = { version = "0.37.0", features = [] }
+wasm-bindgen-test = "0.3.31"

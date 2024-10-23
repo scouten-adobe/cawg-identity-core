@@ -12,16 +12,37 @@
 // each license.
 
 use c2pa::ManifestStore;
+#[cfg(target_arch = "wasm32")]
+use wasm_bindgen::prelude::*;
+#[cfg(target_arch = "wasm32")]
+use wasm_bindgen_test::*;
+
+#[cfg(target_arch = "wasm32")]
+#[wasm_bindgen]
+extern "C" {
+    // Use `js_namespace` here to bind `console.log(..)` instead of just
+    // `log(..)`
+    #[wasm_bindgen(js_namespace = console)]
+    fn log(s: &str);
+}
 
 use crate::IdentityAssertion;
 
-#[tokio::test]
+#[cfg_attr(not(target_arch = "wasm32"), tokio::test)]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test)]
 async fn adobe_connected_identities() {
-    let manifest_store = ManifestStore::from_file(
-        "src/tests/fixtures/claim_aggregation/adobe_connected_identities.jpg",
-    )
-    .unwrap();
-    assert!(manifest_store.validation_status().is_none());
+    let test_image = include_bytes!("../fixtures/claim_aggregation/adobe_connected_identities.jpg");
+
+    let manifest_store = ManifestStore::from_bytes("jpg", test_image, true).unwrap();
+    let validation_status = manifest_store.validation_status();
+
+    #[cfg(target_arch = "wasm32")]
+    {
+        let log_str = format!("MS validation status = {validation_status:#?}");
+        log(&log_str);
+    }
+
+    assert!(validation_status.is_none());
 
     let manifest = manifest_store.get_active().unwrap();
     let identity: IdentityAssertion = manifest.find_assertion("cawg.identity").unwrap();
