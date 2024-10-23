@@ -14,14 +14,19 @@
 use std::{
     collections::HashSet,
     fmt::{Debug, Formatter},
+    sync::LazyLock,
 };
 
+use regex::Regex;
 use serde::{Deserialize, Serialize};
 
 use crate::{
     identity_assertion::{ValidationError, ValidationResult},
     internal::debug_byte_slice::DebugByteSlice,
 };
+
+#[allow(clippy::unwrap_used)]
+static ABSOLUTE_URL_PREFIX: LazyLock<Regex> = LazyLock::new(|| Regex::new("/c2pa/[^/]+/").unwrap());
 
 /// The set of data to be signed by the credential holder.
 #[derive(Clone, Debug, Deserialize, Eq, Serialize, PartialEq)]
@@ -39,10 +44,16 @@ impl SignerPayload {
         // also need to be referenced in the claim.
 
         for ref_assertion in self.referenced_assertions.iter() {
-            if let Some(claim_assertion) = manifest
-                .assertion_references()
-                .find(|a| a.url() == ref_assertion.url)
-            {
+            if let Some(claim_assertion) = manifest.assertion_references().find(|a| {
+                // HACKY workaround for absolute assertion URLs as of c2pa-rs 0.36.0.
+                // See https://github.com/contentauth/c2pa-rs/pull/603.
+                let url = a.url();
+                if url == ref_assertion.url {
+                    return true;
+                }
+                let url = ABSOLUTE_URL_PREFIX.replace(&url, "");
+                url == ref_assertion.url
+            }) {
                 if claim_assertion.hash() != ref_assertion.hash {
                     return Err(ValidationError::AssertionMismatch(
                         ref_assertion.url.to_owned(),

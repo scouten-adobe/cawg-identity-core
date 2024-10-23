@@ -5,8 +5,8 @@ edition = "2021"
 
 [dependencies]
 async-trait = "0.1.78"
-base64 = "0.22"
-c2pa = { version = "0.33.0", features = ["openssl_ffi_mutex"] }
+base64 = "0.22.1"
+c2pa = { version = "0.37.0", features = ["openssl_ffi_mutex"] }
 chrono = { version = "0.4.38", features = ["serde"] }
 ciborium = "0.2.2"
 coset = "0.3.8"
@@ -28,10 +28,10 @@ thiserror = "1.0.61"
 zeroize = { version = "1.8", features = ["zeroize_derive"] }
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
-c2pa = { version = "0.33.0", features = ["openssl_ffi_mutex"] }
+c2pa = { version = "0.37.0", features = ["openssl_ffi_mutex"] }
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
-c2pa = { version = "0.33.0", features = [] }
+c2pa = { version = "0.37.0", features = [] }
 wasm-bindgen = "0.2.95"
 
 [dev-dependencies]
@@ -39,10 +39,10 @@ serde = { version = "1.0.197", features = ["derive"] }
 tempfile = "3.10.1"
 
 [target.'cfg(not(target_arch = "wasm32"))'.dev-dependencies]
-c2pa = { version = "0.33.0", features = ["file_io", "openssl_sign", "openssl_ffi_mutex", "v1_api"] }
+c2pa = { version = "0.37.0", features = ["file_io", "openssl_sign", "openssl_ffi_mutex", "v1_api"] }
 httpmock = "0.7.0"
 tokio = { version = "1.40", features = ["macros"] }
 
 [target.'cfg(target_arch = "wasm32")'.dev-dependencies]
-c2pa = { version = "0.33.0", features = [] }
+c2pa = { version = "0.37.0", features = [] }
 wasm-bindgen-test = "0.3.31"
