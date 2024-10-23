@@ -6,7 +6,7 @@ edition = "2021"
 [dependencies]
 async-trait = "0.1.78"
 base64 = "0.22"
-c2pa = { version = "0.36.0", features = ["openssl_ffi_mutex"] }
+c2pa = { version = "0.37.0", features = ["openssl_ffi_mutex"] }
 chrono = { version = "0.4.38", features = ["serde"] }
 ciborium = "0.2.2"
 coset = "0.3.8"
@@ -28,7 +28,7 @@ thiserror = "1.0.61"
 zeroize = { version = "1.8", features = ["zeroize_derive"] }
 
 [dev-dependencies]
-c2pa = { version = "0.36.0", features = ["file_io", "openssl_sign", "openssl_ffi_mutex"] }
+c2pa = { version = "0.37.0", features = ["file_io", "openssl_sign", "openssl_ffi_mutex"] }
 httpmock = "0.7.0"
 serde = { version = "1.0.197", features = ["derive"] }
 tempfile = "3.10.1"
