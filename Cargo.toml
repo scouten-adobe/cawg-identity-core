@@ -5,7 +5,7 @@ edition = "2021"
 
 [dependencies]
 async-trait = "0.1.78"
-base64 = "0.22"
+base64 = "0.22.1"
 c2pa = { version = "0.37.0", features = ["openssl_ffi_mutex"] }
 chrono = { version = "0.4.38", features = ["serde"] }
 ciborium = "0.2.2"
